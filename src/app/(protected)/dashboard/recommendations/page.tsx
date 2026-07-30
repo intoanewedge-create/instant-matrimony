@@ -1,0 +1,131 @@
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { container } from "@/lib/container";
+import Link from "next/link";
+import { Sparkles, Heart, MapPin, User, Compass, Star } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+export default async function RecommendationsPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+  const userId = (session.user as any).id;
+
+  const recsRes = await container.services.recommendationService.getRecommendations(userId, 6);
+  const recommendations = recsRes.success ? recsRes.data || [] : [];
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 text-slate-200">
+      
+      {/* Title */}
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent flex items-center gap-2">
+          <Sparkles className="w-8 h-8 text-rose-500 fill-rose-500/20" />
+          AI Recommendations
+        </h1>
+        <p className="text-slate-400 text-sm mt-1">
+          Our machine learning matchmaker computes daily affinities using your partner preferences, educational background, and location.
+        </p>
+      </div>
+
+      {recommendations.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {recommendations.map((rec: any, idx: number) => {
+            const candidate = rec.profile;
+            const age = candidate.dateOfBirth
+              ? new Date().getFullYear() - new Date(candidate.dateOfBirth).getFullYear()
+              : "N/A";
+            
+            // Primary Photo
+            const primaryPhoto = candidate.photos?.find((p: any) => p.isMain)?.url 
+              || (candidate.photos && candidate.photos[0]?.url);
+
+            return (
+              <Card key={idx} className="border border-slate-800 bg-slate-900/30 hover:border-rose-500/30 transition-all duration-300 group overflow-hidden flex flex-col justify-between">
+                
+                {/* Photo & Badge Overlay */}
+                <div className="relative aspect-[4/3] bg-slate-950 overflow-hidden">
+                  {primaryPhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={primaryPhoto}
+                      alt={candidate.name || "Member Profile"}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center flex-col text-slate-600 gap-2">
+                      <User className="w-12 h-12" />
+                      <span className="text-xs">No profile picture</span>
+                    </div>
+                  )}
+
+                  {/* Top Overlays */}
+                  <div className="absolute top-2 left-2 flex gap-1.5">
+                    <span className="text-[10px] bg-slate-950/80 backdrop-blur-md text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-rose-400" /> Match: {rec.score}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Body Details */}
+                <CardContent className="p-5 flex-grow flex flex-col justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-bold text-slate-100 group-hover:text-rose-400 transition-colors">
+                        {candidate.user?.name || candidate.name || "Matrimony Member"}
+                      </h3>
+                      <span className="text-xs text-slate-500">{age} yrs • {candidate.height} cm</span>
+                    </div>
+
+                    <p className="text-slate-400 text-xs flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-rose-500" /> {candidate.city}, {candidate.state}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1.5 text-[11px] text-slate-400 border-t border-slate-950/60">
+                      <div><span className="text-slate-600">Religion:</span> {candidate.religion}</div>
+                      <div><span className="text-slate-600">Caste:</span> {candidate.caste || "N/A"}</div>
+                      <div><span className="text-slate-600">Tongue:</span> {candidate.motherTongue}</div>
+                      <div><span className="text-slate-600">Income:</span> ₹{candidate.income}L</div>
+                    </div>
+
+                    {rec.explanation && (
+                      <p className="text-[10px] text-slate-500 italic mt-2 line-clamp-2">
+                        &ldquo;{rec.explanation}&rdquo;
+                      </p>
+                    )}
+                  </div>
+
+                  <Link href={`/profile/${candidate.userId}`} className="block w-full">
+                    <Button variant="outline" className="w-full border-slate-800 hover:bg-rose-600 hover:text-white transition-all text-xs gap-1.5 h-9 rounded-lg">
+                      <Compass className="w-4 h-4" /> View Match Details
+                    </Button>
+                  </Link>
+
+                </CardContent>
+
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <Card className="border border-slate-800 bg-slate-900/30 p-12 text-center text-slate-400 max-w-xl mx-auto space-y-4">
+          <div className="h-12 w-12 rounded-full bg-slate-950/80 border border-slate-800 flex items-center justify-center text-rose-500 mx-auto">
+            <Compass className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-slate-200">No Recommendations Available</h3>
+          <p className="text-xs">
+            Complete your partner preferences and biography details under My Profile to prompt matching calculations.
+          </p>
+          <Link href="/profile" className="inline-block">
+            <Button className="bg-rose-600 hover:bg-rose-500 text-xs font-semibold px-6">
+              Complete Profile
+            </Button>
+          </Link>
+        </Card>
+      )}
+
+    </div>
+  );
+}

@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: instant_matrimony_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: instant_matrimony
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: instant_matrimony_web
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@postgres:5432/instant_matrimony?schema=public
+      - AUTH_SECRET=super_secret_session_key_for_jwt_auth_123
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - LOG_LEVEL=info
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
