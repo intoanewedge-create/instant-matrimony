@@ -18,32 +18,70 @@ export function Footer() {
                 Instant<span className="text-foreground">Matrimony</span>
               </span>
             </Link>
+
             <p className="text-sm text-muted-foreground leading-relaxed">
-              India's premium matrimonial portal offering safe, secure, and compatibility-based match finding for lifelong unions.
+              India's premium matrimonial portal offering safe, secure, and
+              compatibility-based match finding for lifelong unions.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Company</h3>
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              Company
+            </h3>
+
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/about"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   About Us
                 </Link>
               </li>
+
               <li>
-                <Link href="/success-stories" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/browse"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Browse Profiles
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/find"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Search Matches
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/success-stories"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Success Stories
                 </Link>
               </li>
+
               <li>
-                <Link href="/membership" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/membership"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Membership Plans
                 </Link>
               </li>
+
               <li>
-                <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/faq"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Help & FAQs
                 </Link>
               </li>
@@ -52,25 +90,43 @@ export function Footer() {
 
           {/* Legal Info */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Legal</h3>
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              Legal
+            </h3>
+
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link href="/legal" className="text-muted-foreground hover:text-primary transition-colors">
-                  Terms of Service
+                <Link
+                  href="/terms"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Terms &amp; Conditions
                 </Link>
               </li>
+
               <li>
-                <Link href="/legal" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/privacy"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
+
               <li>
-                <Link href="/legal" className="text-muted-foreground hover:text-primary transition-colors">
-                  Refund & Cancellation
+                <Link
+                  href="/legal"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Refund &amp; Cancellation
                 </Link>
               </li>
+
               <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link
+                  href="/contact"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Safety Tips
                 </Link>
               </li>
@@ -79,13 +135,19 @@ export function Footer() {
 
           {/* Contact Details */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Support</h3>
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              Support
+            </h3>
+
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              Have questions? Our relationship managers are here to assist you 24/7.
+              Have questions? Our relationship managers are here to assist you
+              24/7.
             </p>
+
             <p className="mt-2 text-sm font-medium text-foreground">
               Email: support@instantmatrimony.com
             </p>
+
             <p className="text-sm font-medium text-foreground">
               Phone: +91 98765 43210
             </p>
@@ -93,7 +155,11 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-border/20 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground">
-          <p>&copy; {currentYear} InstantMatrimony. All rights reserved. Made with love for lifelong connections.</p>
+          <p>
+            &copy; {currentYear} InstantMatrimony. All rights reserved. Made
+            with love for lifelong connections.
+          </p>
+
           <p className="mt-2 sm:mt-0">Premium SaaS Platform</p>
         </div>
       </div>
