@@ -1,4 +1,4 @@
-import { Profile, Photo } from "@prisma/client";
+import { Profile, Photo, PartnerPreference } from "@prisma/client";
 import { BaseService } from "./base.service";
 
 export type CompletionSectionKey =
@@ -23,14 +23,15 @@ export interface CompletionBreakdown {
   missingSections: string[];
 }
 
+export type ProfileForCompletion = Profile & {
+  photos?: Photo[];
+  partnerPreference?: PartnerPreference | null;
+};
+
 export class CompletionService extends BaseService {
   private readonly SECTION_WEIGHT = 100 / 7; // ~14.29%
 
-  getBreakdown(
-    profile: Profile & {
-      photos?: Photo[];
-    },
-  ): CompletionBreakdown {
+  getBreakdown(profile: ProfileForCompletion): CompletionBreakdown {
     const sections: CompletionSection[] = [
       {
         key: "personal",
@@ -97,7 +98,7 @@ export class CompletionService extends BaseService {
    * Backwards-compatible wrapper.
    * Existing call sites do not need changes.
    */
-  calculate(profile: Profile & { photos?: Photo[] }): number {
+  calculate(profile: ProfileForCompletion): number {
     return this.getBreakdown(profile).percent;
   }
 
@@ -106,7 +107,9 @@ export class CompletionService extends BaseService {
       profile.gender &&
       profile.dateOfBirth &&
       profile.height &&
-      profile.maritalStatus,
+      profile.maritalStatus &&
+      profile.religion &&
+      profile.motherTongue,
     );
   }
 
@@ -123,20 +126,35 @@ export class CompletionService extends BaseService {
   }
 
   private isFamilyComplete(profile: Profile): boolean {
-    return Boolean(profile.familyType || profile.familyDetails);
+    return Boolean(profile.familyValues || profile.horoscope);
   }
 
   private isLifestyleComplete(profile: Profile): boolean {
-    return Boolean(profile.bio && profile.bio.trim().length > 10);
+    return Boolean(
+      (profile.bio && profile.bio.trim().length > 10) ||
+      profile.smoking ||
+      profile.drinking ||
+      profile.foodPreference,
+    );
   }
 
-  private isPartnerPreferencesComplete(profile: Profile): boolean {
-    return Boolean(profile.partnerPreferences);
+  private isPartnerPreferencesComplete(profile: ProfileForCompletion): boolean {
+    const pref = profile.partnerPreference;
+    if (!pref) return false;
+    return Boolean(
+      pref.minAge ||
+      pref.maxAge ||
+      pref.minHeight ||
+      pref.maxHeight ||
+      pref.religion ||
+      pref.motherTongue ||
+      pref.education ||
+      pref.country ||
+      pref.maritalStatus,
+    );
   }
 
-  private isProfilePhotoComplete(
-    profile: Profile & { photos?: Photo[] },
-  ): boolean {
+  private isProfilePhotoComplete(profile: ProfileForCompletion): boolean {
     return Boolean(profile.photos && profile.photos.length > 0);
   }
 }
