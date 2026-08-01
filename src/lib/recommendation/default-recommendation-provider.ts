@@ -9,7 +9,10 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
     return "DefaultRecommendationProvider";
   }
 
-  async getRecommendations(userId: string, limit: number): Promise<Result<any[]>> {
+  async getRecommendations(
+    userId: string,
+    limit: number,
+  ): Promise<Result<any[]>> {
     try {
       const viewer = await prisma.profile.findUnique({
         where: { userId },
@@ -17,18 +20,20 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
       });
 
       if (!viewer) {
-        return returnFailure("Viewer profile not found", "VIEWER_PROFILE_NOT_FOUND");
+        return returnFailure(
+          "Viewer profile not found",
+          "VIEWER_PROFILE_NOT_FOUND",
+        );
       }
 
       const blocks = await prisma.block.findMany({
         where: {
-          OR: [
-            { blockerId: userId },
-            { blockedId: userId },
-          ],
+          OR: [{ blockerId: userId }, { blockedId: userId }],
         },
       });
-      const blockedUserIds = blocks.flatMap((b) => [b.blockerId, b.blockedId]).filter((id) => id !== userId);
+      const blockedUserIds = blocks
+        .flatMap((b) => [b.blockerId, b.blockedId])
+        .filter((id) => id !== userId);
 
       const candidates = await prisma.profile.findMany({
         where: {
@@ -39,7 +44,12 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
             isActive: true,
             deletedAt: null,
           },
-          gender: viewer.gender === "MALE" ? "FEMALE" : viewer.gender === "FEMALE" ? "MALE" : undefined,
+          gender:
+            viewer.gender === "MALE"
+              ? "FEMALE"
+              : viewer.gender === "FEMALE"
+                ? "MALE"
+                : undefined,
         },
         include: {
           photos: {
@@ -67,9 +77,7 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
         };
       });
 
-      const sorted = scored
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+      const sorted = scored.sort((a, b) => b.score - a.score).slice(0, limit);
 
       return returnSuccess(sorted);
     } catch (e: any) {
@@ -77,7 +85,10 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
     }
   }
 
-  private scoreCandidate(viewer: any, candidate: any): {
+  private scoreCandidate(
+    viewer: any,
+    candidate: any,
+  ): {
     score: number;
     grade: string;
     scoreBreakdown: Record<string, number>;
@@ -104,7 +115,9 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 1. Age
     if (pref?.minAge || pref?.maxAge) {
-      const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
+      const age = candidate.dateOfBirth
+        ? calculateAge(candidate.dateOfBirth)
+        : null;
       if (age) {
         const minOk = !pref.minAge || age >= pref.minAge;
         const maxOk = !pref.maxAge || age <= pref.maxAge;
@@ -124,7 +137,10 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 2. Religion
     if (pref?.religion) {
-      if (candidate.religion && candidate.religion.toLowerCase() === pref.religion.toLowerCase()) {
+      if (
+        candidate.religion &&
+        candidate.religion.toLowerCase() === pref.religion.toLowerCase()
+      ) {
         addScoreItem("religion", weights.religion);
         strengths.push("Shared religion");
       } else {
@@ -137,7 +153,10 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 3. Caste
     if (pref?.caste) {
-      if (candidate.caste && candidate.caste.toLowerCase() === pref.caste.toLowerCase()) {
+      if (
+        candidate.caste &&
+        candidate.caste.toLowerCase() === pref.caste.toLowerCase()
+      ) {
         addScoreItem("caste", weights.caste);
         strengths.push("Same caste");
       } else {
@@ -150,7 +169,10 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 4. Mother Tongue
     if (pref?.motherTongue) {
-      if (candidate.motherTongue && candidate.motherTongue.toLowerCase() === pref.motherTongue.toLowerCase()) {
+      if (
+        candidate.motherTongue &&
+        candidate.motherTongue.toLowerCase() === pref.motherTongue.toLowerCase()
+      ) {
         addScoreItem("motherTongue", weights.motherTongue);
         strengths.push("Same mother tongue");
       } else {
@@ -163,7 +185,11 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 5. Marital Status
     if (pref?.maritalStatus) {
-      if (candidate.maritalStatus && candidate.maritalStatus.toLowerCase() === pref.maritalStatus.toLowerCase()) {
+      if (
+        candidate.maritalStatus &&
+        candidate.maritalStatus.toLowerCase() ===
+          pref.maritalStatus.toLowerCase()
+      ) {
         addScoreItem("maritalStatus", weights.maritalStatus);
       } else {
         addScoreItem("maritalStatus", 0);
@@ -192,11 +218,23 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 7. Location (Country + State + City)
     let locScore = 0;
-    if (candidate.country && viewer.country && candidate.country.toLowerCase() === viewer.country.toLowerCase()) {
+    if (
+      candidate.country &&
+      viewer.country &&
+      candidate.country.toLowerCase() === viewer.country.toLowerCase()
+    ) {
       locScore += weights.location * 0.4;
-      if (candidate.state && viewer.state && candidate.state.toLowerCase() === viewer.state.toLowerCase()) {
+      if (
+        candidate.state &&
+        viewer.state &&
+        candidate.state.toLowerCase() === viewer.state.toLowerCase()
+      ) {
         locScore += weights.location * 0.3;
-        if (candidate.city && viewer.city && candidate.city.toLowerCase() === viewer.city.toLowerCase()) {
+        if (
+          candidate.city &&
+          viewer.city &&
+          candidate.city.toLowerCase() === viewer.city.toLowerCase()
+        ) {
           locScore += weights.location * 0.3;
         }
       }
@@ -210,7 +248,9 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 8. Education & Occupation
     if (pref?.education && candidate.education) {
-      if (candidate.education.toLowerCase().includes(pref.education.toLowerCase())) {
+      if (
+        candidate.education.toLowerCase().includes(pref.education.toLowerCase())
+      ) {
         addScoreItem("education", weights.education);
         strengths.push("Matching education level");
       } else {
@@ -233,12 +273,17 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
     }
 
     // 10. Profile Completion
-    const completionEarned = (candidate.completionPercent / 100) * weights.profileCompletion;
+    const completionEarned =
+      (candidate.completionPercent / 100) * weights.profileCompletion;
     addScoreItem("profileCompletion", completionEarned);
 
     // 11. Verification
-    const isVerified = candidate.user?.identityVerification?.status === "APPROVED";
-    addScoreItem("identityVerification", isVerified ? weights.identityVerification : 0);
+    const isVerified =
+      candidate.user?.identityVerification?.status === "APPROVED";
+    addScoreItem(
+      "identityVerification",
+      isVerified ? weights.identityVerification : 0,
+    );
     if (isVerified) {
       strengths.push("Identity verified badge");
     } else {
@@ -247,18 +292,60 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
     // 12. Premium Membership
     const isPremium = (candidate.user?.memberships?.length || 0) > 0;
-    addScoreItem("premiumMembership", isPremium ? weights.premiumMembership : 0);
+    addScoreItem(
+      "premiumMembership",
+      isPremium ? weights.premiumMembership : 0,
+    );
     if (isPremium) {
       strengths.push("Premium subscription benefit");
     }
 
     // 13. Recently Active
     const lastActive = candidate.user?.lastLoginAt;
-    const isActiveRecent = lastActive && Date.now() - new Date(lastActive).getTime() < 3 * 24 * 60 * 60 * 1000;
+    const isActiveRecent =
+      lastActive &&
+      Date.now() - new Date(lastActive).getTime() < 3 * 24 * 60 * 60 * 1000;
     addScoreItem("recentlyActive", isActiveRecent ? weights.recentlyActive : 0);
 
-    addScoreItem("lifestyle", weights.lifestyle * 0.8);
-    addScoreItem("familyValues", weights.familyValues * 0.9);
+    // 14. Lifestyle compatibility (smoking / drinking / foodPreference)
+    // Uses viewer's own attributes as reference — matching attributes earn full credit,
+    // missing/unknown attributes earn a neutral baseline share (0.8).
+    const lifestyleAxes: Array<"smoking" | "drinking" | "foodPreference"> = [
+      "smoking",
+      "drinking",
+      "foodPreference",
+    ];
+    let lifestyleHits = 0;
+    let lifestyleTotal = 0;
+    for (const axis of lifestyleAxes) {
+      const v = (viewer as any)[axis];
+      const c = (candidate as any)[axis];
+      if (v && c) {
+        lifestyleTotal += 1;
+        if (String(v).toLowerCase() === String(c).toLowerCase())
+          lifestyleHits += 1;
+      }
+    }
+    const lifestyleRatio =
+      lifestyleTotal > 0 ? lifestyleHits / lifestyleTotal : 0.8;
+    addScoreItem("lifestyle", weights.lifestyle * lifestyleRatio);
+    if (lifestyleTotal > 0 && lifestyleRatio === 1) {
+      strengths.push("Matching lifestyle preferences");
+    } else if (lifestyleTotal > 0 && lifestyleRatio === 0) {
+      weaknesses.push("Different lifestyle preferences");
+    }
+
+    // 15. Family values compatibility
+    let familyRatio = 0.9;
+    if (viewer.familyValues && candidate.familyValues) {
+      familyRatio =
+        viewer.familyValues.toLowerCase() ===
+        candidate.familyValues.toLowerCase()
+          ? 1
+          : 0.5;
+    }
+    addScoreItem("familyValues", weights.familyValues * familyRatio);
+
     addScoreItem("horoscope", weights.horoscope);
     addScoreItem("mutualInterests", weights.mutualInterests * 0.7);
     addScoreItem("activityScore", weights.activityScore * 0.8);

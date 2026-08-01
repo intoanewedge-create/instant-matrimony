@@ -35,6 +35,7 @@ import { AuthService } from "./services/auth.service";
 import { ProfileService } from "./services/profile.service";
 import { SearchService } from "./services/search.service";
 import { InterestService } from "./services/interest.service";
+import { FavoriteService } from "./services/favorite.service";
 import { MessagingService } from "./services/messaging.service";
 import { MembershipService } from "./services/membership.service";
 import { NotificationService } from "./services/notification.service";
@@ -155,7 +156,8 @@ const invoiceRepository = new PrismaInvoiceRepository();
 const transactionRepository = new PrismaTransactionRepository();
 const webhookRepository = new PrismaWebhookRepository();
 const conversationRepository = new PrismaConversationRepository();
-const conversationParticipantRepository = new PrismaConversationParticipantRepository();
+const conversationParticipantRepository =
+  new PrismaConversationParticipantRepository();
 const messageReactionRepository = new PrismaMessageReactionRepository();
 
 // Milestone 4 repositories
@@ -186,7 +188,8 @@ if (emailConfig.provider === "smtp") {
 // Setup OTP Providers
 const mockOtpProvider = new MockOtpProvider();
 const emailOtpProvider = new EmailOtpProvider(emailProvider);
-const smsOtpProvider = smsConfig.provider === "twilio" ? new SmsOtpProvider() : mockOtpProvider;
+const smsOtpProvider =
+  smsConfig.provider === "twilio" ? new SmsOtpProvider() : mockOtpProvider;
 
 let storageProvider: StorageProvider;
 if (storageConfig.provider === "local") {
@@ -241,22 +244,43 @@ export const auditService = new AuditService(auditRepository);
 export const completionService = new CompletionService();
 export const compatibilityService = new CompatibilityService();
 export const permissionService = new PermissionService();
-export const otpService = new OtpService(verificationOtpRepository, emailOtpProvider, smsOtpProvider);
+export const otpService = new OtpService(
+  verificationOtpRepository,
+  emailOtpProvider,
+  smsOtpProvider,
+);
 
-export const notificationService = new NotificationService(notificationRepository, notificationDispatcher);
+export const notificationService = new NotificationService(
+  notificationRepository,
+  notificationDispatcher,
+);
 
 export const authService = new AuthService(
   userRepository,
   profileRepository,
   userSessionHistoryRepository,
   otpService,
-  emailProvider
+  emailProvider,
 );
 
-export const profileService = new ProfileService(profileRepository, completionService);
-export const searchRankingService = new SearchRankingService(compatibilityService);
-export const searchService = new SearchService(searchRepository, profileRepository, searchRankingService);
-export const interestService = new InterestService(interestRepository, permissionService, notificationService);
+export const profileService = new ProfileService(
+  profileRepository,
+  completionService,
+);
+export const searchRankingService = new SearchRankingService(
+  compatibilityService,
+);
+export const searchService = new SearchService(
+  searchRepository,
+  profileRepository,
+  searchRankingService,
+);
+export const interestService = new InterestService(
+  interestRepository,
+  permissionService,
+  notificationService,
+);
+export const favoriteService = new FavoriteService();
 export const messagingService = new MessagingService(
   messageRepository,
   permissionService,
@@ -264,19 +288,34 @@ export const messagingService = new MessagingService(
   conversationRepository,
   conversationParticipantRepository,
   messageReactionRepository,
-  realtimeProvider
+  realtimeProvider,
 );
 export const membershipService = new MembershipService(membershipRepository);
 export const imageService = new ImageService();
-export const storageService = new StorageService(storageProvider, mediaRepository);
-export const verificationService = new VerificationService(verificationRepository);
-export const moderationService = new ModerationService(verificationRepository, photoRepository, moderationRepository);
+export const storageService = new StorageService(
+  storageProvider,
+  mediaRepository,
+);
+export const verificationService = new VerificationService(
+  verificationRepository,
+);
+export const moderationService = new ModerationService(
+  verificationRepository,
+  photoRepository,
+  moderationRepository,
+);
 
 // Milestone 4 Services & Cache
 export const cacheProvider = new MemoryCacheProvider();
-export const recommendationService = new RecommendationService(recommendationProviderRegistry.getActiveProvider(), recommendationRepository);
+export const recommendationService = new RecommendationService(
+  recommendationProviderRegistry.getActiveProvider(),
+  recommendationRepository,
+);
 export const cmsService = new CmsService(cmsRepository, cacheProvider);
-export const featureFlagService = new FeatureFlagService(featureFlagRepository, cacheProvider);
+export const featureFlagService = new FeatureFlagService(
+  featureFlagRepository,
+  cacheProvider,
+);
 export const analyticsService = new AnalyticsService(analyticsRepository);
 export const savedSearchService = new SavedSearchService(savedSearchRepository);
 export const dashboardAggregateService = new DashboardAggregateService(
@@ -286,7 +325,7 @@ export const dashboardAggregateService = new DashboardAggregateService(
   messagingService,
   notificationService,
   savedSearchService,
-  aiProviderRegistry
+  aiProviderRegistry,
 );
 
 export const billingAggregate = new BillingAggregate(
@@ -296,21 +335,34 @@ export const billingAggregate = new BillingAggregate(
   transactionRepository,
   membershipRepository,
   paymentProvider,
-  auditService
+  auditService,
 );
 
-export const securityService = new SecurityService(passwordHistoryRepository, auditRepository, userRepository);
+export const securityService = new SecurityService(
+  passwordHistoryRepository,
+  auditRepository,
+  userRepository,
+);
 export const rateLimitService = new RateLimitService(cacheProvider);
 export const csrfService = new CsrfService();
-export const sessionSecurityService = new SessionSecurityService(userSessionHistoryRepository);
+export const sessionSecurityService = new SessionSecurityService(
+  userSessionHistoryRepository,
+);
 export const securityAuditService = new SecurityAuditService(auditRepository);
 export const schedulerService = new SchedulerService();
 
 // Milestone 4 - Enterprise final enhancements
 export const telemetryService = new TelemetryService(telemetryRepository);
-export const searchIndexService = new SearchIndexService(searchIndexRepository, telemetryService);
-export const bulkOperationService = new BulkOperationService(bulkOperationRepository);
-export const systemConfigService = new SystemConfigService(systemConfigurationRepository);
+export const searchIndexService = new SearchIndexService(
+  searchIndexRepository,
+  telemetryService,
+);
+export const bulkOperationService = new BulkOperationService(
+  bulkOperationRepository,
+);
+export const systemConfigService = new SystemConfigService(
+  systemConfigurationRepository,
+);
 
 // Milestone 3 Production Services
 import { WorkflowService } from "./services/workflow.service";
@@ -339,7 +391,7 @@ import {
   InMemoryRuleRepository,
   InMemoryExperimentRepository,
   InMemoryAlertRepository,
-  InMemoryKnowledgeRepository
+  InMemoryKnowledgeRepository,
 } from "./repositories/implementations/phase5-repositories.impl";
 import { TenantService } from "./services/tenant.service";
 import { TenantBillingService } from "./services/tenant-billing.service";
@@ -405,37 +457,64 @@ export const alertRepository = new InMemoryAlertRepository();
 export const knowledgeRepository = new InMemoryKnowledgeRepository();
 
 // Phase 5 Service Instances
-export const tenantService = new TenantService(telemetryService, eventDispatcher);
+export const tenantService = new TenantService(
+  telemetryService,
+  eventDispatcher,
+);
 export const tenantBillingService = new TenantBillingService(telemetryService);
 export const tenantMigrationService = new TenantMigrationService();
 export const encryptionService = new EncryptionService();
-export const disasterRecoveryService = new DisasterRecoveryService(telemetryService);
-export const aiPlatformService = new AiPlatformService(telemetryService, eventDispatcher);
-export const aiOrchestrationService = new AiOrchestrationService(aiPlatformService);
+export const disasterRecoveryService = new DisasterRecoveryService(
+  telemetryService,
+);
+export const aiPlatformService = new AiPlatformService(
+  telemetryService,
+  eventDispatcher,
+);
+export const aiOrchestrationService = new AiOrchestrationService(
+  aiPlatformService,
+);
 export const embeddingService = new EmbeddingService(embeddingRepository);
 export const promptRegistryService = new PromptRegistryService(eventDispatcher);
-export const modelRegistryService = new ModelRegistryService(modelRegistryRepository, eventDispatcher);
+export const modelRegistryService = new ModelRegistryService(
+  modelRegistryRepository,
+  eventDispatcher,
+);
 export const aiEvaluationService = new AiEvaluationService();
-export const featureStoreService = new FeatureStoreService(featureStoreRepository, eventDispatcher);
+export const featureStoreService = new FeatureStoreService(
+  featureStoreRepository,
+  eventDispatcher,
+);
 export const governanceService = new GovernanceService();
 export const dataCatalogService = new DataCatalogService(dataCatalogRepository);
 export const ruleEngineService = new RuleEngineService(ruleRepository);
-export const decisionEngineService = new DecisionEngineService(ruleEngineService);
-export const policyEngineService = new PolicyEngineService(decisionEngineService);
+export const decisionEngineService = new DecisionEngineService(
+  ruleEngineService,
+);
+export const policyEngineService = new PolicyEngineService(
+  decisionEngineService,
+);
 export const dataQualityService = new DataQualityService();
-export const reportBuilderService = new ReportBuilderService(reportSnapshotRepository, eventDispatcher);
+export const reportBuilderService = new ReportBuilderService(
+  reportSnapshotRepository,
+  eventDispatcher,
+);
 export const dashboardEngineService = new DashboardEngineService();
 export const forecastingService = new ForecastingService(eventDispatcher);
 export const capacityPlanningService = new CapacityPlanningService();
 export const costManagementService = new CostManagementService();
 export const saasMetricsService = new SaasMetricsService();
-export const securityIntelligenceService = new SecurityIntelligenceService(eventDispatcher);
+export const securityIntelligenceService = new SecurityIntelligenceService(
+  eventDispatcher,
+);
 export const identityService = new IdentityService(eventDispatcher);
 export const webAuthnService = new WebAuthnService();
 export const mfaService = new MfaService();
 export const sessionRiskService = new SessionRiskService();
 export const authorizationService = new AuthorizationService(permissionService);
-export const policyEvaluatorService = new PolicyEvaluatorService(authorizationService);
+export const policyEvaluatorService = new PolicyEvaluatorService(
+  authorizationService,
+);
 export const operationsAutomationService = new OperationsAutomationService();
 export const pluginService = new PluginService();
 export const agentPlatformService = new AgentPlatformService();
@@ -504,6 +583,7 @@ export const container = {
     profileService,
     searchService,
     interestService,
+    favoriteService,
     messagingService,
     membershipService,
     notificationService,
@@ -593,8 +673,11 @@ initEventSubscribers();
 
 // Start background jobs scheduler
 schedulerService.start().catch((err) => {
-  loggerService.error("Failed to start scheduler at container initialization", {}, err);
+  loggerService.error(
+    "Failed to start scheduler at container initialization",
+    {},
+    err,
+  );
 });
 
 export { fraudDetectionService, marketingCampaignService, reportService };
-

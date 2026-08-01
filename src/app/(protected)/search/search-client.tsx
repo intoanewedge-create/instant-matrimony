@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { searchMatchesAction } from "@/lib/actions/search.actions";
 import { sendInterestAction } from "@/lib/actions/interest.actions";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +20,19 @@ import { Spinner } from "@/components/ui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, Filter, Heart, MapPin, Search } from "lucide-react";
 
-export function SearchClient({ initialResults, defaultGender }: { initialResults: any; defaultGender: string }) {
+export function SearchClient({
+  initialResults,
+  defaultGender,
+}: {
+  initialResults: any;
+  defaultGender: string;
+}) {
   const [results, setResults] = useState(initialResults || []);
   const [loading, setLoading] = useState(false);
-  const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
+  const [interestLoadingId, setInterestLoadingId] = useState<string | null>(
+    null,
+  );
+  const [favLoadingId, setFavLoadingId] = useState<string | null>(null);
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -25,10 +41,19 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
       maxAge: "",
       religion: "",
       caste: "",
+      motherTongue: "",
       city: "",
       state: "",
       country: "",
       minIncome: "",
+      education: "",
+      occupation: "",
+      maritalStatus: "",
+      minHeight: "",
+      maxHeight: "",
+      smoking: "",
+      drinking: "",
+      food: "",
     },
   });
 
@@ -41,12 +66,22 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
       if (data.maxAge) filters.maxAge = Number(data.maxAge);
       if (data.religion) filters.religion = data.religion;
       if (data.caste) filters.caste = data.caste;
+      if (data.motherTongue) filters.motherTongue = data.motherTongue;
       if (data.city) filters.city = data.city;
       if (data.state) filters.state = data.state;
       if (data.country) filters.country = data.country;
       if (data.minIncome) filters.minIncome = Number(data.minIncome);
+      if (data.education) filters.education = data.education;
+      if (data.occupation) filters.occupation = data.occupation;
+      if (data.maritalStatus) filters.maritalStatus = data.maritalStatus;
+      if (data.minHeight) filters.minHeight = Number(data.minHeight);
+      if (data.maxHeight) filters.maxHeight = Number(data.maxHeight);
+      if (data.smoking) filters.smoking = data.smoking;
+      if (data.drinking) filters.drinking = data.drinking;
+      if (data.food) filters.food = data.food;
 
-      const res = await searchMatchesAction(filters);
+      // Bugfix: pass as an object parameter `{ filters }`
+      const res = await searchMatchesAction({ filters });
       if (res.success) {
         setResults(res.results || []);
       }
@@ -64,14 +99,34 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
       if (res.success) {
         setResults((prev: any) =>
           prev.map((r: any) =>
-            r.profile.userId === receiverId ? { ...r, interestSent: true } : r
-          )
+            r.profile.userId === receiverId ? { ...r, interestSent: true } : r,
+          ),
         );
       }
     } catch (e) {
       // ignore
     } finally {
       setInterestLoadingId(null);
+    }
+  };
+
+  const handleToggleFavorite = async (targetUserId: string) => {
+    setFavLoadingId(targetUserId);
+    try {
+      const res = await toggleFavoriteAction(targetUserId);
+      if (res.success) {
+        setResults((prev: any) =>
+          prev.map((r: any) =>
+            r.profile.userId === targetUserId
+              ? { ...r, favorited: res.favorited }
+              : r,
+          ),
+        );
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      setFavLoadingId(null);
     }
   };
 
@@ -85,7 +140,9 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
               <CardTitle className="text-lg font-bold flex items-center gap-2">
                 <Filter className="w-5 h-5 text-rose-500" /> Filter Matches
               </CardTitle>
-              <CardDescription>Refine suggestions based on criteria</CardDescription>
+              <CardDescription>
+                Refine suggestions based on criteria
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -145,12 +202,42 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="motherTongue">Mother Tongue</Label>
+                  <Input
+                    id="motherTongue"
+                    placeholder="e.g. Hindi, Bengali"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("motherTongue")}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
                     placeholder="e.g. Mumbai"
                     className="border-slate-800 bg-slate-950/50"
                     {...register("city")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    placeholder="e.g. Maharashtra"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("state")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    placeholder="e.g. India"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("country")}
                   />
                 </div>
 
@@ -165,8 +252,101 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
                   />
                 </div>
 
-                <Button type="submit" disabled={loading} className="w-full bg-rose-600 hover:bg-rose-500">
-                  {loading ? <Spinner className="w-5 h-5 mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+                {/* Additional Phase-6 Filters */}
+                <div className="space-y-2">
+                  <Label htmlFor="education">Education</Label>
+                  <Input
+                    id="education"
+                    placeholder="e.g. B.Tech, MBA"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("education")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="occupation">Occupation</Label>
+                  <Input
+                    id="occupation"
+                    placeholder="e.g. Software Engineer"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("occupation")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="maritalStatus">Marital Status</Label>
+                  <Input
+                    id="maritalStatus"
+                    placeholder="e.g. NEVER_MARRIED"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("maritalStatus")}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="minHeight">Min Height (cm)</Label>
+                    <Input
+                      id="minHeight"
+                      type="number"
+                      placeholder="150"
+                      className="border-slate-800 bg-slate-950/50"
+                      {...register("minHeight")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxHeight">Max Height (cm)</Label>
+                    <Input
+                      id="maxHeight"
+                      type="number"
+                      placeholder="190"
+                      className="border-slate-800 bg-slate-950/50"
+                      {...register("maxHeight")}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="smoking">Smoking Preference</Label>
+                  <Input
+                    id="smoking"
+                    placeholder="e.g. NO"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("smoking")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="drinking">Drinking Preference</Label>
+                  <Input
+                    id="drinking"
+                    placeholder="e.g. OCCASIONALLY"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("drinking")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="food">Dietary Preference</Label>
+                  <Input
+                    id="food"
+                    placeholder="e.g. VEGETARIAN"
+                    className="border-slate-800 bg-slate-950/50"
+                    {...register("food")}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  data-testid="apply-filters-btn"
+                  className="w-full bg-rose-600 hover:bg-rose-500"
+                >
+                  {loading ? (
+                    <Spinner className="w-5 h-5 mr-2" />
+                  ) : (
+                    <Search className="w-4 h-4 mr-2" />
+                  )}
                   Search
                 </Button>
               </form>
@@ -178,7 +358,8 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
         <div className="flex-grow space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Compass className="w-6 h-6 text-rose-500" /> Matched Results ({results.length})
+              <Compass className="w-6 h-6 text-rose-500" /> Matched Results (
+              {results.length})
             </h2>
           </div>
 
@@ -186,7 +367,9 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
             <AnimatePresence mode="popLayout">
               {results.length === 0 ? (
                 <div className="col-span-full py-20 text-center">
-                  <p className="text-slate-400">No matching profiles found. Try broadening search filters.</p>
+                  <p className="text-slate-400">
+                    No matching profiles found. Try broadening search filters.
+                  </p>
                 </div>
               ) : (
                 results.map((r: any, index: number) => (
@@ -202,12 +385,16 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-lg font-bold text-slate-200">
-                              <Link href={`/profile/${r.profile.userId}`} className="hover:text-rose-400 transition-colors">
+                              <Link
+                                href={`/profile/${r.profile.userId}`}
+                                className="hover:text-rose-400 transition-colors"
+                              >
                                 {r.profile.name || "Matrimony Member"}
                               </Link>
                             </CardTitle>
                             <CardDescription className="flex items-center gap-1 mt-1 text-slate-400">
-                              <MapPin className="w-3.5 h-3.5" /> {r.profile.city}, {r.profile.state}
+                              <MapPin className="w-3.5 h-3.5" />{" "}
+                              {r.profile.city}, {r.profile.state}
                             </CardDescription>
                           </div>
                           <span className="text-xs font-bold px-2 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
@@ -217,10 +404,30 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
                       </CardHeader>
                       <CardContent className="flex-grow space-y-3 pt-2 text-sm text-slate-300">
                         <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div><span className="text-slate-500">Age / Height:</span> {r.profile.age} yrs • {r.profile.height} cm</div>
-                          <div><span className="text-slate-500">Marital Status:</span> {r.profile.maritalStatus}</div>
-                          <div><span className="text-slate-500">Religion / Caste:</span> {r.profile.religion} • {r.profile.caste || "N/A"}</div>
-                          <div><span className="text-slate-500">Mother Tongue:</span> {r.profile.motherTongue}</div>
+                          <div>
+                            <span className="text-slate-500">
+                              Age / Height:
+                            </span>{" "}
+                            {r.profile.age} yrs • {r.profile.height} cm
+                          </div>
+                          <div>
+                            <span className="text-slate-500">
+                              Marital Status:
+                            </span>{" "}
+                            {r.profile.maritalStatus}
+                          </div>
+                          <div>
+                            <span className="text-slate-500">
+                              Religion / Caste:
+                            </span>{" "}
+                            {r.profile.religion} • {r.profile.caste || "N/A"}
+                          </div>
+                          <div>
+                            <span className="text-slate-500">
+                              Mother Tongue:
+                            </span>{" "}
+                            {r.profile.motherTongue}
+                          </div>
                         </div>
                         {r.profile.bio && (
                           <p className="text-xs text-slate-400 line-clamp-3 italic">
@@ -229,29 +436,54 @@ export function SearchClient({ initialResults, defaultGender }: { initialResults
                         )}
                         {r.compatibility?.matchedFields?.length > 0 && (
                           <div className="flex flex-wrap gap-1 pt-2">
-                            {r.compatibility.matchedFields.map((field: string) => (
-                              <span key={field} className="text-[10px] bg-green-950/40 text-green-400 border border-green-900/50 px-2 py-0.5 rounded-full">
-                                ✓ {field}
-                              </span>
-                            ))}
+                            {r.compatibility.matchedFields.map(
+                              (field: string) => (
+                                <span
+                                  key={field}
+                                  className="text-[10px] bg-green-950/40 text-green-400 border border-green-900/50 px-2 py-0.5 rounded-full"
+                                >
+                                  ✓ {field}
+                                </span>
+                              ),
+                            )}
                           </div>
                         )}
                       </CardContent>
                       <div className="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-950/20">
                         <Link href={`/profile/${r.profile.userId}`}>
-                          <Button variant="outline" className="border-slate-850 hover:bg-slate-800 hover:text-white text-xs px-4 h-9">
+                          <Button
+                            variant="outline"
+                            className="border-slate-800 hover:bg-slate-800 hover:text-white text-xs px-4 h-9"
+                          >
                             View Profile
                           </Button>
                         </Link>
                         <Button
-                          disabled={r.interestSent || interestLoadingId === r.profile.userId}
+                          type="button"
+                          variant="outline"
+                          disabled={favLoadingId === r.profile.userId}
+                          onClick={() => handleToggleFavorite(r.profile.userId)}
+                          className={`text-xs px-3 h-9 border-slate-800 hover:bg-slate-800 ${r.favorited ? "text-rose-400" : "text-slate-300"}`}
+                          data-testid={`favorite-toggle-${r.profile.userId}`}
+                        >
+                          <Heart
+                            className={`w-3.5 h-3.5 mr-1 ${r.favorited ? "fill-rose-500 text-rose-500" : ""}`}
+                          />
+                          {r.favorited ? "Saved" : "Save"}
+                        </Button>
+                        <Button
+                          disabled={
+                            r.interestSent ||
+                            interestLoadingId === r.profile.userId
+                          }
                           onClick={() => handleSendInterest(r.profile.userId)}
+                          data-testid={`send-interest-${r.profile.userId}`}
                           className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-medium text-xs px-4 h-9"
                         >
-                          <Heart className="w-3.5 h-3.5 mr-1.5" /> {r.interestSent ? "Interest Sent" : "Connect"}
+                          <Heart className="w-3.5 h-3.5 mr-1.5" />{" "}
+                          {r.interestSent ? "Interest Sent" : "Connect"}
                         </Button>
                       </div>
-
                     </Card>
                   </motion.div>
                 ))
