@@ -1,21 +1,107 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { User, Heart, Camera, Check, AlertCircle, Trash2, Star, Upload, Sparkles, MapPin, Eye } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  User,
+  Heart,
+  Camera,
+  Check,
+  AlertCircle,
+  Trash2,
+  Star,
+  Upload,
+  Eye,
+  CircleCheck,
+  Circle,
+} from "lucide-react";
+import type { CompletionBreakdown } from "@/lib/services/completion.service";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { updateProfileAction, updatePreferencesAction } from "@/lib/actions/profile.actions";
-import { uploadPhoto, deletePhoto, setPrimaryPhoto } from "@/lib/actions/media.actions";
+import {
+  updateProfileAction,
+  updatePreferencesAction,
+} from "@/lib/actions/profile.actions";
+import {
+  uploadPhoto,
+  deletePhoto,
+  setPrimaryPhoto,
+} from "@/lib/actions/media.actions";
 
-export function ProfileClient({ initialProfile }: { initialProfile: any }) {
+interface ProfilePhoto {
+  id: string;
+  url: string;
+  isMain: boolean;
+}
+
+interface PartnerPreference {
+  minAge?: number;
+  maxAge?: number;
+  minHeight?: number;
+  maxHeight?: number;
+  maritalStatus?: string;
+  religion?: string;
+  motherTongue?: string;
+  education?: string;
+  country?: string;
+}
+
+interface UserProfile {
+  id: string;
+  gender?: string;
+  dateOfBirth?: string;
+  religion?: string;
+  motherTongue?: string;
+  caste?: string;
+  height?: number;
+  maritalStatus?: string;
+  education?: string;
+  occupation?: string;
+  income?: number;
+  city?: string;
+  state?: string;
+  country?: string;
+  bio?: string;
+  familyValues?: string;
+  horoscope?: string;
+  smoking?: string;
+  drinking?: string;
+  foodPreference?: string;
+  status?: string;
+  completionPercent?: number;
+  photos?: ProfilePhoto[];
+  partnerPreference?: PartnerPreference;
+}
+
+export function ProfileClient({
+  initialProfile,
+  initialCompletion,
+}: {
+  initialProfile: UserProfile;
+  initialCompletion?: CompletionBreakdown;
+}) {
   const router = useRouter();
-  const [profile, setProfile] = useState(initialProfile);
-  const [activeTab, setActiveTab] = useState<"details" | "preferences" | "photos" | "preview">("details");
+  const [profile, setProfile] = useState<UserProfile>(initialProfile);
+
+  const completion: CompletionBreakdown = initialCompletion || {
+    percent: profile.completionPercent || 0,
+    sections: [],
+    missingSections: [],
+  };
+
+  const [activeTab, setActiveTab] = useState<
+    "details" | "preferences" | "photos" | "preview"
+  >("details");
   const [isPending, startTransition] = useTransition();
 
   // Photo uploading states
@@ -31,10 +117,16 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
   const [prefError, setPrefError] = useState<string | null>(null);
 
   // Setup Details Form
-  const { register: registerDetails, handleSubmit: handleSubmitDetails } = useForm({
+  const {
+    register: registerDetails,
+    handleSubmit: handleSubmitDetails,
+    reset: resetDetails,
+  } = useForm({
     defaultValues: {
       gender: profile.gender || "MALE",
-      dateOfBirth: profile.dateOfBirth ? new Date(profile.dateOfBirth).toISOString().split("T")[0] : "",
+      dateOfBirth: profile.dateOfBirth
+        ? new Date(profile.dateOfBirth).toISOString().split("T")[0]
+        : "",
       religion: profile.religion || "",
       motherTongue: profile.motherTongue || "",
       caste: profile.caste || "",
@@ -47,11 +139,20 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
       state: profile.state || "",
       country: profile.country || "India",
       bio: profile.bio || "",
+      familyValues: profile.familyValues || "",
+      horoscope: profile.horoscope || "",
+      smoking: profile.smoking || "",
+      drinking: profile.drinking || "",
+      foodPreference: profile.foodPreference || "",
     },
   });
 
   // Setup Preferences Form
-  const { register: registerPref, handleSubmit: handleSubmitPref } = useForm({
+  const {
+    register: registerPref,
+    handleSubmit: handleSubmitPref,
+    reset: resetPref,
+  } = useForm({
     defaultValues: {
       minAge: profile.partnerPreference?.minAge || 18,
       maxAge: profile.partnerPreference?.maxAge || 40,
@@ -65,11 +166,50 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
     },
   });
 
-  const onUpdateDetails = async (data: any) => {
+  // Sync state & forms if props update from Server Components
+  useEffect(() => {
+    setProfile(initialProfile);
+    resetDetails({
+      gender: initialProfile.gender || "MALE",
+      dateOfBirth: initialProfile.dateOfBirth
+        ? new Date(initialProfile.dateOfBirth).toISOString().split("T")[0]
+        : "",
+      religion: initialProfile.religion || "",
+      motherTongue: initialProfile.motherTongue || "",
+      caste: initialProfile.caste || "",
+      height: initialProfile.height || 160,
+      maritalStatus: initialProfile.maritalStatus || "SINGLE",
+      education: initialProfile.education || "",
+      occupation: initialProfile.occupation || "",
+      income: initialProfile.income || 0,
+      city: initialProfile.city || "",
+      state: initialProfile.state || "",
+      country: initialProfile.country || "India",
+      bio: initialProfile.bio || "",
+      familyValues: initialProfile.familyValues || "",
+      horoscope: initialProfile.horoscope || "",
+      smoking: initialProfile.smoking || "",
+      drinking: initialProfile.drinking || "",
+      foodPreference: initialProfile.foodPreference || "",
+    });
+    resetPref({
+      minAge: initialProfile.partnerPreference?.minAge || 18,
+      maxAge: initialProfile.partnerPreference?.maxAge || 40,
+      minHeight: initialProfile.partnerPreference?.minHeight || 140,
+      maxHeight: initialProfile.partnerPreference?.maxHeight || 220,
+      maritalStatus:
+        initialProfile.partnerPreference?.maritalStatus || "SINGLE",
+      religion: initialProfile.partnerPreference?.religion || "",
+      motherTongue: initialProfile.partnerPreference?.motherTongue || "",
+      education: initialProfile.partnerPreference?.education || "",
+      country: initialProfile.partnerPreference?.country || "India",
+    });
+  }, [initialProfile, resetDetails, resetPref]);
+
+  const onUpdateDetails = async (data: Record<string, any>) => {
     setDetailsSuccess(null);
     setDetailsError(null);
     startTransition(async () => {
-      // Cast numerical fields appropriately
       const payload = {
         ...data,
         height: Number(data.height),
@@ -78,7 +218,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
       const res = await updateProfileAction(payload);
       if (res.success && res.profile) {
         setDetailsSuccess("Profile details updated successfully!");
-        setProfile((prev: any) => ({ ...prev, ...res.profile }));
+        setProfile((prev) => ({ ...prev, ...res.profile }));
         router.refresh();
       } else {
         setDetailsError(res.error || "Failed to update profile details");
@@ -86,7 +226,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
     });
   };
 
-  const onUpdatePref = async (data: any) => {
+  const onUpdatePref = async (data: Record<string, any>) => {
     setPrefSuccess(null);
     setPrefError(null);
     startTransition(async () => {
@@ -100,8 +240,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
       const res = await updatePreferencesAction(payload);
       if (res.success) {
         setPrefSuccess("Partner preferences updated successfully!");
-        // Refresh preferences in state
-        setProfile((prev: any) => ({
+        setProfile((prev) => ({
           ...prev,
           partnerPreference: { ...prev.partnerPreference, ...payload },
         }));
@@ -112,7 +251,6 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
     });
   };
 
-  // Upload Photo action
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -127,10 +265,8 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
     try {
       const res = await uploadPhoto(formData);
       if (res.success) {
-        setPhotoSuccess("Photo uploaded successfully! Refreshing gallery...");
+        setPhotoSuccess("Photo uploaded successfully!");
         router.refresh();
-        // Reload page data
-        setTimeout(() => window.location.reload(), 1500);
       } else {
         setPhotoError(res.error || "Failed to upload photo");
       }
@@ -150,9 +286,9 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
       const res = await deletePhoto(photoId);
       if (res.success) {
         setPhotoSuccess("Photo deleted successfully!");
-        setProfile((prev: any) => ({
+        setProfile((prev) => ({
           ...prev,
-          photos: prev.photos.filter((p: any) => p.id !== photoId),
+          photos: (prev.photos || []).filter((p) => p.id !== photoId),
         }));
         router.refresh();
       } else {
@@ -171,9 +307,12 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
       const res = await setPrimaryPhoto(photoId);
       if (res.success) {
         setPhotoSuccess("Primary profile photo updated!");
-        setProfile((prev: any) => ({
+        setProfile((prev) => ({
           ...prev,
-          photos: prev.photos.map((p: any) => ({ ...p, isMain: p.id === photoId })),
+          photos: (prev.photos || []).map((p) => ({
+            ...p,
+            isMain: p.id === photoId,
+          })),
         }));
         router.refresh();
       } else {
@@ -193,24 +332,86 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
             My Profile & Matches Workspace
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Complete details to boost compatibility scores and discover matches in your caste & community.
+            Complete details to boost compatibility scores and discover matches
+            in your caste & community.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-3 py-1.5 rounded-lg font-medium">
-            Profile Completion: <span className="text-rose-400 font-bold">{profile.completionPercent}%</span>
+            Profile Completion:{" "}
+            <span className="text-rose-400 font-bold">
+              {completion.percent}%
+            </span>
           </span>
-          <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${
-            profile.status === "APPROVED" 
-              ? "bg-green-500/10 text-green-400 border-green-500/20" 
-              : profile.status === "PENDING"
-              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-              : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-          }`}>
-            {profile.status}
+          <span
+            className={`text-xs px-2.5 py-1 rounded-full font-bold border ${
+              profile.status === "APPROVED"
+                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                : profile.status === "PENDING"
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+            }`}
+          >
+            {profile.status || "DRAFT"}
           </span>
         </div>
       </div>
+
+      {/* Completion Card */}
+      <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-slate-100">
+            Profile Completion
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Complete your profile to improve match visibility.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-slate-400">Completion</span>
+            <span className="text-lg font-bold text-rose-400">
+              {completion.percent}%
+            </span>
+          </div>
+
+          <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all duration-300"
+              style={{ width: `${completion.percent}%` }}
+            />
+          </div>
+
+          {completion.sections.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {completion.sections.map((section) => (
+                <div
+                  key={section.key}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs border ${
+                    section.completed
+                      ? "bg-green-500/10 text-green-400 border-green-500/20"
+                      : "bg-slate-800 text-slate-400 border-slate-700"
+                  }`}
+                >
+                  {section.completed ? (
+                    <CircleCheck className="w-3.5 h-3.5" />
+                  ) : (
+                    <Circle className="w-3.5 h-3.5" />
+                  )}
+                  {section.name}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {completion.missingSections.length > 0 && (
+            <p className="text-xs text-slate-400">
+              <span className="font-semibold text-slate-200">Missing:</span>{" "}
+              {completion.missingSections.join(", ")}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tabs Selector */}
       <div className="flex border-b border-slate-800 gap-2 overflow-x-auto pb-px">
@@ -258,19 +459,25 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
 
       {/* Tabs Content */}
       <div className="mt-4">
+        {/* TAB 1: DETAILS */}
         {activeTab === "details" && (
           <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <User className="w-5 h-5 text-rose-500" /> Edit Personal Information
+                <User className="w-5 h-5 text-rose-500" /> Edit Personal
+                Information
               </CardTitle>
               <CardDescription className="text-slate-400">
-                Update your details below. Note: Changing critical information like religion, caste, or date of birth will trigger profile re-moderation.
+                Update your details below. Note: Changing critical information
+                like religion, caste, or date of birth will trigger profile
+                re-moderation.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleSubmitDetails(onUpdateDetails)} className="space-y-6">
-                
+              <form
+                onSubmit={handleSubmitDetails(onUpdateDetails)}
+                className="space-y-6"
+              >
                 {detailsSuccess && (
                   <div className="p-4 rounded-xl bg-green-950/30 border border-green-800/30 flex items-center gap-3 text-green-400 text-sm">
                     <Check className="w-5 h-5 shrink-0" />
@@ -285,7 +492,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Row 1 */}
+                  {/* Basic Metadata */}
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
                     <select
@@ -317,7 +524,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                     />
                   </div>
 
-                  {/* Row 2 */}
+                  {/* Marital & Background */}
                   <div className="space-y-2">
                     <Label htmlFor="maritalStatus">Marital Status</Label>
                     <select
@@ -350,7 +557,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                     />
                   </div>
 
-                  {/* Row 3 */}
+                  {/* Education & Career */}
                   <div className="space-y-2">
                     <Label htmlFor="motherTongue">Mother Tongue</Label>
                     <Input
@@ -379,7 +586,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                     />
                   </div>
 
-                  {/* Row 4 */}
+                  {/* Location & Finance */}
                   <div className="space-y-2">
                     <Label htmlFor="income">Annual Income (Lakhs INR)</Label>
                     <Input
@@ -408,7 +615,6 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                       {...registerDetails("state")}
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="country">Country</Label>
                     <Input
@@ -424,36 +630,110 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                   <Label htmlFor="bio">About Me (Bio)</Label>
                   <Textarea
                     id="bio"
-                    placeholder="Tell prospective matches about your personality, hobbies, family values, and what you are looking for in a partner..."
+                    placeholder="Tell prospective matches about your personality, hobbies, family values..."
                     className="border-slate-800 bg-slate-950/60 min-h-24 resize-none"
                     {...registerDetails("bio")}
                   />
                 </div>
 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isPending} className="bg-rose-600 hover:bg-rose-500 font-semibold px-8 py-2">
+                {/* Family & Lifestyle Section */}
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-lg font-semibold text-slate-200">
+                    Family & Lifestyle
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="familyValues">Family Values</Label>
+                      <Input
+                        id="familyValues"
+                        placeholder="e.g. Traditional, Modern"
+                        className="border-slate-800 bg-slate-950/60"
+                        {...registerDetails("familyValues")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="horoscope">Horoscope / Rashi</Label>
+                      <Input
+                        id="horoscope"
+                        placeholder="e.g. Aries"
+                        className="border-slate-800 bg-slate-950/60"
+                        {...registerDetails("horoscope")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="smoking">Smoking</Label>
+                      <select
+                        id="smoking"
+                        className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950/60 text-white focus:border-rose-500 text-sm"
+                        {...registerDetails("smoking")}
+                      >
+                        <option value="">Select</option>
+                        <option value="NO">No</option>
+                        <option value="YES">Yes</option>
+                        <option value="OCCASIONAL">Occasional</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="drinking">Drinking</Label>
+                      <select
+                        id="drinking"
+                        className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950/60 text-white focus:border-rose-500 text-sm"
+                        {...registerDetails("drinking")}
+                      >
+                        <option value="">Select</option>
+                        <option value="NO">No</option>
+                        <option value="YES">Yes</option>
+                        <option value="OCCASIONAL">Occasional</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="foodPreference">Food Preference</Label>
+                      <select
+                        id="foodPreference"
+                        className="w-full h-10 px-3 rounded-lg border border-slate-800 bg-slate-950/60 text-white focus:border-rose-500 text-sm"
+                        {...registerDetails("foodPreference")}
+                      >
+                        <option value="">Select</option>
+                        <option value="VEGETARIAN">Vegetarian</option>
+                        <option value="NON_VEGETARIAN">Non Vegetarian</option>
+                        <option value="VEGAN">Vegan</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="bg-rose-600 hover:bg-rose-500 font-semibold px-8 py-2 text-white"
+                  >
                     {isPending ? "Saving..." : "Save Details"}
                   </Button>
                 </div>
-
               </form>
             </CardContent>
           </Card>
         )}
 
+        {/* TAB 2: PREFERENCES */}
         {activeTab === "preferences" && (
           <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-rose-500" /> Edit Partner Match Criteria
+                <Heart className="w-5 h-5 text-rose-500" /> Edit Partner Match
+                Criteria
               </CardTitle>
               <CardDescription className="text-slate-400">
-                Define details of your ideal partner. Our AI engine uses these to compute real-time compatibility scores.
+                Define details of your ideal partner. Our algorithm uses these
+                to compute compatibility scores.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <form onSubmit={handleSubmitPref(onUpdatePref)} className="space-y-6">
-
+              <form
+                onSubmit={handleSubmitPref(onUpdatePref)}
+                className="space-y-6"
+              >
                 {prefSuccess && (
                   <div className="p-4 rounded-xl bg-green-950/30 border border-green-800/30 flex items-center gap-3 text-green-400 text-sm">
                     <Check className="w-5 h-5 shrink-0" />
@@ -512,7 +792,6 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                     </div>
                   </div>
 
-                  {/* Criteria 2 */}
                   <div className="space-y-2">
                     <Label htmlFor="maritalStatusPref">Marital Status</Label>
                     <select
@@ -537,7 +816,9 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="languagePref">Preferred Mother Tongue</Label>
+                    <Label htmlFor="languagePref">
+                      Preferred Mother Tongue
+                    </Label>
                     <Input
                       id="languagePref"
                       placeholder="e.g. Telugu"
@@ -549,14 +830,14 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                   <div className="space-y-2">
                     <Label htmlFor="educationPref">Preferred Education</Label>
                     <Input
-                      id="languagePref"
+                      id="educationPref"
                       placeholder="e.g. Graduate"
                       className="border-slate-800 bg-slate-950/60"
                       {...registerPref("education")}
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="countryPref">Preferred Country</Label>
                     <Input
                       id="countryPref"
@@ -567,29 +848,33 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isPending} className="bg-rose-600 hover:bg-rose-500 font-semibold px-8 py-2">
+                <div className="flex justify-end pt-4">
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="bg-rose-600 hover:bg-rose-500 font-semibold px-8 py-2 text-white"
+                  >
                     {isPending ? "Saving..." : "Save Preferences"}
                   </Button>
                 </div>
-
               </form>
             </CardContent>
           </Card>
         )}
 
+        {/* TAB 3: PHOTOS */}
         {activeTab === "photos" && (
           <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <Camera className="w-5 h-5 text-rose-500" /> Photo & Verification Gallery
+                <Camera className="w-5 h-5 text-rose-500" /> Photo Gallery
               </CardTitle>
               <CardDescription className="text-slate-400">
-                Upload up to 5 photos. High-resolution photos receive 3x higher connect requests.
+                Upload up to 5 photos. Profiles with photos get up to 3x more
+                connect requests.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-
               {photoSuccess && (
                 <div className="p-4 rounded-xl bg-green-950/30 border border-green-800/30 flex items-center gap-3 text-green-400 text-sm">
                   <Check className="w-5 h-5 shrink-0" />
@@ -603,158 +888,150 @@ export function ProfileClient({ initialProfile }: { initialProfile: any }) {
                 </div>
               )}
 
-              {/* Upload Button Box */}
-              <div className="border-2 border-dashed border-slate-800 hover:border-rose-500/50 rounded-2xl p-8 text-center bg-slate-950/40 transition-colors relative">
-                <input
+              {/* Photo Upload Area */}
+              <div className="border-2 border-dashed border-slate-800 hover:border-slate-700 bg-slate-950/40 rounded-xl p-8 text-center transition-colors">
+                <Input
                   type="file"
-                  id="photo-upload-input"
+                  id="photoInput"
                   accept="image/*"
                   onChange={handlePhotoUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  disabled={uploading || (profile.photos || []).length >= 5}
+                  disabled={uploading}
+                  className="hidden"
                 />
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-12 w-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500">
-                    <Upload className="w-5 h-5 animate-bounce" />
+                <label
+                  htmlFor="photoInput"
+                  className="cursor-pointer flex flex-col items-center gap-3"
+                >
+                  <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-300">
+                    <Upload className="w-6 h-6" />
                   </div>
-                  <p className="font-semibold text-sm">Click to upload new photo</p>
-                  <p className="text-slate-500 text-xs">JPEG, PNG or WEBP up to 5MB (Max 5 photos)</p>
-                </div>
-                {uploading && (
-                  <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <div className="flex items-center gap-2 text-rose-400 text-sm font-semibold">
-                      <Sparkles className="w-5 h-5 animate-spin" />
-                      Processing & verifying image safety...
-                    </div>
+                  <div>
+                    <p className="text-slate-200 font-medium">
+                      Click to upload a profile photo
+                    </p>
+                    <p className="text-slate-500 text-xs mt-1">
+                      PNG, JPG or WEBP (Max 5MB)
+                    </p>
                   </div>
-                )}
+                </label>
               </div>
 
-              {/* Photos List */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {(profile.photos || []).map((photo: any) => (
-                  <div key={photo.id} className="group relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden aspect-[3/4]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* Photos Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                {(profile.photos || []).map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="group relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 aspect-square"
+                  >
                     <img
                       src={photo.url}
-                      alt="Uploaded profile view"
-                      className="h-full w-full object-cover"
+                      alt="Profile Media"
+                      className="w-full h-full object-cover"
                     />
-
-                    {/* Badge Overlay */}
-                    <div className="absolute top-2 left-2 flex flex-col gap-1">
-                      {photo.isMain && (
-                        <span className="text-[10px] bg-rose-600 text-white px-2 py-0.5 rounded-full font-bold shadow-md flex items-center gap-0.5">
-                          <Star className="w-3 h-3 fill-white" /> Primary
-                        </span>
-                      )}
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                        photo.isApproved 
-                          ? "bg-green-600/90 text-white" 
-                          : "bg-amber-600/90 text-white"
-                      }`}>
-                        {photo.isApproved ? "Approved" : "Pending review"}
+                    {photo.isMain && (
+                      <span className="absolute top-2 left-2 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current" /> Primary
                       </span>
-                    </div>
-
-                    {/* Hover Actions Panel */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-2">
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       {!photo.isMain && (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
                           onClick={() => handleSetPrimary(photo.id)}
-                          className="h-8 text-[10px] text-white hover:bg-slate-900 border border-slate-800 px-2"
+                          className="h-8 text-xs bg-slate-800 hover:bg-slate-700 text-slate-100"
                         >
-                          Set Primary
+                          Make Primary
                         </Button>
                       )}
                       <Button
                         size="icon"
-                        variant="ghost"
+                        variant="destructive"
                         onClick={() => handleDeletePhoto(photo.id)}
-                        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950/50"
+                        className="h-8 w-8 bg-red-600/80 hover:bg-red-600"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                 ))}
-
-                {(!profile.photos || profile.photos.length === 0) && (
-                  <div className="col-span-full py-10 text-center text-xs text-slate-500">
-                    No photos uploaded. Please upload a photo to start matching.
-                  </div>
-                )}
               </div>
-
             </CardContent>
           </Card>
         )}
 
+        {/* TAB 4: PREVIEW */}
         {activeTab === "preview" && (
-          <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md p-6 flex flex-col md:flex-row gap-8">
-            <div className="w-full md:w-80 shrink-0">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden relative shadow-2xl aspect-[3/4]">
-                {profile.photos?.find((p: any) => p.isMain)?.url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={profile.photos.find((p: any) => p.isMain).url}
-                    alt={profile.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-slate-900 flex items-center justify-center flex-col text-slate-500 gap-2">
-                    <Camera className="w-12 h-12" />
-                    <span className="text-xs">No Profile Picture</span>
+          <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                <Eye className="w-5 h-5 text-emerald-400" /> Public Profile
+                Preview
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                This is how prospective matches will view your profile.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
+                  {profile.photos?.find((p) => p.isMain)?.url ? (
+                    <img
+                      src={profile.photos.find((p) => p.isMain)?.url}
+                      alt="Primary"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-600">
+                      <User className="w-12 h-12" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-100">
+                      {profile.gender === "FEMALE"
+                        ? "Bride Profile"
+                        : "Groom Profile"}
+                    </h2>
+                    <p className="text-slate-400 text-sm">
+                      {profile.city
+                        ? `${profile.city}, ${profile.state}`
+                        : "Location not specified"}
+                    </p>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent flex flex-col justify-end p-6">
-                  <h3 className="text-xl font-bold text-slate-100 flex items-center gap-1.5">
-                    {profile.user?.name || "Matrimony Member"}
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-rose-500" /> {profile.city || "Not set"}, {profile.state || "Not set"}
-                  </p>
+
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {profile.religion && (
+                      <span className="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
+                        {profile.religion}{" "}
+                        {profile.caste ? `• ${profile.caste}` : ""}
+                      </span>
+                    )}
+                    {profile.occupation && (
+                      <span className="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
+                        {profile.occupation}
+                      </span>
+                    )}
+                    {profile.education && (
+                      <span className="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
+                        {profile.education}
+                      </span>
+                    )}
+                  </div>
+
+                  {profile.bio && (
+                    <p className="text-slate-300 text-sm leading-relaxed pt-2">
+                      {profile.bio}
+                    </p>
+                  )}
                 </div>
               </div>
-            </div>
-
-            <div className="flex-grow space-y-6 text-sm">
-              <h2 className="text-2xl font-bold text-slate-200">Bio / Description</h2>
-              <p className="text-slate-400 italic leading-relaxed">
-                &ldquo;{profile.bio || "No bio description written yet. Update your details to describe yourself."}&rdquo;
-              </p>
-
-              <hr className="border-slate-800" />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-slate-500 uppercase tracking-wider font-semibold">Basic Details</span>
-                  <ul className="mt-2 space-y-1.5">
-                    <li><span className="text-slate-400">Gender:</span> {profile.gender}</li>
-                    <li><span className="text-slate-400">Age:</span> {profile.dateOfBirth ? `${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()} yrs` : "N/A"}</li>
-                    <li><span className="text-slate-400">Height:</span> {profile.height} cm</li>
-                    <li><span className="text-slate-400">Marital Status:</span> {profile.maritalStatus}</li>
-                  </ul>
-                </div>
-                <div>
-                  <span className="text-slate-500 uppercase tracking-wider font-semibold">Community & Profession</span>
-                  <ul className="mt-2 space-y-1.5">
-                    <li><span className="text-slate-400">Religion:</span> {profile.religion}</li>
-                    <li><span className="text-slate-400">Caste:</span> {profile.caste || "N/A"}</li>
-                    <li><span className="text-slate-400">Mother Tongue:</span> {profile.motherTongue}</li>
-                    <li><span className="text-slate-400">Education:</span> {profile.education || "N/A"}</li>
-                    <li><span className="text-slate-400">Occupation:</span> {profile.occupation || "N/A"}</li>
-                    <li><span className="text-slate-400">Annual Income:</span> ₹{profile.income} Lakhs</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         )}
       </div>
-
     </div>
   );
 }
