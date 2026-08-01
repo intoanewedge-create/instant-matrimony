@@ -17,13 +17,28 @@ import {
   UserPlus,
   HelpCircle,
   X,
+  CheckCheck,
 } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { sendInterestAction } from "@/lib/actions/interest.actions";
-import { acceptInterestAction } from "@/lib/actions/interest.actions";
+import {
+  sendInterestAction,
+  acceptInterestAction,
+} from "@/lib/actions/interest.actions";
+import { NotificationBell } from "@/components/notification-bell";
+import { RecentActivityFeed } from "@/components/recent-activity-feed";
+import {
+  markNotificationAsReadAction,
+  markAllNotificationsAsReadAction,
+} from "@/lib/actions/notification.actions";
 
 export function DashboardClient({
   profile,
@@ -32,13 +47,30 @@ export function DashboardClient({
   sentInterests = [],
   suggestions: initialSuggestions = [],
   conversations = [],
-  notifications = [],
+  notifications: initialNotifications = [],
 }: any) {
   const router = useRouter();
   const [received, setReceived] = useState(initialReceived || []);
   const [suggestions, setSuggestions] = useState(initialSuggestions || []);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [tourStep, setTourStep] = useState<number>(0); // 0 = inactive, 1 = welcome, 2 = suggestions, 3 = subscription
+  const [notifications, setNotifications] = useState<any[]>(
+    initialNotifications || [],
+  );
+
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
+
+  const handleMarkNotifRead = async (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+    await markNotificationAsReadAction(id);
+  };
+
+  const handleMarkAllNotifRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    await markAllNotificationsAsReadAction();
+  };
 
   const handleSendInterest = async (receiverId: string) => {
     setProcessingId(receiverId);
@@ -47,8 +79,8 @@ export function DashboardClient({
       if (res.success) {
         setSuggestions((prev: any) =>
           prev.map((s: any) =>
-            s.profile.userId === receiverId ? { ...s, interestSent: true } : s
-          )
+            s.profile.userId === receiverId ? { ...s, interestSent: true } : s,
+          ),
         );
       }
     } catch (e) {
@@ -63,7 +95,9 @@ export function DashboardClient({
     try {
       const res = await acceptInterestAction(interestId);
       if (res.success) {
-        setReceived((prev: any) => prev.filter((i: any) => i.id !== interestId));
+        setReceived((prev: any) =>
+          prev.filter((i: any) => i.id !== interestId),
+        );
         router.refresh();
       }
     } catch (e) {
@@ -85,11 +119,19 @@ export function DashboardClient({
 
   const cardVariants = {
     hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 120 } },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 120 },
+    },
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8 relative" role="main" aria-label="Member Dashboard">
+    <div
+      className="container mx-auto px-4 py-8 space-y-8 relative"
+      role="main"
+      aria-label="Member Dashboard"
+    >
       {/* Onboarding Tour Modal */}
       <AnimatePresence>
         {tourStep > 0 && (
@@ -116,13 +158,31 @@ export function DashboardClient({
                   <div className="p-3 bg-rose-500/10 text-rose-500 w-fit rounded-lg">
                     <Sparkles className="w-6 h-6" />
                   </div>
-                  <h2 id="tour-title" className="text-xl font-bold text-slate-100">Welcome to InstantMatrimony Tour!</h2>
+                  <h2
+                    id="tour-title"
+                    className="text-xl font-bold text-slate-100"
+                  >
+                    Welcome to InstantMatrimony Tour!
+                  </h2>
                   <p className="text-slate-400 text-sm">
-                    Let's walk you through the key matching controls of your high-performance workspace in just 3 quick steps.
+                    Let's walk you through the key matching controls of your
+                    high-performance workspace in just 3 quick steps.
                   </p>
                   <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="ghost" onClick={() => setTourStep(0)} size="sm">Skip</Button>
-                    <Button onClick={() => setTourStep(2)} size="sm" className="bg-rose-600 hover:bg-rose-500 text-white">Next Step</Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setTourStep(0)}
+                      size="sm"
+                    >
+                      Skip
+                    </Button>
+                    <Button
+                      onClick={() => setTourStep(2)}
+                      size="sm"
+                      className="bg-rose-600 hover:bg-rose-500 text-white"
+                    >
+                      Next Step
+                    </Button>
                   </div>
                 </div>
               )}
@@ -132,13 +192,31 @@ export function DashboardClient({
                   <div className="p-3 bg-pink-500/10 text-pink-500 w-fit rounded-lg">
                     <Heart className="w-6 h-6" />
                   </div>
-                  <h2 id="tour-title" className="text-xl font-bold text-slate-100">Intelligent Match Suggestions</h2>
+                  <h2
+                    id="tour-title"
+                    className="text-xl font-bold text-slate-100"
+                  >
+                    Intelligent Match Suggestions
+                  </h2>
                   <p className="text-slate-400 text-sm">
-                    In the center panel, our AI pipeline scores compatibility and lists your top suggestions. Connect instantly!
+                    In the center panel, our AI pipeline scores compatibility
+                    and lists your top suggestions. Connect instantly!
                   </p>
                   <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" onClick={() => setTourStep(1)} size="sm">Back</Button>
-                    <Button onClick={() => setTourStep(3)} size="sm" className="bg-rose-600 hover:bg-rose-500 text-white">Next Step</Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setTourStep(1)}
+                      size="sm"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={() => setTourStep(3)}
+                      size="sm"
+                      className="bg-rose-600 hover:bg-rose-500 text-white"
+                    >
+                      Next Step
+                    </Button>
                   </div>
                 </div>
               )}
@@ -148,13 +226,31 @@ export function DashboardClient({
                   <div className="p-3 bg-yellow-500/10 text-yellow-500 w-fit rounded-lg">
                     <Zap className="w-6 h-6" />
                   </div>
-                  <h2 id="tour-title" className="text-xl font-bold text-slate-100">Unlock Full Access</h2>
+                  <h2
+                    id="tour-title"
+                    className="text-xl font-bold text-slate-100"
+                  >
+                    Unlock Full Access
+                  </h2>
                   <p className="text-slate-400 text-sm">
-                    Upgrade your membership to access contact numbers, direct messages, and verification badges.
+                    Upgrade your membership to access contact numbers, direct
+                    messages, and verification badges.
                   </p>
                   <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" onClick={() => setTourStep(2)} size="sm">Back</Button>
-                    <Button onClick={() => setTourStep(0)} size="sm" className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-500 hover:to-pink-500">Finish Tour</Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setTourStep(2)}
+                      size="sm"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={() => setTourStep(0)}
+                      size="sm"
+                      className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-500 hover:to-pink-500"
+                    >
+                      Finish Tour
+                    </Button>
                   </div>
                 </div>
               )}
@@ -174,13 +270,21 @@ export function DashboardClient({
             <Sparkles className="w-3.5 h-3.5" /> Premium Matchmaking
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-            Namaste, <span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">{profile.name || "User"}</span>
+            Namaste,{" "}
+            <span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+              {profile.name || "User"}
+            </span>
           </h1>
           <p className="text-slate-400 max-w-xl">
-            Welcome to your premium dashboard. Complete your profile, explore suggestions, and connect with prospective matches.
+            Welcome to your premium dashboard. Complete your profile, explore
+            suggestions, and connect with prospective matches.
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <NotificationBell
+            initialNotifications={notifications}
+            initialUnreadCount={unreadCount}
+          />
           <Button
             onClick={() => setTourStep(1)}
             variant="outline"
@@ -203,12 +307,36 @@ export function DashboardClient({
         {/* Left/Middle Column (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" role="region" aria-label="Statistics Summary">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            role="region"
+            aria-label="Statistics Summary"
+          >
             {[
-              { label: "Received Interests", value: received.length, icon: Heart, color: "text-rose-500 bg-rose-500/10" },
-              { label: "Sent Interests", value: sentInterests.length, icon: UserPlus, color: "text-blue-500 bg-blue-500/10" },
-              { label: "Active Chats", value: conversations.length, icon: MessageSquare, color: "text-pink-500 bg-pink-500/10" },
-              { label: "Profile Status", value: profile.status, icon: UserCheck, color: "text-green-500 bg-green-500/10" },
+              {
+                label: "Received Interests",
+                value: received.length,
+                icon: Heart,
+                color: "text-rose-500 bg-rose-500/10",
+              },
+              {
+                label: "Sent Interests",
+                value: sentInterests.length,
+                icon: UserPlus,
+                color: "text-blue-500 bg-blue-500/10",
+              },
+              {
+                label: "Active Chats",
+                value: conversations.length,
+                icon: MessageSquare,
+                color: "text-pink-500 bg-pink-500/10",
+              },
+              {
+                label: "Profile Status",
+                value: profile.status,
+                icon: UserCheck,
+                color: "text-green-500 bg-green-500/10",
+              },
             ].map((stat, idx) => (
               <motion.div key={idx} variants={cardVariants}>
                 <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
@@ -216,8 +344,12 @@ export function DashboardClient({
                     <div className={`p-2.5 rounded-lg ${stat.color}`}>
                       <stat.icon className="w-5 h-5" aria-hidden="true" />
                     </div>
-                    <span className="text-xs text-slate-400 font-medium">{stat.label}</span>
-                    <span className="text-xl font-bold" aria-live="polite">{stat.value}</span>
+                    <span className="text-xs text-slate-400 font-medium">
+                      {stat.label}
+                    </span>
+                    <span className="text-xl font-bold" aria-live="polite">
+                      {stat.value}
+                    </span>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -225,21 +357,35 @@ export function DashboardClient({
           </div>
 
           {/* Suggested Matches */}
-          <motion.div variants={cardVariants} role="region" aria-label="Suggested Matches Section">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Suggested Matches Section"
+          >
             <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-bold">Suggested Matches</CardTitle>
-                  <CardDescription>Handpicked profiles compatible with your preferences</CardDescription>
+                  <CardTitle className="text-xl font-bold">
+                    Suggested Matches
+                  </CardTitle>
+                  <CardDescription>
+                    Handpicked profiles compatible with your preferences
+                  </CardDescription>
                 </div>
-                <Link href="/search" className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center" aria-label="Explore all compatible matches">
+                <Link
+                  href="/search"
+                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center"
+                  aria-label="Explore all compatible matches"
+                >
                   Explore All <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
               </CardHeader>
               <CardContent className="space-y-4">
                 {suggestions.length === 0 ? (
                   <div className="py-8 text-center space-y-3">
-                    <p className="text-slate-400 text-sm">No suggestions found. Try adjusting preferences.</p>
+                    <p className="text-slate-400 text-sm">
+                      No suggestions found. Try adjusting preferences.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3" role="list">
@@ -255,12 +401,16 @@ export function DashboardClient({
                           </div>
                           <div>
                             <h4 className="font-bold text-slate-200">
-                              <Link href={`/profile/${s.profile.userId}`} className="hover:text-rose-400 transition-colors">
+                              <Link
+                                href={`/profile/${s.profile.userId}`}
+                                className="hover:text-rose-400 transition-colors"
+                              >
                                 {s.profile.name || "Premium Member"}
                               </Link>
                             </h4>
                             <p className="text-xs text-slate-400">
-                              {s.profile.age} yrs • {s.profile.city || "N/A"}, {s.profile.state || "N/A"}
+                              {s.profile.age} yrs • {s.profile.city || "N/A"},{" "}
+                              {s.profile.state || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -271,7 +421,10 @@ export function DashboardClient({
                             </span>
                           </div>
                           <Button
-                            disabled={s.interestSent || processingId === s.profile.userId}
+                            disabled={
+                              s.interestSent ||
+                              processingId === s.profile.userId
+                            }
                             onClick={() => handleSendInterest(s.profile.userId)}
                             size="sm"
                             aria-busy={processingId === s.profile.userId}
@@ -288,16 +441,40 @@ export function DashboardClient({
             </Card>
           </motion.div>
 
+          {/* Recent Activity Feed */}
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Recent Activity Feed"
+          >
+            <RecentActivityFeed
+              conversations={conversations}
+              receivedInterests={received}
+              sentInterests={sentInterests}
+              notifications={notifications}
+            />
+          </motion.div>
+
           {/* Pending / Received Interests */}
-          <motion.div variants={cardVariants} role="region" aria-label="Received Interest Requests">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Received Interest Requests"
+          >
             <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-xl font-bold">Received Interest Requests</CardTitle>
-                <CardDescription>Members interested in connecting with you</CardDescription>
+                <CardTitle className="text-xl font-bold">
+                  Received Interest Requests
+                </CardTitle>
+                <CardDescription>
+                  Members interested in connecting with you
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {received.length === 0 ? (
-                  <p className="text-slate-400 text-sm text-center py-6">No new interest requests received.</p>
+                  <p className="text-slate-400 text-sm text-center py-6">
+                    No new interest requests received.
+                  </p>
                 ) : (
                   <div className="space-y-3" role="list">
                     {received.map((r: any) => (
@@ -312,12 +489,16 @@ export function DashboardClient({
                           </div>
                           <div>
                             <h4 className="font-semibold text-slate-200">
-                              <Link href={`/profile/${r.senderId}`} className="hover:text-rose-400 transition-colors">
+                              <Link
+                                href={`/profile/${r.senderId}`}
+                                className="hover:text-rose-400 transition-colors"
+                              >
                                 {r.sender?.name || "Member"}
                               </Link>
                             </h4>
                             <p className="text-xs text-slate-400">
-                              {r.sender?.profile?.religion} • {r.sender?.profile?.motherTongue}
+                              {r.sender?.profile?.religion} •{" "}
+                              {r.sender?.profile?.motherTongue}
                             </p>
                           </div>
                         </div>
@@ -351,49 +532,82 @@ export function DashboardClient({
         {/* Right Column (1/3 width) */}
         <div className="space-y-8">
           {/* Profile Completion Card */}
-          <motion.div variants={cardVariants} role="region" aria-label="Profile Strength details">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Profile Strength details"
+          >
             <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold">Profile Strength</CardTitle>
+                <CardTitle className="text-lg font-bold">
+                  Profile Strength
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Completion Percent</span>
-                  <span className="text-rose-400 font-bold">{profile.completionPercent}%</span>
+                  <span className="text-rose-400 font-bold">
+                    {profile.completionPercent}%
+                  </span>
                 </div>
-                <Progress value={profile.completionPercent} className="h-2 bg-slate-800" aria-label="Profile completeness progression" />
+                <Progress
+                  value={profile.completionPercent}
+                  className="h-2 bg-slate-800"
+                  aria-label="Profile completeness progression"
+                />
                 <p className="text-xs text-slate-400">
-                  Profiles with 100% completion receive 5x more interests. Add education, income details and upload photos.
+                  Profiles with 100% completion receive 5x more interests. Add
+                  education, income details and upload photos.
                 </p>
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Membership Plan Card */}
-          <motion.div variants={cardVariants} role="region" aria-label="Membership Status Details">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Membership Status Details"
+          >
             <Card className="border border-rose-900/20 bg-gradient-to-b from-rose-950/20 to-slate-900/40 backdrop-blur-md">
               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg font-bold">Membership Status</CardTitle>
-                  <CardDescription>Your subscription tier and benefits</CardDescription>
+                  <CardTitle className="text-lg font-bold">
+                    Membership Status
+                  </CardTitle>
+                  <CardDescription>
+                    Your subscription tier and benefits
+                  </CardDescription>
                 </div>
-                <Zap className="w-5 h-5 text-rose-500 animate-pulse" aria-hidden="true" />
+                <Zap
+                  className="w-5 h-5 text-rose-500 animate-pulse"
+                  aria-hidden="true"
+                />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 text-sm">Plan Tier</span>
-                  <span className="text-sm font-bold text-rose-400 uppercase">{membership?.plan?.name || "Free Trial"}</span>
+                  <span className="text-sm font-bold text-rose-400 uppercase">
+                    {membership?.plan?.name || "Free Trial"}
+                  </span>
                 </div>
                 {membership ? (
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400">Days Remaining</span>
                     <span className="font-semibold text-slate-200">
-                      {Math.ceil((new Date(membership.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} Days
+                      {Math.ceil(
+                        (new Date(membership.endDate).getTime() - Date.now()) /
+                          (1000 * 60 * 60 * 24),
+                      )}{" "}
+                      Days
                     </span>
                   </div>
                 ) : (
                   <Link href="/dashboard/billing" className="block w-full mt-2">
-                    <Button size="sm" className="w-full bg-rose-600 hover:bg-rose-500 text-white">
+                    <Button
+                      size="sm"
+                      className="w-full bg-rose-600 hover:bg-rose-500 text-white"
+                    >
                       Upgrade to Premium
                     </Button>
                   </Link>
@@ -403,17 +617,27 @@ export function DashboardClient({
           </motion.div>
 
           {/* Quick Actions Panel */}
-          <motion.div variants={cardVariants} role="region" aria-label="Quick Navigation Controls">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="Quick Navigation Controls"
+          >
             <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-lg font-bold">Quick Actions</CardTitle>
+                <CardTitle className="text-lg font-bold">
+                  Quick Actions
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-2">
                 {[
                   { name: "Search Matches", icon: Compass, href: "/search" },
                   { name: "Chat Box", icon: MessageSquare, href: "/messages" },
                   { name: "Preferences", icon: Settings, href: "/onboarding" },
-                  { name: "Verification & Photos", icon: UserCheck, href: "/dashboard/verification" },
+                  {
+                    name: "Verification & Photos",
+                    icon: UserCheck,
+                    href: "/dashboard/verification",
+                  },
                 ].map((action, idx) => (
                   <Link
                     key={idx}
@@ -421,8 +645,13 @@ export function DashboardClient({
                     className="border border-slate-800 hover:bg-slate-800 rounded-lg flex flex-col items-center p-4 h-auto gap-2 justify-center transition-all bg-transparent focus-visible:ring-2 focus-visible:ring-rose-500"
                     aria-label={`Navigate to ${action.name}`}
                   >
-                    <action.icon className="w-5 h-5 text-rose-500" aria-hidden="true" />
-                    <span className="text-xs text-slate-300 font-medium">{action.name}</span>
+                    <action.icon
+                      className="w-5 h-5 text-rose-500"
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs text-slate-300 font-medium">
+                      {action.name}
+                    </span>
                   </Link>
                 ))}
               </CardContent>
@@ -430,28 +659,86 @@ export function DashboardClient({
           </motion.div>
 
           {/* Notifications Card */}
-          <motion.div variants={cardVariants} role="region" aria-label="System Notifications Panel">
+          <motion.div
+            variants={cardVariants}
+            role="region"
+            aria-label="System Notifications Panel"
+          >
             <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-bold">Notifications</CardTitle>
-                <Bell className="w-4 h-4 text-rose-500" aria-hidden="true" />
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-bold">
+                    Notifications
+                  </CardTitle>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600/20 text-rose-300 border border-rose-600/30">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllNotifRead}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium"
+                      aria-label="Mark all notifications as read"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" /> Mark all
+                    </button>
+                  )}
+                  <Bell className="w-4 h-4 text-rose-500" aria-hidden="true" />
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 {notifications.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-2">No new notifications.</p>
+                  <p className="text-xs text-slate-400 text-center py-2">
+                    No new notifications.
+                  </p>
                 ) : (
-                  <div className="space-y-3" role="list">
-                    {notifications.map((n: any) => (
-                      <div key={n.id} role="listitem" className="text-xs space-y-1 border-b border-slate-800 pb-2 last:border-0 last:pb-0">
-                        <div className="flex justify-between font-semibold text-slate-200">
-                          <span>{n.title}</span>
-                          <span className="text-[10px] text-slate-500 flex items-center gap-0.5">
-                            <Clock className="w-3 h-3" aria-hidden="true" /> {new Date(n.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-slate-400">{n.message}</p>
-                      </div>
-                    ))}
+                  <div className="space-y-2" role="list">
+                    {notifications.slice(0, 5).map((n: any) => {
+                      const isUnread = !n.read;
+                      return (
+                        <button
+                          key={n.id}
+                          onClick={() => isUnread && handleMarkNotifRead(n.id)}
+                          role="listitem"
+                          className={`w-full text-left text-xs space-y-1 rounded-lg p-2 transition-colors ${
+                            isUnread
+                              ? "bg-rose-950/10 hover:bg-rose-950/20 border border-rose-500/20"
+                              : "hover:bg-slate-800/40 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex items-start gap-2 min-w-0">
+                              <span
+                                className={`mt-1 inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  isUnread
+                                    ? "bg-rose-500 animate-pulse"
+                                    : "bg-slate-700"
+                                }`}
+                              />
+                              <span
+                                className={`font-semibold truncate ${
+                                  isUnread ? "text-slate-100" : "text-slate-400"
+                                }`}
+                              >
+                                {n.title}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 flex items-center gap-0.5 shrink-0">
+                              <Clock className="w-3 h-3" aria-hidden="true" />{" "}
+                              {new Date(n.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p
+                            className={`pl-3.5 ${isUnread ? "text-slate-300" : "text-slate-500"}`}
+                          >
+                            {n.message}
+                          </p>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -462,4 +749,3 @@ export function DashboardClient({
     </div>
   );
 }
-
