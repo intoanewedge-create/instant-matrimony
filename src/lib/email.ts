@@ -19,25 +19,51 @@ export class EmailService {
   }
 
   private getAppUrl(): string {
-    return process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
+    return (
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      "http://localhost:3000"
+    );
   }
 
-  public async sendEmail({ to, subject, html }: EmailSendOptions): Promise<boolean> {
-    const provider = process.env.EMAIL_PROVIDER || emailConfig.provider || "mock";
-    const fromAddress = process.env.EMAIL_FROM || emailConfig.from || "no-reply@instantmatrimony.com";
+  public async sendEmail({
+    to,
+    subject,
+    html,
+  }: EmailSendOptions): Promise<boolean> {
+    const provider =
+      process.env.EMAIL_PROVIDER || emailConfig.provider || "mock";
+    const fromAddress =
+      process.env.EMAIL_FROM ||
+      emailConfig.from ||
+      "no-reply@instantmatrimony.com";
 
     if (process.env.NODE_ENV === "production" && provider === "mock") {
       logger.warn(
-        "WARNING: Email provider not configured. Using MockEmailProvider. Emails will not reach real users. Please set EMAIL_PROVIDER=smtp or RESEND_API_KEY."
+        "WARNING: Email provider not configured. Using MockEmailProvider. Emails will not reach real users. Please set EMAIL_PROVIDER=smtp or RESEND_API_KEY.",
       );
     }
 
     try {
       if (provider === "smtp") {
-        const host = process.env.EMAIL_SERVER_HOST || process.env.SMTP_HOST || emailConfig.smtp.host;
-        const port = parseInt(process.env.EMAIL_SERVER_PORT || process.env.SMTP_PORT || String(emailConfig.smtp.port), 10);
-        const user = process.env.EMAIL_SERVER_USER || process.env.SMTP_USER || emailConfig.smtp.user;
-        const pass = process.env.EMAIL_SERVER_PASSWORD || process.env.SMTP_PASS || emailConfig.smtp.pass;
+        const host =
+          process.env.EMAIL_SERVER_HOST ||
+          process.env.SMTP_HOST ||
+          emailConfig.smtp.host;
+        const port = parseInt(
+          process.env.EMAIL_SERVER_PORT ||
+            process.env.SMTP_PORT ||
+            String(emailConfig.smtp.port),
+          10,
+        );
+        const user =
+          process.env.EMAIL_SERVER_USER ||
+          process.env.SMTP_USER ||
+          emailConfig.smtp.user;
+        const pass =
+          process.env.EMAIL_SERVER_PASSWORD ||
+          process.env.SMTP_PASS ||
+          emailConfig.smtp.pass;
 
         const transporter = nodemailer.createTransport({
           host,
@@ -53,12 +79,18 @@ export class EmailService {
           html,
         });
 
-        logger.info({ to, subject, provider: "smtp" }, "Verification email sent successfully via SMTP");
+        logger.info(
+          { to, subject, provider: "smtp" },
+          "Verification email sent successfully via SMTP",
+        );
         return true;
       } else if (provider === "resend") {
         const apiKey = process.env.RESEND_API_KEY || emailConfig.resend.apiKey;
         if (!apiKey) {
-          logger.warn({ to, subject }, "RESEND_API_KEY missing. Falling back to Mock logger.");
+          logger.warn(
+            { to, subject },
+            "RESEND_API_KEY missing. Falling back to Mock logger.",
+          );
           this.logMockEmail(to, subject, html);
           return true;
         }
@@ -71,10 +103,16 @@ export class EmailService {
             subject,
             html,
           });
-          logger.info({ to, subject, provider: "resend" }, "Verification email sent successfully via Resend API");
+          logger.info(
+            { to, subject, provider: "resend" },
+            "Verification email sent successfully via Resend API",
+          );
           return true;
         } catch (e: any) {
-          logger.error({ to, subject, error: e.message }, "Resend provider error. Falling back to Mock logger.");
+          logger.error(
+            { to, subject, error: e.message },
+            "Resend provider error. Falling back to Mock logger.",
+          );
           this.logMockEmail(to, subject, html);
           return true;
         }
@@ -84,7 +122,10 @@ export class EmailService {
         return true;
       }
     } catch (error: any) {
-      logger.error({ to, subject, error: error.message }, "Failed to send email via configured provider. Logging email content as fallback.");
+      logger.error(
+        { to, subject, error: error.message },
+        "Failed to send email via configured provider. Logging email content as fallback.",
+      );
       this.logMockEmail(to, subject, html);
       return false;
     }
@@ -97,14 +138,30 @@ export class EmailService {
         subject,
         preview: html.replace(/<[^>]*>?/gm, "").substring(0, 150) + "...",
       },
-      "[MOCK EMAIL SERVICE] Email dispatched successfully to recipient"
+      "[MOCK EMAIL SERVICE] Email dispatched successfully to recipient",
     );
   }
 
-  public async sendVerificationEmail(email: string, token: string, code?: string): Promise<boolean> {
+  public async sendVerificationEmail(
+    email: string,
+    token: string,
+    code?: string,
+  ): Promise<boolean> {
     const appUrl = this.getAppUrl();
     const verifyUrl = `${appUrl}/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
-    
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("\n========== [DEV] EMAIL VERIFICATION ==========");
+      console.log("To:", email);
+      console.log("Verification URL:", verifyUrl);
+
+      if (code) {
+        console.log("Verification Code:", code);
+      }
+
+      console.log("==============================================\n");
+    }
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #090d16; color: #f8fafc; border-radius: 16px; border: 1px solid #1e293b;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -123,12 +180,16 @@ export class EmailService {
             </a>
           </div>
 
-          ${code ? `
+          ${
+            code
+              ? `
           <div style="background-color: #1e293b; padding: 16px; border-radius: 8px; text-align: center; margin-top: 20px;">
             <p style="color: #94a3b8; font-size: 13px; margin: 0 0 8px 0;">Or enter this 6-digit verification code:</p>
             <span style="font-family: monospace; font-size: 28px; font-weight: bold; color: #f43f5e; letter-spacing: 6px;">${code}</span>
           </div>
-          ` : ""}
+          `
+              : ""
+          }
 
           <p style="color: #64748b; font-size: 13px; margin-top: 24px; line-height: 1.5;">
             If the button above does not work, copy and paste this link into your browser:<br/>
@@ -148,10 +209,26 @@ export class EmailService {
     });
   }
 
-  public async sendPasswordResetEmail(email: string, token: string, code?: string): Promise<boolean> {
+  public async sendPasswordResetEmail(
+    email: string,
+    token: string,
+    code?: string,
+  ): Promise<boolean> {
     const appUrl = this.getAppUrl();
     const resetUrl = `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("\n========== [DEV] PASSWORD RESET ==========");
+      console.log("To:", email);
+      console.log("Reset URL:", resetUrl);
+
+      if (code) {
+        console.log("Reset Code:", code);
+      }
+
+      console.log("==========================================\n");
+    }
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #090d16; color: #f8fafc; border-radius: 16px; border: 1px solid #1e293b;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -170,12 +247,16 @@ export class EmailService {
             </a>
           </div>
 
-          ${code ? `
+          ${
+            code
+              ? `
           <div style="background-color: #1e293b; padding: 16px; border-radius: 8px; text-align: center; margin-top: 20px;">
             <p style="color: #94a3b8; font-size: 13px; margin: 0 0 8px 0;">Verification code:</p>
             <span style="font-family: monospace; font-size: 28px; font-weight: bold; color: #f43f5e; letter-spacing: 6px;">${code}</span>
           </div>
-          ` : ""}
+          `
+              : ""
+          }
         </div>
       </div>
     `;
