@@ -15,7 +15,6 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
 
-      const isAdminRoute = pathname.startsWith("/admin");
       const isProtectedRoute =
         pathname.startsWith("/dashboard") ||
         pathname.startsWith("/search") ||
@@ -28,12 +27,6 @@ export const authConfig = {
         pathname === "/register" ||
         pathname === "/forgot-password" ||
         pathname === "/reset-password";
-
-      if (isAdminRoute) {
-        if (!isLoggedIn) return false;
-        const role = (auth.user as any)?.role;
-        return role === "ADMIN" || role === "SUPER_ADMIN";
-      }
 
       if (isProtectedRoute) {
         return isLoggedIn;
@@ -48,4 +41,3 @@ export const authConfig = {
   },
   providers: [], // Configured in main auth.ts
 } satisfies NextAuthConfig;
-

@@ -6,7 +6,6 @@ import { Heart } from "lucide-react";
 export async function Navbar() {
   const session = await auth();
   const isLoggedIn = !!session?.user;
-  const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
@@ -79,7 +78,7 @@ export async function Navbar() {
         {/* Action Button */}
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
-            <Link href={isAdmin ? "/admin" : "/dashboard"}>
+            <Link href="/dashboard">
               <Button size="sm">Go to Dashboard</Button>
             </Link>
           ) : (
