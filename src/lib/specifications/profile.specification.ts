@@ -108,4 +108,56 @@ export class ProfileSpecification {
     if (minPercent === undefined || minPercent === null) return {};
     return { completionPercent: { gte: minPercent } };
   }
+
+  static filterBySubCasteGothram(subCaste?: string, gothram?: string) {
+    const where: any = {};
+    if (subCaste) where.subCaste = { equals: subCaste, mode: "insensitive" };
+    if (gothram) where.gothram = { equals: gothram, mode: "insensitive" };
+    return where;
+  }
+
+  static filterByWeightRange(minWeight?: number, maxWeight?: number) {
+    if (!minWeight && !maxWeight) return {};
+    const weight: any = {};
+    if (minWeight) weight.gte = minWeight;
+    if (maxWeight) weight.lte = maxWeight;
+    return { weight };
+  }
+
+  static filterByIncomeRange(minIncome?: number, maxIncome?: number) {
+    if (minIncome === undefined && maxIncome === undefined) return {};
+    const income: any = {};
+    if (minIncome !== undefined) income.gte = minIncome;
+    if (maxIncome !== undefined) income.lte = maxIncome;
+    return { income };
+  }
+
+  static filterByHasPhoto(hasPhoto?: boolean) {
+    if (!hasPhoto) return {};
+    return {
+      photos: {
+        some: {
+          deletedAt: null,
+        },
+      },
+    };
+  }
+
+  static filterByRecentlyJoined(recentlyJoined?: boolean) {
+    if (!recentlyJoined) return {};
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return {
+      createdAt: { gte: thirtyDaysAgo },
+    };
+  }
+
+  static filterByRecentlyActive(recentlyActive?: boolean) {
+    if (!recentlyActive) return {};
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return {
+      updatedAt: { gte: sevenDaysAgo },
+    };
+  }
 }

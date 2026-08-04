@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeStyleInjector } from "@/components/theme-style-injector";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <ThemeStyleInjector />
           {children}
           <PwaRegister />
         </ThemeProvider>

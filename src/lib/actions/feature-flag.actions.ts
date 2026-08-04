@@ -38,9 +38,7 @@ export async function setFlagAction(input: {
     result.data.category || undefined
   );
 
-  if (res.success) {
-    revalidatePath("/admin/features");
-  }
+
   return res;
 }
 
@@ -59,8 +57,6 @@ export async function seedDefaultFlagsAction() {
     return { success: false, error: "Forbidden" };
   }
   const res = await container.services.featureFlagService.seedDefaultFlags();
-  if (res.success) {
-    revalidatePath("/admin/features");
-  }
+
   return res;
 }

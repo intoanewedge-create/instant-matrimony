@@ -22,7 +22,7 @@ export class SearchService extends BaseService {
     params: {
       queryText?: string;
       filters?: any;
-      cursor?: string;
+      page?: number;
       limit?: number;
       sortBy?: string;
     }
@@ -31,6 +31,10 @@ export class SearchService extends BaseService {
       const viewerProfile = await this.profileRepository.findByUserId(viewerUserId);
       if (!viewerProfile) {
         return this.returnFailure("Viewer profile not found", "PROFILE_NOT_FOUND");
+      }
+
+      if (viewerProfile.status !== "APPROVED") {
+        return this.returnFailure("Only approved profiles are authorized to search", "UNAUTHORIZED_STATUS");
       }
 
       let parsedFilters = params.filters || {};
@@ -47,28 +51,36 @@ export class SearchService extends BaseService {
         await this.searchRepository.saveSearchHistory(viewerUserId, params.queryText, parsedFilters);
       }
 
-      const limitVal = params.limit || 10;
-      const candidates = await this.searchRepository.search({
+      const pageVal = params.page || 1;
+      const limitVal = params.limit || 12;
+      const searchRes = await this.searchRepository.search({
         viewerId: viewerUserId,
         filters: parsedFilters,
-        cursor: params.cursor,
+        page: pageVal,
         limit: limitVal,
         sortBy: params.sortBy,
       });
 
       // Rank using SearchRankingService
-      const rankedCandidates = this.rankingService.rankCandidates(viewerProfile, candidates);
+      const rankedCandidates = this.rankingService.rankCandidates(viewerProfile, searchRes.data);
 
-      const mappedResults = rankedCandidates.map((candidate) => {
+      const mappedResults = rankedCandidates.map((candidate: any) => {
         const dto = ProfileMapper.toResponse(candidate as any);
         return {
           profile: dto,
           compatibility: candidate.compatibility,
           rankingScore: candidate.rankingScore,
+          privacy: candidate.privacy,
+          user: candidate.user,
         };
       });
 
-      return this.returnSuccess(mappedResults);
+      return this.returnSuccess({
+        data: mappedResults,
+        totalRecords: searchRes.totalRecords,
+        page: searchRes.page,
+        totalPages: searchRes.totalPages,
+      });
     } catch (e: any) {
       return this.returnFailure(e.message, "SEARCH_ERROR");
     }

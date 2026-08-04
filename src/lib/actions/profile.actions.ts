@@ -124,4 +124,79 @@ export async function updateNotificationPreferencesAction(data: any) {
   return { success: true };
 }
 
+export async function approveProfileAction(profileId: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return { success: false, error: "Admin authorization required" };
+  }
+  const adminUserId = (session.user as any).id;
+
+  const res = await container.services.profileService.approveProfile(adminUserId, profileId);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/admin/profiles");
+  revalidatePath("/dashboard");
+  return { success: true, profile: res.data };
+}
+
+export async function rejectProfileAction(profileId: string, reason: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return { success: false, error: "Admin authorization required" };
+  }
+  const adminUserId = (session.user as any).id;
+
+  const res = await container.services.profileService.rejectProfile(adminUserId, profileId, reason);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/admin/profiles");
+  revalidatePath("/dashboard");
+  return { success: true, profile: res.data };
+}
+
+export async function suspendProfileAction(profileId: string, reason?: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return { success: false, error: "Admin authorization required" };
+  }
+  const adminUserId = (session.user as any).id;
+
+  const res = await container.services.profileService.suspendProfile(adminUserId, profileId, reason);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/admin/profiles");
+  revalidatePath("/dashboard");
+  return { success: true, profile: res.data };
+}
+
+export async function restoreProfileAction(profileId: string) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return { success: false, error: "Admin authorization required" };
+  }
+  const adminUserId = (session.user as any).id;
+
+  const res = await container.services.profileService.restoreProfile(adminUserId, profileId);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/admin/profiles");
+  revalidatePath("/dashboard");
+  return { success: true, profile: res.data };
+}
+
+export async function resubmitProfileAction() {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = (session.user as any).id;
+
+  const res = await container.services.profileService.resubmitProfile(userId);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/dashboard");
+  revalidatePath("/onboarding");
+  return { success: true, profile: res.data };
+}
+
 

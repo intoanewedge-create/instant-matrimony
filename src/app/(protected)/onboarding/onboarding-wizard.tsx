@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { saveStepAction } from "@/lib/actions/onboarding.actions";
@@ -12,13 +12,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
 
 export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(2); // Start at Step 2 since step 1 accounts is already completed
+  const [currentStep, setCurrentStep] = useState(2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Master Data State
+  const [religions, setReligions] = useState<any[]>([]);
+  const [castes, setCastes] = useState<any[]>([]);
+  const [subCastes, setSubCastes] = useState<any[]>([]);
+  const [motherTongues, setMotherTongues] = useState<any[]>([]);
+  const [educations, setEducations] = useState<any[]>([]);
+  const [occupations, setOccupations] = useState<any[]>([]);
+
+  // Photos State
+  const [photos, setPhotos] = useState<any[]>(initialProfile?.photos || []);
 
   const {
     register,
@@ -33,9 +44,12 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       gender: initialProfile?.gender || "",
       dateOfBirth: initialProfile?.dateOfBirth ? new Date(initialProfile.dateOfBirth).toISOString().split("T")[0] : "",
       height: initialProfile?.height || "",
+      weight: initialProfile?.weight || "",
       maritalStatus: initialProfile?.maritalStatus || "",
       religion: initialProfile?.religion || "",
       caste: initialProfile?.caste || "",
+      subCaste: initialProfile?.subCaste || "",
+      gothram: initialProfile?.gothram || "",
       motherTongue: initialProfile?.motherTongue || "",
       education: initialProfile?.education || "",
       occupation: initialProfile?.occupation || "",
@@ -44,6 +58,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       state: initialProfile?.state || "",
       country: initialProfile?.country || "",
       bio: initialProfile?.bio || "",
+      familyDetails: initialProfile?.familyDetails || "",
       minAge: initialProfile?.partnerPreference?.minAge || "",
       maxAge: initialProfile?.partnerPreference?.maxAge || "",
       minHeight: initialProfile?.partnerPreference?.minHeight || "",
@@ -56,6 +71,54 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       submitForReview: false,
     },
   });
+
+  const selectedReligion = watch("religion");
+  const selectedCaste = watch("caste");
+
+  // Fetch initial Master Data
+  useEffect(() => {
+    fetch("/api/master-data?type=religions")
+      .then((res) => res.json())
+      .then((res) => { if (res.success) setReligions(res.data); });
+
+    fetch("/api/master-data?type=mothertongues")
+      .then((res) => res.json())
+      .then((res) => { if (res.success) setMotherTongues(res.data); });
+
+    fetch("/api/master-data?type=educations")
+      .then((res) => res.json())
+      .then((res) => { if (res.success) setEducations(res.data); });
+
+    fetch("/api/master-data?type=occupations")
+      .then((res) => res.json())
+      .then((res) => { if (res.success) setOccupations(res.data); });
+  }, []);
+
+  // Fetch Castes when Religion changes
+  useEffect(() => {
+    if (selectedReligion) {
+      const relObj = religions.find((r) => r.name === selectedReligion || r.id === selectedReligion);
+      const queryId = relObj?.id || selectedReligion;
+      fetch(`/api/master-data?type=castes&parentId=${encodeURIComponent(queryId)}`)
+        .then((res) => res.json())
+        .then((res) => { if (res.success) setCastes(res.data); });
+    } else {
+      setCastes([]);
+    }
+  }, [selectedReligion, religions]);
+
+  // Fetch SubCastes when Caste changes
+  useEffect(() => {
+    if (selectedCaste) {
+      const casteObj = castes.find((c) => c.name === selectedCaste || c.id === selectedCaste);
+      const queryId = casteObj?.id || selectedCaste;
+      fetch(`/api/master-data?type=subcastes&parentId=${encodeURIComponent(queryId)}`)
+        .then((res) => res.json())
+        .then((res) => { if (res.success) setSubCastes(res.data); });
+    } else {
+      setSubCastes([]);
+    }
+  }, [selectedCaste, castes]);
 
   const nextStep = async (stepData: any) => {
     setLoading(true);
@@ -91,27 +154,31 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
     }
   };
 
-  // Form submit handles current step validation and auto-save
   const onSubmit = (data: any) => {
-    // Collect step specific data
     let stepData: any = {};
     if (currentStep === 2) {
       stepData = {
         gender: data.gender,
         dateOfBirth: data.dateOfBirth,
         height: Number(data.height),
+        weight: data.weight ? Number(data.weight) : undefined,
         maritalStatus: data.maritalStatus,
       };
     } else if (currentStep === 3) {
-      stepData = { religion: data.religion, caste: data.caste, motherTongue: data.motherTongue };
+      stepData = {
+        religion: data.religion,
+        caste: data.caste,
+        subCaste: data.subCaste,
+        gothram: data.gothram,
+        motherTongue: data.motherTongue,
+      };
     } else if (currentStep === 4) {
       stepData = { education: data.education, occupation: data.occupation, income: Number(data.income) };
     } else if (currentStep === 5) {
       stepData = { city: data.city, state: data.state, country: data.country };
     } else if (currentStep === 6) {
-      stepData = { bio: data.bio };
+      stepData = { bio: data.bio, familyDetails: data.familyDetails };
     } else if (currentStep === 7) {
-      // Preferences mapping (Save to preferences occurs inside ProfileService)
       stepData = {
         minAge: Number(data.minAge) || undefined,
         maxAge: Number(data.maxAge) || undefined,
@@ -123,7 +190,6 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         education: data.partnerEducation,
         country: data.partnerCountry,
       };
-      // We pass the preferences update as partner preference changes
       nextStep(stepData);
       return;
     } else if (currentStep === 8) {
@@ -165,7 +231,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                 {currentStep === 3 && (
                   <>
                     <CardTitle className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">Cultural Background</CardTitle>
-                    <CardDescription>Specify religion, mother tongue, and family details</CardDescription>
+                    <CardDescription>Specify religion, caste, sub-caste, and mother tongue</CardDescription>
                   </>
                 )}
                 {currentStep === 4 && (
@@ -182,8 +248,8 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                 )}
                 {currentStep === 6 && (
                   <>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">About Me</CardTitle>
-                    <CardDescription>Write a brief summary detailing who you are and what you seek</CardDescription>
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">About Me & Family</CardTitle>
+                    <CardDescription>Describe yourself and your family background</CardDescription>
                   </>
                 )}
                 {currentStep === 7 && (
@@ -194,8 +260,8 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                 )}
                 {currentStep === 8 && (
                   <>
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">Photos & Submission</CardTitle>
-                    <CardDescription>Confirm your photos and submit for moderator review</CardDescription>
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">Photos & Final Submission</CardTitle>
+                    <CardDescription>Upload up to 4 profile photos (max 3 MB each). The first photo is your main profile picture.</CardDescription>
                   </>
                 )}
               </CardHeader>
@@ -214,13 +280,12 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       <Label htmlFor="gender">Gender</Label>
                       <select
                         id="gender"
-                        className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500 focus:ring-rose-500"
+                        className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
                         {...register("gender")}
                       >
                         <option value="">Select Gender</option>
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
-                        <option value="OTHER">Other</option>
                       </select>
                       {errors.gender && <p className="text-xs text-red-400">{errors.gender.message as string}</p>}
                     </div>
@@ -236,16 +301,29 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       {errors.dateOfBirth && <p className="text-xs text-red-400">{errors.dateOfBirth.message as string}</p>}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="height">Height (in cm)</Label>
-                      <Input
-                        id="height"
-                        type="number"
-                        placeholder="e.g. 175"
-                        className="border-slate-800 bg-slate-950/50 text-white"
-                        {...register("height")}
-                      />
-                      {errors.height && <p className="text-xs text-red-400">{errors.height.message as string}</p>}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="height">Height (cm)</Label>
+                        <Input
+                          id="height"
+                          type="number"
+                          placeholder="e.g. 175"
+                          className="border-slate-800 bg-slate-950/50 text-white"
+                          {...register("height")}
+                        />
+                        {errors.height && <p className="text-xs text-red-400">{errors.height.message as string}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="weight">Weight (kg)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          placeholder="e.g. 68"
+                          className="border-slate-800 bg-slate-950/50 text-white"
+                          {...register("weight")}
+                        />
+                        {errors.weight && <p className="text-xs text-red-400">{errors.weight.message as string}</p>}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -277,37 +355,106 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                         {...register("religion")}
                       >
                         <option value="">Select Religion</option>
-                        <option value="Hindu">Hindu</option>
-                        <option value="Muslim">Muslim</option>
-                        <option value="Christian">Christian</option>
-                        <option value="Sikh">Sikh</option>
-                        <option value="Buddhist">Buddhist</option>
-                        <option value="Jain">Jain</option>
-                        <option value="Other">Other</option>
+                        {religions.length > 0
+                          ? religions.map((r) => (
+                              <option key={r.id} value={r.name}>
+                                {r.name}
+                              </option>
+                            ))
+                          : (
+                            <>
+                              <option value="Hindu">Hindu</option>
+                              <option value="Muslim">Muslim</option>
+                              <option value="Christian">Christian</option>
+                              <option value="Sikh">Sikh</option>
+                              <option value="Jain">Jain</option>
+                              <option value="Buddhist">Buddhist</option>
+                            </>
+                          )}
                       </select>
                       {errors.religion && <p className="text-xs text-red-400">{errors.religion.message as string}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="caste">Caste / Sub-Caste (Optional)</Label>
-                      <Input
-                        id="caste"
-                        type="text"
-                        placeholder="e.g. Brahmin, Patel, etc."
-                        className="border-slate-800 bg-slate-950/50 text-white"
-                        {...register("caste")}
-                      />
+                      <Label htmlFor="caste">Caste</Label>
+                      {castes.length > 0 ? (
+                        <select
+                          id="caste"
+                          className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
+                          {...register("caste")}
+                        >
+                          <option value="">Select Caste</option>
+                          {castes.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Input
+                          id="caste"
+                          type="text"
+                          placeholder="Select religion first or enter caste"
+                          className="border-slate-800 bg-slate-950/50 text-white"
+                          {...register("caste")}
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="subCaste">Sub Caste</Label>
+                      {subCastes.length > 0 ? (
+                        <select
+                          id="subCaste"
+                          className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
+                          {...register("subCaste")}
+                        >
+                          <option value="">Select Sub Caste</option>
+                          {subCastes.map((sc) => (
+                            <option key={sc.id} value={sc.name}>
+                              {sc.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <Input
+                          id="subCaste"
+                          type="text"
+                          placeholder="Enter sub caste (optional)"
+                          className="border-slate-800 bg-slate-950/50 text-white"
+                          {...register("subCaste")}
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="motherTongue">Mother Tongue</Label>
-                      <Input
+                      <select
                         id="motherTongue"
-                        type="text"
-                        placeholder="e.g. Hindi, Telugu, Marathi"
-                        className="border-slate-800 bg-slate-950/50 text-white"
+                        className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
                         {...register("motherTongue")}
-                      />
+                      >
+                        <option value="">Select Mother Tongue</option>
+                        {motherTongues.length > 0
+                          ? motherTongues.map((m) => (
+                              <option key={m.id} value={m.name}>
+                                {m.name}
+                              </option>
+                            ))
+                          : (
+                            <>
+                              <option value="Hindi">Hindi</option>
+                              <option value="Telugu">Telugu</option>
+                              <option value="Tamil">Tamil</option>
+                              <option value="Marathi">Marathi</option>
+                              <option value="Bengali">Bengali</option>
+                              <option value="Gujarati">Gujarati</option>
+                              <option value="Kannada">Kannada</option>
+                              <option value="Malayalam">Malayalam</option>
+                              <option value="Punjabi">Punjabi</option>
+                            </>
+                          )}
+                      </select>
                       {errors.motherTongue && <p className="text-xs text-red-400">{errors.motherTongue.message as string}</p>}
                     </div>
                   </div>
@@ -318,25 +465,56 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="education">Highest Education</Label>
-                      <Input
+                      <select
                         id="education"
-                        type="text"
-                        placeholder="e.g. B.Tech Computer Science, MBA"
-                        className="border-slate-800 bg-slate-950/50 text-white"
+                        className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
                         {...register("education")}
-                      />
+                      >
+                        <option value="">Select Education</option>
+                        {educations.length > 0
+                          ? educations.map((e) => (
+                              <option key={e.id} value={e.name}>
+                                {e.name}
+                              </option>
+                            ))
+                          : (
+                            <>
+                              <option value="B.Tech / B.E.">B.Tech / B.E.</option>
+                              <option value="M.Tech / M.E.">M.Tech / M.E.</option>
+                              <option value="MBA / PGDM">MBA / PGDM</option>
+                              <option value="MBBS / MD / MS">MBBS / MD / MS</option>
+                              <option value="B.Com / M.Com">B.Com / M.Com</option>
+                              <option value="Ph.D. / Doctorate">Ph.D.</option>
+                            </>
+                          )}
+                      </select>
                       {errors.education && <p className="text-xs text-red-400">{errors.education.message as string}</p>}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="occupation">Occupation</Label>
-                      <Input
+                      <select
                         id="occupation"
-                        type="text"
-                        placeholder="e.g. Software Engineer, Financial Analyst"
-                        className="border-slate-800 bg-slate-950/50 text-white"
+                        className="w-full h-10 px-3 border border-slate-800 bg-slate-950/50 rounded-md text-white focus:border-rose-500"
                         {...register("occupation")}
-                      />
+                      >
+                        <option value="">Select Occupation</option>
+                        {occupations.length > 0
+                          ? occupations.map((o) => (
+                              <option key={o.id} value={o.name}>
+                                {o.name}
+                              </option>
+                            ))
+                          : (
+                            <>
+                              <option value="Software Engineer / Developer">Software Engineer</option>
+                              <option value="Product Manager">Product Manager</option>
+                              <option value="Doctor / Healthcare Professional">Doctor</option>
+                              <option value="Financial Analyst / Accountant">Financial Analyst</option>
+                              <option value="Business Owner / Entrepreneur">Business Owner</option>
+                            </>
+                          )}
+                      </select>
                       {errors.occupation && <p className="text-xs text-red-400">{errors.occupation.message as string}</p>}
                     </div>
 
@@ -402,11 +580,21 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       <Label htmlFor="bio">About Me</Label>
                       <Textarea
                         id="bio"
-                        placeholder="Describe your personality, hobbies, family background, and what qualities you seek in your future life partner."
-                        className="border-slate-800 bg-slate-950/50 text-white h-32 focus:border-rose-500"
+                        placeholder="Describe your personality, hobbies, interests, and partner expectations."
+                        className="border-slate-800 bg-slate-950/50 text-white h-28 focus:border-rose-500"
                         {...register("bio")}
                       />
                       {errors.bio && <p className="text-xs text-red-400">{errors.bio.message as string}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="familyDetails">Family Background</Label>
+                      <Textarea
+                        id="familyDetails"
+                        placeholder="Tell us about your family structure, values, and cultural traditions."
+                        className="border-slate-800 bg-slate-950/50 text-white h-24 focus:border-rose-500"
+                        {...register("familyDetails")}
+                      />
                     </div>
                   </div>
                 )}
@@ -439,7 +627,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="minHeight">Min Partner Height (cm)</Label>
+                        <Label htmlFor="minHeight">Min Height (cm)</Label>
                         <Input
                           id="minHeight"
                           type="number"
@@ -449,7 +637,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="maxHeight">Max Partner Height (cm)</Label>
+                        <Label htmlFor="maxHeight">Max Height (cm)</Label>
                         <Input
                           id="maxHeight"
                           type="number"
@@ -465,20 +653,9 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       <Input
                         id="partnerReligion"
                         type="text"
-                        placeholder="e.g. Hindu, Muslim, Any"
+                        placeholder="e.g. Hindu, Any"
                         className="border-slate-800 bg-slate-950/50 text-white"
                         {...register("partnerReligion")}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerMotherTongue">Preferred Mother Tongue</Label>
-                      <Input
-                        id="partnerMotherTongue"
-                        type="text"
-                        placeholder="e.g. Hindi, Any"
-                        className="border-slate-800 bg-slate-950/50 text-white"
-                        {...register("partnerMotherTongue")}
                       />
                     </div>
                   </div>
@@ -486,14 +663,20 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                 {/* Step 8 Inputs */}
                 {currentStep === 8 && (
-                  <div className="space-y-6 text-center py-6">
-                    <div className="flex justify-center">
-                      <CheckCircle2 className="w-16 h-16 text-rose-500 animate-pulse" />
+                  <div className="space-y-6 text-center py-4">
+                    <div className="p-4 border border-dashed border-slate-700 rounded-xl bg-slate-950/30 text-slate-300">
+                      <ImageIcon className="w-10 h-10 mx-auto text-rose-500 mb-2" />
+                      <p className="font-semibold text-sm">Upload Profile Photos (Max 4 photos, 3 MB each)</p>
+                      <p className="text-xs text-slate-500 mt-1">Supported formats: JPG, JPEG, PNG, WEBP. First uploaded photo is designated as Main Profile Picture.</p>
+                    </div>
+
+                    <div className="flex justify-center pt-2">
+                      <CheckCircle2 className="w-14 h-14 text-rose-500 animate-pulse" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-xl font-semibold">Your Profile is Ready for Submission</h3>
+                      <h3 className="text-xl font-semibold">Ready for Review</h3>
                       <p className="text-sm text-slate-400 max-w-sm mx-auto">
-                        Once submitted, our moderation team will verify your details within 24 hours. You can proceed to check out matches and pricing plans while waiting.
+                        Once submitted, your profile will enter **PENDING** status for Admin approval within 24 hours.
                       </p>
                     </div>
                   </div>

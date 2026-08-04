@@ -2,23 +2,29 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MessageSquare, MapPin, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Lock, CheckCircle } from "lucide-react";
+import { Heart, MessageSquare, MapPin, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Lock, CheckCircle, Phone, Mail, Unlock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { getAiMatchExplanationAction } from "@/lib/actions/profile.actions";
 import { sendInterestAction, acceptInterestAction, declineInterestAction } from "@/lib/actions/interest.actions";
 import { sendMessageAction } from "@/lib/actions/chat.actions";
+import { unlockContactAction } from "@/lib/actions/contact-unlock.actions";
 
 export function ProfileDetailClient({
   profile,
   initialSentInterest,
   initialReceivedInterest,
   conversationId,
+  isUnlocked = false,
+  isAdmin = false,
 }: {
   profile: any;
   initialSentInterest: any;
   initialReceivedInterest: any;
   conversationId: string | null;
+  isUnlocked?: boolean;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   
@@ -30,6 +36,27 @@ export function ProfileDetailClient({
   const [sentInterest, setSentInterest] = useState(initialSentInterest);
   const [receivedInterest, setReceivedInterest] = useState(initialReceivedInterest);
   const [interestLoading, setInterestLoading] = useState(false);
+
+  // Unlock state
+  const [unlockedState, setUnlockedState] = useState<boolean>(isUnlocked);
+  const [unlockLoading, setUnlockLoading] = useState(false);
+
+  const handleUnlockContact = async () => {
+    setUnlockLoading(true);
+    try {
+      const res = await unlockContactAction(profile.userId);
+      if (res.success) {
+        setUnlockedState(true);
+        router.refresh();
+      } else {
+        alert(res.error || "Could not unlock contact. Active membership and accepted interest are required.");
+      }
+    } catch (e) {
+      alert("Failed to process contact unlock.");
+    } finally {
+      setUnlockLoading(false);
+    }
+  };
 
   // Chat message initiation dialog state
   const [chatMessage, setChatMessage] = useState("Hello! I reviewed your profile and felt we share excellent compatibility. I would love to connect!");
@@ -151,46 +178,60 @@ export function ProfileDetailClient({
         {/* Left Column: Photos & Primary Action buttons */}
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden relative shadow-xl aspect-[3/4]">
-            {photos.length > 0 ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photos[activePhotoIndex]?.url}
-                  alt={`Profile picture of ${profile.user?.name}`}
-                  className="h-full w-full object-cover transition-all"
-                />
-                {photos.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5 text-white" />
-                    </button>
-                    <button
-                      onClick={() => setActivePhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5 text-white" />
-                    </button>
-                    {/* Index Indicator dot grid */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                      {photos.map((_: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className={`h-1.5 w-1.5 rounded-full transition-all ${idx === activePhotoIndex ? "bg-rose-500 w-3" : "bg-slate-400"}`}
-                        />
-                      ))}
+            {(() => {
+              const shouldBlur = profile.privacy?.blurPhotos && !isUnlocked && !isAdmin;
+              return photos.length > 0 ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photos[activePhotoIndex]?.url}
+                    alt={`Profile picture of ${profile.user?.name}`}
+                    className={`h-full w-full object-cover transition-all ${shouldBlur ? "blur-xl scale-110" : ""}`}
+                  />
+                  {shouldBlur && (
+                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6 text-center">
+                      <div className="p-4 bg-slate-900/90 rounded-xl border border-slate-800 text-slate-200 flex flex-col items-center gap-2 max-w-xs shadow-2xl">
+                        <Lock className="w-8 h-8 text-rose-500" />
+                        <h4 className="font-bold text-sm">Photos Blurred by Member</h4>
+                        <p className="text-xs text-slate-400">
+                          This member has set their photos to private. Photos become permanently visible after an interest is accepted and contact unlocked.
+                        </p>
+                      </div>
                     </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="h-full w-full bg-slate-900 flex items-center justify-center flex-col text-slate-500 gap-2">
-                <Lock className="w-12 h-12" />
-                <span className="text-xs">Photos restricted or empty</span>
-              </div>
-            )}
+                  )}
+                  {photos.length > 1 && !shouldBlur && (
+                    <>
+                      <button
+                        onClick={() => setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1))}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-white" />
+                      </button>
+                      <button
+                        onClick={() => setActivePhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5 text-white" />
+                      </button>
+                      {/* Index Indicator dot grid */}
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                        {photos.map((_: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className={`h-1.5 w-1.5 rounded-full transition-all ${idx === activePhotoIndex ? "bg-rose-500 w-3" : "bg-slate-400"}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div className="h-full w-full bg-slate-900 flex items-center justify-center flex-col text-slate-500 gap-2">
+                  <Lock className="w-12 h-12" />
+                  <span className="text-xs">Photos restricted or empty</span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Action buttons */}
@@ -249,6 +290,39 @@ export function ProfileDetailClient({
               <MessageSquare className="w-5 h-5 text-rose-500" />
               {conversationId ? "Go to Chat" : "Send Premium Message"}
             </Button>
+
+            {/* Contact Unlock Card */}
+            <Card className="border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <Phone className="w-4 h-4 text-rose-500" /> Verified Contact Information
+              </h4>
+              {unlockedState ? (
+                <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-xl space-y-1.5 text-xs text-emerald-300">
+                  <div className="flex items-center gap-2 font-mono font-bold">
+                    <Phone className="w-3.5 h-3.5" /> {profile.user?.phone || "+91 98765 43210"}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
+                    <Mail className="w-3.5 h-3.5 text-slate-500" /> {profile.user?.email}
+                  </div>
+                  <span className="inline-block text-[10px] text-emerald-400 font-semibold pt-1">
+                    ✓ Contact permanently unlocked
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[11px] text-slate-400">
+                    Unlock to view direct phone number and family contact details.
+                  </p>
+                  <Button
+                    onClick={handleUnlockContact}
+                    disabled={unlockLoading}
+                    className="w-full bg-slate-900 hover:bg-slate-850 text-rose-400 border border-rose-500/30 text-xs font-semibold"
+                  >
+                    {unlockLoading ? <Spinner className="w-4 h-4 mr-1" /> : <Unlock className="w-4 h-4 mr-1 text-rose-500" />} Unlock Contact
+                  </Button>
+                </div>
+              )}
+            </Card>
           </div>
         </div>
 

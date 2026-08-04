@@ -2,12 +2,12 @@
 
 import { auth } from "../auth";
 import { container } from "../container";
-import { searchFiltersSchema } from "../validators/search.validator";
+import { searchFilterSchema } from "../validators/search.validator";
 
 export async function searchMatchesAction(params: {
   queryText?: string;
   filters?: any;
-  cursor?: string;
+  page?: number;
   limit?: number;
   sortBy?: string;
 }) {
@@ -17,8 +17,14 @@ export async function searchMatchesAction(params: {
   }
   const userId = (session.user as any).id;
 
+  // Check viewer's profile status
+  const profileRes = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileRes.success || profileRes.data?.status !== "APPROVED") {
+    return { success: false, error: "Only members with APPROVED profiles can search." };
+  }
+
   const filtersVal = params.filters || {};
-  const result = searchFiltersSchema.safeParse(filtersVal);
+  const result = searchFilterSchema.safeParse(filtersVal);
   if (!result.success) {
     return { success: false, error: result.error.issues[0].message };
   }
@@ -26,7 +32,7 @@ export async function searchMatchesAction(params: {
   const serviceResult = await container.services.searchService.searchMatches(userId, {
     queryText: params.queryText,
     filters: result.data,
-    cursor: params.cursor,
+    page: params.page,
     limit: params.limit,
     sortBy: params.sortBy,
   });
@@ -34,7 +40,7 @@ export async function searchMatchesAction(params: {
     return { success: false, error: serviceResult.error };
   }
 
-  return { success: true, results: serviceResult.data };
+  return { success: true, ...serviceResult.data };
 }
 
 export async function getSearchSuggestionsAction(query: string) {
@@ -49,4 +55,3 @@ export async function getSearchSuggestionsAction(query: string) {
   }
   return { success: true, suggestions: res.data };
 }
-

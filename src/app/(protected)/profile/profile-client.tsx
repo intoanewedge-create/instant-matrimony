@@ -218,7 +218,7 @@ export function ProfileClient({
       const res = await updateProfileAction(payload);
       if (res.success && res.profile) {
         setDetailsSuccess("Profile details updated successfully!");
-        setProfile((prev) => ({ ...prev, ...res.profile }));
+        setProfile((prev) => ({ ...prev, ...(res.profile as any) }));
         router.refresh();
       } else {
         setDetailsError(res.error || "Failed to update profile details");
@@ -946,9 +946,9 @@ export function ProfileClient({
                       )}
                       <Button
                         size="icon"
-                        variant="destructive"
+                        variant="outline"
                         onClick={() => handleDeletePhoto(photo.id)}
-                        className="h-8 w-8 bg-red-600/80 hover:bg-red-600"
+                        className="h-8 w-8 bg-red-600/80 text-white border-red-500 hover:bg-red-600"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

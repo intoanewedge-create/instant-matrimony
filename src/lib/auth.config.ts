@@ -15,25 +15,40 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
 
-      const isProtectedRoute =
-        pathname.startsWith("/dashboard") ||
-        pathname.startsWith("/search") ||
-        pathname.startsWith("/messages") ||
-        pathname.startsWith("/profile") ||
-        pathname.startsWith("/settings") ||
-        pathname.startsWith("/onboarding");
+      // Guest Allowed Routes: Home, About, Contact, FAQ, Membership Plans, Login, Register, Terms, Privacy, Success Stories
+      const isGuestAllowedPublicRoute =
+        pathname === "/" ||
+        pathname === "/about" ||
+        pathname === "/contact" ||
+        pathname === "/faq" ||
+        pathname === "/membership" ||
+        pathname === "/terms" ||
+        pathname === "/privacy" ||
+        pathname === "/legal" ||
+        pathname === "/success-stories";
+
       const isGuestAuthRoute =
         pathname === "/login" ||
         pathname === "/register" ||
         pathname === "/forgot-password" ||
         pathname === "/reset-password";
 
-      if (isProtectedRoute) {
-        return isLoggedIn;
+      // If route is an auth route (login/register) and user is already logged in, redirect to dashboard
+      if (isGuestAuthRoute) {
+        if (isLoggedIn) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+        return true;
       }
 
-      if (isGuestAuthRoute && isLoggedIn) {
-        return Response.redirect(new URL("/dashboard", nextUrl));
+      // If route is public guest allowed page, allow access for everyone
+      if (isGuestAllowedPublicRoute) {
+        return true;
+      }
+
+      // All other routes (/browse, /profiles, /search, /messages, /dashboard, /profile, /admin, /onboarding, /settings) require authentication
+      if (!isLoggedIn) {
+        return Response.redirect(new URL("/login", nextUrl));
       }
 
       return true;
@@ -41,3 +56,4 @@ export const authConfig = {
   },
   providers: [], // Configured in main auth.ts
 } satisfies NextAuthConfig;
+

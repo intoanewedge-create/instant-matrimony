@@ -192,8 +192,8 @@ function LoginForm() {
                 <Checkbox
                   id="rememberMe"
                   checked={!!watch("rememberMe")}
-                  onCheckedChange={(checked) =>
-                    setValue("rememberMe", checked === true)
+                  onChange={(e) =>
+                    setValue("rememberMe", e.target.checked)
                   }
                   className="border-slate-700"
                 />

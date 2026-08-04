@@ -24,6 +24,7 @@ export async function sendInterestAction(receiverId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/search");
+  revalidatePath("/interests");
   return { success: true, interest: serviceResult.data };
 }
 
@@ -40,6 +41,7 @@ export async function acceptInterestAction(interestId: string) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/interests");
   revalidatePath("/messages");
   return { success: true };
 }
@@ -57,5 +59,23 @@ export async function declineInterestAction(interestId: string) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/interests");
+  return { success: true };
+}
+
+export async function withdrawInterestAction(interestId: string) {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const senderId = (session.user as any).id;
+
+  const serviceResult = await container.services.interestService.withdrawInterest(senderId, interestId);
+  if (!serviceResult.success) {
+    return { success: false, error: serviceResult.error };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/interests");
   return { success: true };
 }

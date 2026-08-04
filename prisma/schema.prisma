@@ -64,6 +64,11 @@ model User {
   sessions                 Session[]
   transactions             Transaction[]
   sessionHistories         UserSessionHistory[]
+  contactUnlocksMade       ContactUnlock[]           @relation("ContactUnlocksMade")
+  contactUnlocksReceived   ContactUnlock[]           @relation("ContactUnlocksReceived")
+  conciergeCase            ConciergeCase?            @relation("ConciergeUser")
+  assignedConciergeCases   ConciergeCase[]           @relation("AssignedConciergeAdmin")
+  conciergeShortlistsReceived ConciergeShortlist[]   @relation("ConciergeShortlistTarget")
 }
 
 model Account {
@@ -112,15 +117,20 @@ model Profile {
   religion          String?
   motherTongue      String?
   caste             String?
+  subCaste          String?
+  gothram           String?
   height            Int?
+  weight            Int?
   maritalStatus     String?
   education         String?
   occupation        String?
   income            Float?
   city              String?
+  district          String?
   state             String?
   country           String?
   bio               String?
+  familyDetails     String?
   smoking           String?
   drinking          String?
   foodPreference    String?
@@ -135,6 +145,7 @@ model Profile {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   partnerPreference PartnerPreference?
+  privacy           ProfilePrivacy?
   photos            Photo[]
   approvedBy        User?              @relation("ProfileApprovedBy", fields: [approvedById], references: [id])
   user              User               @relation("UserProfile", fields: [userId], references: [id], onDelete: Cascade)
@@ -145,6 +156,7 @@ model Profile {
   @@index([religion])
   @@index([motherTongue])
   @@index([caste])
+  @@index([subCaste])
   @@index([maritalStatus])
   @@index([education])
   @@index([occupation])
@@ -217,6 +229,7 @@ model Membership {
   updatedAt             DateTime         @updatedAt
   plan                  MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactUnlocks        ContactUnlock[]
 
   @@index([userId])
   @@index([status])
@@ -244,18 +257,29 @@ model Order {
 
 model Payment {
   id                   String          @id @default(uuid())
-  orderId              String
+  orderId              String?
+  userId               String?
+  planId               String?
   amount               Float
   status               PaymentStatus   @default(PENDING)
-  gateway              PaymentGateway
+  gateway              PaymentGateway  @default(MANUAL)
   provider             PaymentProvider @default(MOCK)
   gatewayTransactionId String?
+  paymentMethod        String?
+  utrNumber            String?
+  receiptUrl           String?
+  bankName             String?
+  accountHolder        String?
+  rejectionReason      String?
+  verifiedById         String?
+  verifiedAt           DateTime?
   deletedAt            DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
-  order                Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order                Order?          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+  @@index([userId])
 }
 
 model Transaction {
@@ -366,13 +390,22 @@ model Report {
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String?
+  module    String?
   action    String
+  oldValue  String?
+  newValue  String?
   ipAddress String?
   userAgent String?
+  device    String?
   details   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model SiteSettings {
@@ -822,6 +855,10 @@ enum Role {
   CUSTOMER_SUPPORT
   OPERATIONS
   ANALYST
+  PROFILE_MODERATOR
+  PAYMENT_MANAGER
+  CONCIERGE_MANAGER
+  REPORT_VIEWER
 }
 
 enum AccountStatus {
@@ -927,6 +964,7 @@ enum PaymentGateway {
   PHONEPE
   PAYU
   STRIPE
+  MANUAL
 }
 
 enum TransactionType {
@@ -968,3 +1006,436 @@ enum PhotoStatus {
   APPROVED
   REJECTED
 }
+
+enum ConciergeStatus {
+  OPEN
+  SEARCHING_MATCHES
+  SHORTLIST_PREPARED
+  FAMILY_CONTACT
+  MEETING_SCHEDULED
+  NEGOTIATION
+  MARRIAGE_CONFIRMED
+  CLOSED
+}
+
+model ProfilePrivacy {
+  id                String   @id @default(uuid())
+  profileId         String   @unique
+  blurPhotos        Boolean  @default(false)
+  hidePhone         Boolean  @default(false)
+  hideIncome        Boolean  @default(false)
+  hideFamilyDetails Boolean  @default(false)
+  hideLastSeen      Boolean  @default(false)
+  hideOnlineStatus  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model MasterReligion {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  castes    MasterCaste[]
+}
+
+model MasterCaste {
+  id         String           @id @default(uuid())
+  religionId String
+  name       String
+  order      Int              @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  religion   MasterReligion   @relation(fields: [religionId], references: [id], onDelete: Cascade)
+  subCastes  MasterSubCaste[]
+
+  @@unique([religionId, name])
+}
+
+model MasterSubCaste {
+  id        String          @id @default(uuid())
+  casteId   String
+  name      String
+  order     Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  caste     MasterCaste     @relation(fields: [casteId], references: [id], onDelete: Cascade)
+  gothrams  MasterGothram[]
+
+  @@unique([casteId, name])
+}
+
+model MasterGothram {
+  id         String          @id @default(uuid())
+  subCasteId String?
+  name       String
+  order      Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  subCaste   MasterSubCaste? @relation(fields: [subCasteId], references: [id], onDelete: SetNull)
+}
+
+model MasterMotherTongue {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterEducation {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterOccupation {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MasterCountry {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  code      String?
+  order     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  states    MasterState[]
+}
+
+model MasterState {
+  id        String           @id @default(uuid())
+  countryId String
+  name      String
+  code      String?
+  order     Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  country   MasterCountry    @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  districts MasterDistrict[]
+
+  @@unique([countryId, name])
+}
+
+model MasterDistrict {
+  id        String       @id @default(uuid())
+  stateId   String
+  name      String
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  state     MasterState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  cities    MasterCity[]
+
+  @@unique([stateId, name])
+}
+
+model MasterCity {
+  id         String         @id @default(uuid())
+  districtId String
+  name       String
+  order      Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  district   MasterDistrict @relation(fields: [districtId], references: [id], onDelete: Cascade)
+
+  @@unique([districtId, name])
+}
+
+model ContactUnlock {
+  id           String      @id @default(uuid())
+  userId       String
+  targetUserId String
+  membershipId String?
+  interestId   String?
+  paymentId    String?
+  unlockReason String?
+  unlockedAt   DateTime    @default(now())
+  user         User        @relation("ContactUnlocksMade", fields: [userId], references: [id], onDelete: Cascade)
+  targetUser   User        @relation("ContactUnlocksReceived", fields: [targetUserId], references: [id], onDelete: Cascade)
+  membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, targetUserId])
+  @@index([userId])
+  @@index([targetUserId])
+}
+
+model ConciergeCase {
+  id                   String                @id @default(uuid())
+  userId               String                @unique
+  assignedAdminId      String?
+  status               ConciergeStatus       @default(OPEN)
+  notes                String?
+  startedAt            DateTime              @default(now())
+  expectedCompletionAt DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  user                 User                  @relation("ConciergeUser", fields: [userId], references: [id], onDelete: Cascade)
+  assignedAdmin        User?                 @relation("AssignedConciergeAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  updates              ConciergeUpdate[]
+  meetings             ConciergeMeeting[]
+  callLogs             ConciergeCallLog[]
+  attachments          ConciergeAttachment[]
+  shortlists           ConciergeShortlist[]
+}
+
+model ConciergeShortlist {
+  id             String        @id @default(uuid())
+  caseId         String
+  targetUserId   String
+  status         String        @default("SHORTLISTED")
+  familyResponse String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  case           ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  targetUser     User          @relation("ConciergeShortlistTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, targetUserId])
+  @@index([caseId])
+  @@index([targetUserId])
+}
+
+model ConciergeUpdate {
+  id                String        @id @default(uuid())
+  caseId            String
+  authorId          String
+  content           String
+  isCustomerVisible Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  case              ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model ConciergeMeeting {
+  id          String        @id @default(uuid())
+  caseId      String
+  title       String
+  scheduledAt DateTime
+  location    String?
+  status      String        @default("SCHEDULED")
+  notes       String?
+  createdAt   DateTime      @default(now())
+  case        ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model ConciergeCallLog {
+  id        String        @id @default(uuid())
+  caseId    String
+  person    String
+  duration  Int?
+  notes     String
+  calledAt  DateTime      @default(now())
+  case      ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model ConciergeAttachment {
+  id        String        @id @default(uuid())
+  caseId    String
+  fileName  String
+  fileUrl   String
+  fileType  String?
+  createdAt DateTime      @default(now())
+  case      ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String   @default("General")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  linkUrl   String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Testimonial {
+  id         String   @id @default(uuid())
+  name       String
+  role       String?
+  content    String
+  photoUrl   String?
+  rating     Int      @default(5)
+  isApproved Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model SuccessStory {
+  id          String    @id @default(uuid())
+  groomName   String
+  brideName   String
+  story       String
+  weddingDate DateTime?
+  photoUrl    String?
+  isApproved  Boolean   @default(true)
+  isFeatured  Boolean   @default(false)
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model BlogPost {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  summary     String
+  content     String
+  coverImage  String?
+  authorName  String    @default("Admin")
+  category    String    @default("General")
+  tags        String[]
+  status      String    @default("DRAFT")
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
+model EmailTemplate {
+  id           String                 @id @default(uuid())
+  slug         String                 @unique
+  name         String
+  subject      String
+  bodyHtml     String
+  bodyText     String
+  placeholders String[]
+  isActive     Boolean                @default(true)
+  version      Int                    @default(1)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  versions     EmailTemplateVersion[]
+
+  @@index([slug])
+}
+
+model EmailTemplateVersion {
+  id          String        @id @default(uuid())
+  templateId  String
+  subject     String
+  bodyHtml    String
+  bodyText    String
+  version     Int
+  createdById String?
+  createdAt   DateTime      @default(now())
+  template    EmailTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+model NotificationSetting {
+  id              String   @id @default(uuid())
+  eventKey        String   @unique
+  eventName       String
+  description     String?
+  emailEnabled    Boolean  @default(true)
+  smsEnabled      Boolean  @default(true)
+  whatsappEnabled Boolean  @default(true)
+  pushEnabled     Boolean  @default(true)
+  inAppEnabled    Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  module      String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  role         Role
+  permissionId String
+  createdAt    DateTime   @default(now())
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+}
+
+model License {
+  id            String   @id @default(uuid())
+  licenseKey    String   @unique
+  customerName  String
+  company       String
+  domain        String
+  purchaseDate  DateTime @default(now())
+  expiryDate    DateTime
+  version       String   @default("2.0.0")
+  supportExpiry DateTime
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Plugin {
+  id          String   @id @default(uuid())
+  pluginKey   String   @unique
+  name        String
+  version     String   @default("1.0.0")
+  description String?
+  isEnabled   Boolean  @default(false)
+  settings    String?  @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DynamicMenu {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  location    String   @default("HEADER")
+  items       String   @default("[]")
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BackupRecord {
+  id         String   @id @default(uuid())
+  fileName   String
+  fileSize   Int
+  backupType String   @default("FULL")
+  filePath   String
+  createdAt  DateTime @default(now())
+}
+
+

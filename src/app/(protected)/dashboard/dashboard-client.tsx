@@ -18,7 +18,9 @@ import {
   HelpCircle,
   X,
   CheckCheck,
+  AlertCircle,
 } from "lucide-react";
+import { resubmitProfileAction } from "@/lib/actions/profile.actions";
 import {
   Card,
   CardHeader,
@@ -259,6 +261,84 @@ export function DashboardClient({
         )}
       </AnimatePresence>
 
+      {/* Profile Status Alert Banners */}
+      {profile?.status === "PENDING" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-amber-950/20"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-300">Profile Under Admin Review</h3>
+              <p className="text-xs text-amber-200/80">
+                Your profile details have been submitted and are currently being reviewed by our moderation team. Platform browsing and matching will activate once approved.
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 shrink-0">
+            PENDING APPROVAL
+          </span>
+        </motion.div>
+      )}
+
+      {profile?.status === "REJECTED" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-5 rounded-xl bg-red-950/50 border border-red-800/70 text-red-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg shadow-red-950/30"
+        >
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-red-400 font-bold">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>Profile Requires Edits & Resubmission</span>
+            </div>
+            <p className="text-xs text-red-200/90">
+              <strong className="text-red-300">Rejection Reason:</strong> {profile?.rejectionReason || "Please update your profile information and photos according to platform guidelines."}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center justify-center rounded-md text-xs font-semibold px-3 py-1.5 border border-red-700 text-red-200 hover:bg-red-900/50 transition-colors"
+            >
+              Edit Profile
+            </Link>
+            <Button
+              size="sm"
+              onClick={async () => {
+                const res = await resubmitProfileAction();
+                if (res.success) {
+                  router.refresh();
+                }
+              }}
+              className="bg-rose-600 hover:bg-rose-500 text-white"
+            >
+              Resubmit Profile
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {profile?.status === "SUSPENDED" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-xl bg-red-950/60 border border-red-900 text-red-300 flex items-center gap-3 shadow-lg"
+        >
+          <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
+          <div>
+            <h3 className="font-bold text-red-400">Account Suspended</h3>
+            <p className="text-xs text-red-300/80">
+              Your profile has been suspended by system administration. Matchmaking features are disabled. Please contact support.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Welcome Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -318,40 +398,46 @@ export function DashboardClient({
                 value: received.length,
                 icon: Heart,
                 color: "text-rose-500 bg-rose-500/10",
+                href: "/interests",
               },
               {
                 label: "Sent Interests",
                 value: sentInterests.length,
                 icon: UserPlus,
                 color: "text-blue-500 bg-blue-500/10",
+                href: "/interests",
               },
               {
                 label: "Active Chats",
                 value: conversations.length,
                 icon: MessageSquare,
                 color: "text-pink-500 bg-pink-500/10",
+                href: "/messages",
               },
               {
                 label: "Profile Status",
                 value: profile.status,
                 icon: UserCheck,
                 color: "text-green-500 bg-green-500/10",
+                href: "/profile",
               },
             ].map((stat, idx) => (
               <motion.div key={idx} variants={cardVariants}>
-                <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-                  <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
-                    <div className={`p-2.5 rounded-lg ${stat.color}`}>
-                      <stat.icon className="w-5 h-5" aria-hidden="true" />
-                    </div>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {stat.label}
-                    </span>
-                    <span className="text-xl font-bold" aria-live="polite">
-                      {stat.value}
-                    </span>
-                  </CardContent>
-                </Card>
+                <Link href={stat.href}>
+                  <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md hover:border-rose-500/50 transition-all cursor-pointer">
+                    <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                      <div className={`p-2.5 rounded-lg ${stat.color}`}>
+                        <stat.icon className="w-5 h-5" aria-hidden="true" />
+                      </div>
+                      <span className="text-xs text-slate-400 font-medium">
+                        {stat.label}
+                      </span>
+                      <span className="text-xl font-bold" aria-live="polite">
+                        {stat.value}
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>

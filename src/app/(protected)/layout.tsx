@@ -54,8 +54,11 @@ export default async function ProtectedLayout({
             <Link href="/dashboard/recommendations" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-500" /> Recommendations
             </Link>
-            <Link href="/dashboard/interests" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
-              <Heart className="w-4 h-4 text-rose-500" /> Connections
+            <Link href="/interests" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+              <Heart className="w-4 h-4 text-rose-500" /> Interests
+            </Link>
+            <Link href="/dashboard/concierge" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-amber-400" /> VIP Concierge
             </Link>
           </nav>
 

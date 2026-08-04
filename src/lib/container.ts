@@ -45,6 +45,8 @@ import { CompletionService } from "./services/completion.service";
 import { PermissionService } from "./services/permission.service";
 import { ImageService } from "./services/image.service";
 import { OtpService } from "./services/otp.service";
+import { masterDataService } from "./services/master-data.service";
+import { contactUnlockService } from "./services/contact-unlock.service";
 import { initEventSubscribers } from "./events/subscribers";
 
 import { PrismaMediaRepository } from "./repositories/media.repository";
@@ -610,6 +612,8 @@ export const container = {
     schedulerService,
     searchRankingService,
     dashboardAggregateService,
+    masterDataService,
+    contactUnlockService,
     fraudDetectionService,
     marketingCampaignService,
     reportService,

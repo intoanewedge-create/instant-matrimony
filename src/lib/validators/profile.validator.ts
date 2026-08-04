@@ -21,12 +21,17 @@ export const step2Schema = z.object({
       .min(100, "Height must be at least 100 cm")
       .max(250, "Height must be under 250 cm"),
   ),
+  weight: z
+    .preprocess((val) => (val ? Number(val) : undefined), z.number().min(30).max(300))
+    .optional(),
   maritalStatus: z.string().min(1, "Marital status is required"),
 });
 
 export const step3Schema = z.object({
   religion: z.string().min(1, "Religion is required"),
   caste: z.string().optional(),
+  subCaste: z.string().optional(),
+  gothram: z.string().optional(),
   motherTongue: z.string().min(1, "Mother tongue is required"),
 });
 
@@ -50,6 +55,7 @@ export const step6Schema = z.object({
     .string()
     .min(10, "Bio must be at least 10 characters")
     .max(1000, "Bio must not exceed 1000 characters"),
+  familyDetails: z.string().optional(),
 });
 
 export const step7Schema = z.object({

@@ -1,34 +1,35 @@
 import { z } from "zod";
 
-const numLike = (min: number, max: number) =>
-  z.preprocess(
-    (val) =>
-      val === "" || val === undefined || val === null ? undefined : Number(val),
-    z.number().min(min).max(max).optional(),
-  );
-
-export const searchFiltersSchema = z.object({
+export const searchFilterSchema = z.object({
   gender: z.string().optional(),
-  minAge: numLike(18, 100),
-  maxAge: numLike(18, 100),
+  minAge: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(18).max(100)).optional(),
+  maxAge: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(18).max(100)).optional(),
+  minHeight: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(100).max(250)).optional(),
+  maxHeight: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(100).max(250)).optional(),
+  minWeight: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(30).max(300)).optional(),
+  maxWeight: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(30).max(300)).optional(),
+  maritalStatus: z.string().optional(),
   religion: z.string().optional(),
   caste: z.string().optional(),
+  subCaste: z.string().optional(),
+  gothram: z.string().optional(),
   motherTongue: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  minIncome: z.preprocess(
-    (val) =>
-      val === "" || val === undefined || val === null ? undefined : Number(val),
-    z.number().min(0).optional(),
-  ),
-  // Additional filters — Prisma schema already supports these fields.
   education: z.string().optional(),
   occupation: z.string().optional(),
-  maritalStatus: z.string().optional(),
-  minHeight: numLike(120, 250),
-  maxHeight: numLike(120, 250),
+  minIncome: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(0)).optional(),
+  maxIncome: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(0)).optional(),
+  country: z.string().optional(),
+  state: z.string().optional(),
+  district: z.string().optional(),
+  city: z.string().optional(),
   smoking: z.string().optional(),
   drinking: z.string().optional(),
   food: z.string().optional(),
+  isVerified: z.preprocess((val) => val === true || val === "true", z.boolean()).optional(),
+  hasPhoto: z.preprocess((val) => val === true || val === "true", z.boolean()).optional(),
+  recentlyJoined: z.preprocess((val) => val === true || val === "true", z.boolean()).optional(),
+  recentlyActive: z.preprocess((val) => val === true || val === "true", z.boolean()).optional(),
+  page: z.preprocess((val) => (val ? Number(val) : 1), z.number().min(1)).optional(),
+  limit: z.preprocess((val) => (val ? Number(val) : 12), z.number().min(1).max(50)).optional(),
+  sortBy: z.enum(["bestMatch", "recentlyJoined", "recentlyActive", "age", "height"]).optional(),
 });

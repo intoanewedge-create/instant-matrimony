@@ -44,6 +44,23 @@ export class PermissionService extends BaseService {
     try {
       if (senderId === receiverId) return false;
 
+      // Check profile approval status for both sender & receiver
+      const senderProfile = await prisma.profile.findUnique({
+        where: { userId: senderId },
+        select: { status: true, user: { select: { isActive: true } } },
+      });
+      const receiverProfile = await prisma.profile.findUnique({
+        where: { userId: receiverId },
+        select: { status: true, user: { select: { isActive: true } } },
+      });
+
+      if (!senderProfile || senderProfile.status !== "APPROVED" || !senderProfile.user?.isActive) {
+        return false;
+      }
+      if (!receiverProfile || receiverProfile.status !== "APPROVED" || !receiverProfile.user?.isActive) {
+        return false;
+      }
+
       // Check block state
       const blocked = await prisma.block.findFirst({
         where: {
@@ -87,6 +104,19 @@ export class PermissionService extends BaseService {
     try {
       if (senderId === receiverId) return true;
 
+      // Both profiles must be APPROVED
+      const senderProfile = await prisma.profile.findUnique({
+        where: { userId: senderId },
+        select: { status: true },
+      });
+      const receiverProfile = await prisma.profile.findUnique({
+        where: { userId: receiverId },
+        select: { status: true },
+      });
+      if (senderProfile?.status !== "APPROVED" || receiverProfile?.status !== "APPROVED") {
+        return false;
+      }
+
       // Check block state
       const blocked = await prisma.block.findFirst({
         where: {
@@ -116,6 +146,14 @@ export class PermissionService extends BaseService {
   async canViewProfile(userId: string, targetUserId: string): Promise<boolean> {
     try {
       if (userId === targetUserId) return true;
+
+      const targetProfile = await prisma.profile.findUnique({
+        where: { userId: targetUserId },
+        select: { status: true, user: { select: { isActive: true } } },
+      });
+      if (!targetProfile || targetProfile.status !== "APPROVED" || !targetProfile.user?.isActive) {
+        return false;
+      }
 
       // Check block state
       const blocked = await prisma.block.findFirst({

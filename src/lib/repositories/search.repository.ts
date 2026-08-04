@@ -7,11 +7,11 @@ export class PrismaSearchRepository implements ISearchRepository {
   async search(params: {
     viewerId: string;
     filters: any;
-    cursor?: string;
+    page?: number;
     limit: number;
     sortBy?: string;
-  }): Promise<Profile[]> {
-    const { viewerId, filters, cursor, limit, sortBy } = params;
+  }): Promise<{ data: Profile[]; totalRecords: number; page: number; totalPages: number }> {
+    const { viewerId, filters, page = 1, limit = 12, sortBy = "bestMatch" } = params;
 
     const blocks = await prisma.block.findMany({
       where: {
@@ -38,73 +38,60 @@ export class PrismaSearchRepository implements ISearchRepository {
       gender: filters.gender,
       minAge: filters.minAge,
       maxAge: filters.maxAge,
-      religion: filters.religion,
-      caste: filters.caste,
-      city: filters.city,
-      state: filters.state,
-      country: filters.country,
-      minIncome: filters.minIncome,
-      motherTongue: filters.motherTongue,
       minHeight: filters.minHeight,
       maxHeight: filters.maxHeight,
+      minWeight: filters.minWeight,
+      maxWeight: filters.maxWeight,
+      maritalStatus: filters.maritalStatus,
+      religion: filters.religion,
+      caste: filters.caste,
+      subCaste: filters.subCaste,
+      gothram: filters.gothram,
+      motherTongue: filters.motherTongue,
       education: filters.education,
       occupation: filters.occupation,
+      minIncome: filters.minIncome,
+      maxIncome: filters.maxIncome,
+      country: filters.country,
+      state: filters.state,
+      district: filters.district,
+      city: filters.city,
       smoking: filters.smoking,
       drinking: filters.drinking,
       food: filters.food,
       isVerified: filters.isVerified,
-      isPremium: filters.isPremium,
+      hasPhoto: filters.hasPhoto,
+      recentlyJoined: filters.recentlyJoined,
+      recentlyActive: filters.recentlyActive,
       minCompletion: filters.minCompletion,
     });
 
     let orderBy: any = [];
     if (sortBy === "recentlyActive") {
-      orderBy = [
-        { user: { lastLoginAt: "desc" } },
-        { createdAt: "desc" }
-      ];
-    } else if (sortBy === "newest") {
-      orderBy = [
-        { createdAt: "desc" }
-      ];
-    } else if (sortBy === "premium") {
-      orderBy = [
-        {
-          user: {
-            memberships: {
-              _count: "desc"
-            }
-          }
-        },
-        { createdAt: "desc" }
-      ];
-    } else if (sortBy === "verified") {
-      orderBy = [
-        {
-          user: {
-            identityVerification: {
-              status: "desc"
-            }
-          }
-        },
-        { createdAt: "desc" }
-      ];
+      orderBy = [{ updatedAt: "desc" }];
+    } else if (sortBy === "recentlyJoined") {
+      orderBy = [{ createdAt: "desc" }];
+    } else if (sortBy === "age") {
+      orderBy = [{ dateOfBirth: "desc" }];
+    } else if (sortBy === "height") {
+      orderBy = [{ height: "desc" }];
     } else {
-      orderBy = [
-        { completionPercent: "desc" },
-        { createdAt: "desc" }
-      ];
+      // Default: bestMatch / profile completion
+      orderBy = [{ completionPercent: "desc" }, { createdAt: "desc" }];
     }
 
-    return prisma.profile.findMany({
+    const totalRecords = await prisma.profile.count({ where });
+    const skip = (page - 1) * limit;
+
+    const data = (await prisma.profile.findMany({
       where,
       take: limit,
-      skip: cursor ? 1 : 0,
-      cursor: cursor ? { id: cursor } : undefined,
+      skip,
       include: {
         photos: {
-          where: { deletedAt: null, isApproved: true },
+          where: { deletedAt: null },
         },
+        privacy: true,
         user: {
           include: {
             memberships: {
@@ -120,7 +107,16 @@ export class PrismaSearchRepository implements ISearchRepository {
         partnerPreference: true,
       },
       orderBy,
-    }) as any;
+    })) as any;
+
+    const totalPages = Math.ceil(totalRecords / limit) || 1;
+
+    return {
+      data,
+      totalRecords,
+      page,
+      totalPages,
+    };
   }
 
   async saveSearchHistory(userId: string, query?: string, filters?: any): Promise<any> {
@@ -177,4 +173,3 @@ export class PrismaSearchRepository implements ISearchRepository {
     });
   }
 }
-

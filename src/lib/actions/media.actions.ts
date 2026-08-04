@@ -314,7 +314,6 @@ export async function submitVerification(data: {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -335,7 +334,6 @@ export async function approveVerification(id: string) {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -356,7 +354,6 @@ export async function rejectVerification(id: string, reason: string) {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -377,7 +374,6 @@ export async function requestReUploadVerification(id: string, reason: string) {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -398,7 +394,6 @@ export async function approvePhoto(photoId: string) {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -419,7 +414,6 @@ export async function rejectPhoto(photoId: string, reason: string) {
     }
 
     revalidatePath("/dashboard/verification");
-    revalidatePath("/admin/verification");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };

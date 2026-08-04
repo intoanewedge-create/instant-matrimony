@@ -21,9 +21,20 @@ export default async function ProfileDetailPage({
     redirect("/profile");
   }
 
-  // Fetch target profile
-  const targetProfile = await container.repositories.profileRepository.findByUserId(targetUserId);
-  if (!targetProfile) {
+  // Fetch target profile with privacy settings
+  const targetProfile = await prisma.profile.findUnique({
+    where: { userId: targetUserId },
+    include: {
+      photos: { where: { deletedAt: null } },
+      privacy: true,
+      partnerPreference: true,
+      user: {
+        select: { id: true, name: true, email: true, phone: true, isActive: true, identityVerification: true },
+      },
+    },
+  });
+
+  if (!targetProfile || targetProfile.status !== "APPROVED") {
     redirect("/dashboard");
   }
 
@@ -36,7 +47,13 @@ export default async function ProfileDetailPage({
     where: { senderId: targetUserId, receiverId: selfUserId },
   });
 
-  // Check if they have an existing conversation
+  // Check contact unlock
+  const unlockedContact = await prisma.contactUnlock.findFirst({
+    where: { userId: selfUserId, targetUserId },
+  });
+  const isUnlocked = !!unlockedContact;
+
+  // Check existing conversation
   const conversationParticipant = await prisma.conversationParticipant.findFirst({
     where: { userId: selfUserId },
     include: {
@@ -53,7 +70,6 @@ export default async function ProfileDetailPage({
   const hasChat = !!conversationParticipant?.conversation?.participants?.length;
   const conversationId = hasChat ? conversationParticipant.conversation.id : null;
 
-  // Convert dates and relation entities safely for client component
   const serializedProfile = JSON.parse(JSON.stringify(targetProfile));
   const serializedSentInterest = sentInterest ? JSON.parse(JSON.stringify(sentInterest)) : null;
   const serializedReceivedInterest = receivedInterest ? JSON.parse(JSON.stringify(receivedInterest)) : null;
@@ -65,6 +81,8 @@ export default async function ProfileDetailPage({
         initialSentInterest={serializedSentInterest}
         initialReceivedInterest={serializedReceivedInterest}
         conversationId={conversationId}
+        isUnlocked={isUnlocked}
+        isAdmin={(session.user as any).role === "ADMIN"}
       />
     </div>
   );

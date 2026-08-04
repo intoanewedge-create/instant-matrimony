@@ -139,4 +139,120 @@ export class PrismaMembershipRepository implements IMembershipRepository {
       data,
     });
   }
+
+  async createManualPayment(data: {
+    userId: string;
+    planId: string;
+    amount: number;
+    paymentMethod: string;
+    utrNumber: string;
+    receiptUrl?: string;
+    bankName?: string;
+    accountHolder?: string;
+  }): Promise<Payment> {
+    return prisma.payment.create({
+      data: {
+        userId: data.userId,
+        planId: data.planId,
+        amount: data.amount,
+        status: "PENDING",
+        gateway: "MANUAL",
+        paymentMethod: data.paymentMethod,
+        utrNumber: data.utrNumber,
+        receiptUrl: data.receiptUrl,
+        bankName: data.bankName,
+        accountHolder: data.accountHolder,
+      },
+    });
+  }
+
+  async approveManualPayment(adminUserId: string, paymentId: string): Promise<any> {
+    return prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findUnique({ where: { id: paymentId } });
+      if (!payment || payment.status !== "PENDING") {
+        return { success: false, error: "Payment not found or already processed" };
+      }
+
+      const plan = payment.planId ? await tx.membershipPlan.findUnique({ where: { id: payment.planId } }) : null;
+      const durationDays = plan?.durationDays || 30;
+      const userId = payment.userId!;
+
+      // 1. Update Payment
+      const updatedPayment = await tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: "PAID",
+          verifiedById: adminUserId,
+          verifiedAt: new Date(),
+        },
+      });
+
+      // 2. Deactivate previous active memberships
+      await tx.membership.updateMany({
+        where: { userId, status: "ACTIVE" },
+        data: { status: "EXPIRED" },
+      });
+
+      // 3. Create active Membership
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + durationDays);
+
+      const membership = await tx.membership.create({
+        data: {
+          userId,
+          planId: payment.planId!,
+          status: "ACTIVE",
+          startDate,
+          endDate,
+        },
+      });
+
+      // 4. Create ConciergeCase if Plan 2 / Concierge
+      if (plan && (plan.name.toLowerCase().includes("concierge") || plan.price >= 100000)) {
+        await tx.conciergeCase.upsert({
+          where: { userId },
+          create: {
+            userId,
+            status: "OPEN",
+            notes: "Activated via Premium Concierge Membership purchase.",
+          },
+          update: {
+            status: "OPEN",
+          },
+        });
+      }
+
+      return {
+        success: true,
+        payment: updatedPayment,
+        membership,
+        userId,
+        planName: plan?.name || "Membership",
+      };
+    });
+  }
+
+  async rejectManualPayment(adminUserId: string, paymentId: string, reason: string): Promise<any> {
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment || payment.status !== "PENDING") {
+      return { success: false, error: "Payment not found or already processed" };
+    }
+
+    const updatedPayment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: "FAILED",
+        rejectionReason: reason,
+        verifiedById: adminUserId,
+        verifiedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      payment: updatedPayment,
+      userId: payment.userId,
+    };
+  }
 }

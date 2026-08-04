@@ -32,6 +32,8 @@ export default function RegisterPage() {
       email: "",
       phone: "",
       password: "",
+      confirmPassword: "",
+      acceptTerms: false,
     },
   });
 
@@ -44,10 +46,20 @@ export default function RegisterPage() {
       if (!res.success) {
         setError(res.error || "Registration failed");
       } else {
-        setSuccessMsg("Verification email sent. Please check your inbox.");
-        setTimeout(() => {
-          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-        }, 1500);
+        setSuccessMsg("Registration successful! Redirecting to profile creation...");
+        // Auto sign-in and redirect to onboarding wizard
+        const signInRes = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+
+        if (signInRes?.ok) {
+          router.push("/onboarding");
+          router.refresh();
+        } else {
+          router.push("/login?registered=true");
+        }
       }
     } catch (e: any) {
       setError("An unexpected error occurred");
@@ -137,6 +149,37 @@ export default function RegisterPage() {
                   <p className="text-xs text-red-400">{errors.password.message as string}</p>
                 )}
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  className="border-slate-800 bg-slate-950/50 text-white placeholder-slate-500 focus:border-rose-500 focus:ring-rose-500"
+                  {...register("confirmPassword")}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-400">{errors.confirmPassword.message as string}</p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  id="acceptTerms"
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-800 bg-slate-950/50 text-rose-600 focus:ring-rose-500"
+                  {...register("acceptTerms")}
+                />
+                <label htmlFor="acceptTerms" className="text-xs text-slate-400">
+                  I accept the{" "}
+                  <Link href="/terms" className="text-rose-500 hover:underline">
+                    Terms & Conditions
+                  </Link>{" "}
+                  and Privacy Policy
+                </label>
+              </div>
+              {errors.acceptTerms && (
+                <p className="text-xs text-red-400">{errors.acceptTerms.message as string}</p>
+              )}
               <Button
                 type="submit"
                 disabled={loading}

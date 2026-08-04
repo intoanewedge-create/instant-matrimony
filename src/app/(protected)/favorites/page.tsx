@@ -13,7 +13,7 @@ export default async function FavoritesPage() {
   const userId = (session.user as any).id;
 
   const result = await container.services.favoriteService.listFavorites(userId);
-  const favorites: any[] = result.success ? result.data : [];
+  const favorites: any[] = (result.success && result.data) ? result.data : [];
 
   async function handleRemove(formData: FormData) {
     "use server";

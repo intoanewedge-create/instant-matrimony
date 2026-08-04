@@ -49,7 +49,6 @@ export async function createPageAction(input: any) {
   });
 
   if (res.success) {
-    revalidatePath("/admin/cms");
     revalidatePath("/");
   }
   return res;
@@ -72,7 +71,6 @@ export async function updatePageAction(id: string, input: any) {
   });
 
   if (res.success) {
-    revalidatePath("/admin/cms");
     revalidatePath(`/${result.data.slug}`);
   }
   return res;
@@ -86,7 +84,6 @@ export async function deletePageAction(id: string) {
 
   const res = await container.services.cmsService.deletePage(id);
   if (res.success) {
-    revalidatePath("/admin/cms");
   }
   return res;
 }

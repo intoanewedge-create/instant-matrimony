@@ -155,4 +155,125 @@ export class ProfileService extends BaseService {
       return this.returnFailure(e.message, "PREFERENCE_UPDATE_ERROR");
     }
   }
+
+  async approveProfile(adminUserId: string, profileId: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findById(profileId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      if (profile.status === "APPROVED") return this.returnFailure("Profile is already approved", "INVALID_STATUS");
+
+      const previousStatus = profile.status;
+      const updated = await this.profileRepository.update(profileId, {
+        status: "APPROVED",
+        approvedById: adminUserId,
+        approvedAt: new Date(),
+        rejectionReason: null,
+      });
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.PROFILE_APPROVED, {
+        userId: profile.userId,
+        profileId,
+        approvedById: adminUserId,
+        previousStatus,
+      });
+
+      return this.returnSuccess(updated);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_APPROVE_ERROR");
+    }
+  }
+
+  async rejectProfile(adminUserId: string, profileId: string, reason: string): Promise<Result<any>> {
+    try {
+      if (!reason || reason.trim().length === 0) {
+        return this.returnFailure("Rejection reason is required", "REASON_REQUIRED");
+      }
+      const profile = await this.profileRepository.findById(profileId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      if (profile.status === "SUSPENDED") return this.returnFailure("Cannot reject a suspended profile", "INVALID_STATUS");
+
+      const previousStatus = profile.status;
+      const updated = await this.profileRepository.update(profileId, {
+        status: "REJECTED",
+        rejectionReason: reason.trim(),
+      });
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.PROFILE_REJECTED, {
+        userId: profile.userId,
+        profileId,
+        rejectedById: adminUserId,
+        reason,
+        previousStatus,
+      });
+
+      return this.returnSuccess(updated);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_REJECT_ERROR");
+    }
+  }
+
+  async suspendProfile(adminUserId: string, profileId: string, reason?: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findById(profileId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+
+      const previousStatus = profile.status;
+      const updated = await this.profileRepository.update(profileId, {
+        status: "SUSPENDED",
+        rejectionReason: reason || null,
+      });
+
+      return this.returnSuccess(updated);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_SUSPEND_ERROR");
+    }
+  }
+
+  async restoreProfile(adminUserId: string, profileId: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findById(profileId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      if (profile.status !== "SUSPENDED" && profile.status !== "REJECTED") {
+        return this.returnFailure("Only suspended or rejected profiles can be restored", "INVALID_STATUS");
+      }
+
+      const updated = await this.profileRepository.update(profileId, {
+        status: "APPROVED",
+        rejectionReason: null,
+      });
+
+      return this.returnSuccess(updated);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_RESTORE_ERROR");
+    }
+  }
+
+  async resubmitProfile(userId: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findByUserId(userId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      if (profile.status !== "REJECTED" && profile.status !== "DRAFT") {
+        return this.returnFailure("Only rejected or draft profiles can be resubmitted", "INVALID_STATUS");
+      }
+
+      if (profile.completionPercent < 50) {
+        return this.returnFailure("Profile must be at least 50% complete before submission", "INCOMPLETE_PROFILE");
+      }
+
+      const updated = await this.profileRepository.update(profile.id, {
+        status: "PENDING",
+        rejectionReason: null,
+      });
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.PROFILE_SUBMITTED, {
+        userId,
+        profileId: profile.id,
+        reason: "Resubmitted after edits",
+      });
+
+      return this.returnSuccess(updated);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_RESUBMIT_ERROR");
+    }
+  }
 }

@@ -127,4 +127,80 @@ export class MembershipService extends BaseService {
       return this.returnFailure(e.message, "PLANS_FETCH_ERROR");
     }
   }
+
+  async submitManualPayment(
+    userId: string,
+    planId: string,
+    paymentMethod: string,
+    utrNumber: string,
+    receiptUrl?: string,
+    bankName?: string,
+    accountHolder?: string
+  ): Promise<Result<any>> {
+    try {
+      const plan = await this.membershipRepository.findPlanById(planId);
+      if (!plan) return this.returnFailure("Membership plan not found", "PLAN_NOT_FOUND");
+
+      const payment = await (this.membershipRepository as any).createManualPayment({
+        userId,
+        planId,
+        amount: plan.price,
+        paymentMethod,
+        utrNumber,
+        receiptUrl,
+        bankName,
+        accountHolder,
+      });
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.PAYMENT_SUBMITTED, {
+        paymentId: payment.id,
+        userId,
+        planId,
+        amount: plan.price,
+        utrNumber,
+      });
+
+      return this.returnSuccess(payment);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PAYMENT_SUBMIT_ERROR");
+    }
+  }
+
+  async approvePayment(adminUserId: string, paymentId: string): Promise<Result<any>> {
+    try {
+      const result = await (this.membershipRepository as any).approveManualPayment(adminUserId, paymentId);
+      if (!result.success) return this.returnFailure(result.error || "Failed to approve payment", "APPROVE_ERROR");
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.PAYMENT_APPROVED, {
+        paymentId,
+        userId: result.userId,
+        membershipId: result.membership.id,
+      });
+
+      await eventDispatcher.publish(DOMAIN_EVENTS.MEMBERSHIP_ACTIVATED, {
+        userId: result.userId,
+        membershipId: result.membership.id,
+        planName: result.planName,
+      });
+
+      return this.returnSuccess(result);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PAYMENT_APPROVE_ERROR");
+    }
+  }
+
+  async rejectPayment(adminUserId: string, paymentId: string, reason: string): Promise<Result<any>> {
+    try {
+      if (!reason || !reason.trim()) {
+        return this.returnFailure("Rejection reason is required", "REASON_REQUIRED");
+      }
+
+      const result = await (this.membershipRepository as any).rejectManualPayment(adminUserId, paymentId, reason);
+      if (!result.success) return this.returnFailure(result.error || "Failed to reject payment", "REJECT_ERROR");
+
+      return this.returnSuccess(result);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PAYMENT_REJECT_ERROR");
+    }
+  }
 }

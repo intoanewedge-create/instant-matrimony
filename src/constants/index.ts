@@ -41,6 +41,10 @@ export const DOMAIN_EVENTS = {
   INTEREST_SENT: "InterestSent",
   INTEREST_ACCEPTED: "InterestAccepted",
   MEMBERSHIP_PURCHASED: "MembershipPurchased",
+  PAYMENT_SUBMITTED: "PaymentSubmitted",
+  PAYMENT_APPROVED: "PaymentApproved",
+  MEMBERSHIP_ACTIVATED: "MembershipActivated",
+  CONTACT_UNLOCKED: "ContactUnlocked",
   MESSAGE_SENT: "MessageSent",
 } as const;
 

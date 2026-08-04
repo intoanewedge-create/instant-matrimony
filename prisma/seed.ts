@@ -8,6 +8,27 @@ async function main() {
 
   // 1. Clean existing database records
   console.log("Cleaning database...");
+  await prisma.fAQ.deleteMany({});
+  await prisma.banner.deleteMany({});
+  await prisma.testimonial.deleteMany({});
+  await prisma.conciergeAttachment.deleteMany({});
+  await prisma.conciergeCallLog.deleteMany({});
+  await prisma.conciergeMeeting.deleteMany({});
+  await prisma.conciergeUpdate.deleteMany({});
+  await prisma.conciergeCase.deleteMany({});
+  await prisma.contactUnlock.deleteMany({});
+  await prisma.masterGothram.deleteMany({});
+  await prisma.masterSubCaste.deleteMany({});
+  await prisma.masterCaste.deleteMany({});
+  await prisma.masterReligion.deleteMany({});
+  await prisma.masterMotherTongue.deleteMany({});
+  await prisma.masterEducation.deleteMany({});
+  await prisma.masterOccupation.deleteMany({});
+  await prisma.masterCity.deleteMany({});
+  await prisma.masterDistrict.deleteMany({});
+  await prisma.masterState.deleteMany({});
+  await prisma.masterCountry.deleteMany({});
+  await prisma.profilePrivacy.deleteMany({});
   await prisma.siteSettings.deleteMany({});
   await prisma.auditLog.deleteMany({});
   await prisma.notification.deleteMany({});
@@ -25,6 +46,189 @@ async function main() {
   await prisma.partnerPreference.deleteMany({});
   await prisma.profile.deleteMany({});
   await prisma.user.deleteMany({});
+
+  // 1b. Seed Master Data
+  console.log("Seeding Master Data...");
+  
+  // Religions & Castes & SubCastes
+  const religionData = [
+    {
+      name: "Hindu",
+      order: 1,
+      castes: [
+        {
+          name: "Brahmin",
+          order: 1,
+          subCastes: ["Smartha", "Niyogi", "Vaidiki", "Deshastha", "Saraswat", "Kanyakubja", "Gour", "Nagar", "Iyer", "Iyengar"]
+        },
+        {
+          name: "Reddy",
+          order: 2,
+          subCastes: ["Kapu Reddy", "Ganjam Reddy", "Pedakanti", "Velanati", "Pakanati"]
+        },
+        {
+          name: "Kamma",
+          order: 3,
+          subCastes: ["Chowdary", "Zamindari Kamma", "Pedda Kamma"]
+        },
+        {
+          name: "Kapu",
+          order: 4,
+          subCastes: ["Telaga", "Balija", "Ontari"]
+        },
+        {
+          name: "Patel",
+          order: 5,
+          subCastes: ["Leva Patel", "Kadva Patel"]
+        },
+        {
+          name: "Maratha",
+          order: 6,
+          subCastes: ["96 Kuli Maratha", "Deshmukh", "Kunbi"]
+        },
+        {
+          name: "Nair",
+          order: 7,
+          subCastes: ["Kiriyath", "Illathu", "Swaroopathu"]
+        },
+        {
+          name: "Vani",
+          order: 8,
+          subCastes: ["Vaishya", "Arya Vysya"]
+        },
+        {
+          name: "Rajput",
+          order: 9,
+          subCastes: ["Chauhan", "Rathore", "Parmar", "Sisodia"]
+        },
+        {
+          name: "General / Other",
+          order: 10,
+          subCastes: ["General"]
+        }
+      ]
+    },
+    {
+      name: "Muslim",
+      order: 2,
+      castes: [
+        { name: "Sunni", order: 1, subCastes: ["Hanafi", "Shafi", "General Sunni"] },
+        { name: "Shia", order: 2, subCastes: ["Ithna Ashari", "Ismaili"] },
+        { name: "Syed", order: 3, subCastes: ["Syed Sunni", "Syed Shia"] },
+        { name: "Pathan", order: 4, subCastes: ["Khan"] }
+      ]
+    },
+    {
+      name: "Christian",
+      order: 3,
+      castes: [
+        { name: "Catholic", order: 1, subCastes: ["Roman Catholic", "Syro-Malabar", "Syro-Malankara"] },
+        { name: "Protestant", order: 2, subCastes: ["CSI", "CNI", "Methodist", "Baptist"] },
+        { name: "Orthodox", order: 3, subCastes: ["Jacobite", "Malankara Orthodox"] }
+      ]
+    },
+    {
+      name: "Sikh",
+      order: 4,
+      castes: [
+        { name: "Jat", order: 1, subCastes: ["Jat Sikh"] },
+        { name: "Khatri", order: 2, subCastes: ["Arora Khatri"] },
+        { name: "Ramgharia", order: 3, subCastes: ["Ramgharia"] }
+      ]
+    },
+    {
+      name: "Jain",
+      order: 5,
+      castes: [
+        { name: "Digambar", order: 1, subCastes: ["Digambar Khandelwal", "Digambar Agarwal"] },
+        { name: "Svetambar", order: 2, subCastes: ["Oswal", "Porwal"] }
+      ]
+    },
+    {
+      name: "Buddhist",
+      order: 6,
+      castes: [
+        { name: "Mahayana", order: 1, subCastes: ["General Mahayana"] },
+        { name: "Theravada", order: 2, subCastes: ["General Theravada"] }
+      ]
+    }
+  ];
+
+  for (const r of religionData) {
+    const religion = await prisma.masterReligion.create({
+      data: { name: r.name, order: r.order }
+    });
+    for (const c of r.castes) {
+      const caste = await prisma.masterCaste.create({
+        data: { name: c.name, order: c.order, religionId: religion.id }
+      });
+      for (let sIdx = 0; sIdx < c.subCastes.length; sIdx++) {
+        await prisma.masterSubCaste.create({
+          data: { name: c.subCastes[sIdx], order: sIdx + 1, casteId: caste.id }
+        });
+      }
+    }
+  }
+
+  // Mother Tongues
+  const motherTongues = [
+    "Hindi", "Telugu", "Tamil", "Marathi", "Bengali", "Gujarati", "Kannada",
+    "Malayalam", "Punjabi", "Odia", "Assamese", "Urdu", "Konkani", "Sindhi", "English"
+  ];
+  for (let i = 0; i < motherTongues.length; i++) {
+    await prisma.masterMotherTongue.create({
+      data: { name: motherTongues[i], order: i + 1 }
+    });
+  }
+
+  // Education
+  const educations = [
+    { name: "B.Tech / B.E.", category: "Engineering" },
+    { name: "M.Tech / M.E.", category: "Engineering" },
+    { name: "MBA / PGDM", category: "Management" },
+    { name: "MBBS / MD / MS", category: "Medical" },
+    { name: "B.Com / M.Com", category: "Commerce" },
+    { name: "B.Sc / M.Sc", category: "Science" },
+    { name: "MCA / BCA", category: "IT" },
+    { name: "CA / CS / ICWA", category: "Finance" },
+    { name: "LL.B / LL.M", category: "Law" },
+    { name: "Ph.D. / Doctorate", category: "Research" }
+  ];
+  for (let i = 0; i < educations.length; i++) {
+    await prisma.masterEducation.create({
+      data: { name: educations[i].name, category: educations[i].category, order: i + 1 }
+    });
+  }
+
+  // Occupations
+  const occupations = [
+    { name: "Software Engineer / Developer", category: "IT" },
+    { name: "Product Manager", category: "IT" },
+    { name: "Doctor / Healthcare Professional", category: "Medical" },
+    { name: "Financial Analyst / Accountant", category: "Finance" },
+    { name: "Civil Services / IAS / IPS", category: "Government" },
+    { name: "Business Owner / Entrepreneur", category: "Business" },
+    { name: "Architect / Civil Engineer", category: "Engineering" },
+    { name: "Professor / Lecturer", category: "Education" },
+    { name: "Lawyer / Legal Advisor", category: "Legal" },
+    { name: "HR Manager", category: "Corporate" }
+  ];
+  for (let i = 0; i < occupations.length; i++) {
+    await prisma.masterOccupation.create({
+      data: { name: occupations[i].name, category: occupations[i].category, order: i + 1 }
+    });
+  }
+
+  // Countries & States
+  const india = await prisma.masterCountry.create({
+    data: { name: "India", code: "IN", order: 1 }
+  });
+  const states = ["Maharashtra", "Karnataka", "Tamil Nadu", "Telangana", "Delhi", "West Bengal", "Gujarat", "Punjab"];
+  for (let i = 0; i < states.length; i++) {
+    await prisma.masterState.create({
+      data: { name: states[i], countryId: india.id, order: i + 1 }
+    });
+  }
 
   // 2. Seed Site Settings
   console.log("Seeding Site Settings...");
@@ -44,39 +248,23 @@ async function main() {
     await prisma.siteSettings.create({ data: item });
   }
 
-  // 3. Seed Membership Plans
+  // 3. Seed Membership Plans (Configurable database plans)
   console.log("Seeding Membership Plans...");
   const plans = [
     {
-      name: "Silver",
-      description: "Basic plan for profile views and initial connections",
-      price: 1499,
+      name: "Plan 1 (Standard)",
+      description: "Includes 5 contact unlocks upon accepted interests and full direct messaging.",
+      price: 1000,
       durationDays: 30,
-      features: ["View 15 Contact Numbers", "Send Unlimited Interests", "Direct Chat (Up to 5 profiles)"],
+      features: ["View 5 Contact Numbers (on Accepted Interest)", "Send Unlimited Interests", "Direct Chat Messaging", "30 Days Validity"],
       isActive: true
     },
     {
-      name: "Gold",
-      description: "Most popular plan with extended duration and contacts",
-      price: 2999,
-      durationDays: 90,
-      features: ["View 40 Contact Numbers", "Send Unlimited Interests", "Direct Chat (Up to 15 profiles)", "Profile Highlight for 7 Days"],
-      isActive: true
-    },
-    {
-      name: "Platinum",
-      description: "Premium plan for serious seekers seeking max visibility",
-      price: 4999,
-      durationDays: 180,
-      features: ["View 100 Contact Numbers", "Send Unlimited Interests", "Unlimited Direct Chat", "Profile Highlight for 30 Days", "Dedicated Relationship Advisor"],
-      isActive: true
-    },
-    {
-      name: "Diamond",
-      description: "Ultimate elite plan with advisor-led match finding",
-      price: 8999,
+      name: "Plan 2 (Premium Concierge)",
+      description: "Full Concierge Service with dedicated Relationship Manager, match shortlisting, family meetings, and priority visibility.",
+      price: 500000,
       durationDays: 365,
-      features: ["View 250 Contact Numbers", "Send Unlimited Interests", "Unlimited Direct Chat", "Profile Highlight for 90 Days", "Personal Relationship Manager", "Priority search listing"],
+      features: ["Dedicated Admin Relationship Manager", "Unlimited Contact Access for Matches", "Admin-Assisted Search & Shortlisting", "Family Meeting Scheduling", "Highest Profile Listing Visibility", "Priority Support"],
       isActive: true
     }
   ];
@@ -376,8 +564,8 @@ async function main() {
 
   const religions = ["Hindu", "Muslim", "Sikh", "Christian", "Jain"];
   const languages = ["Hindi", "Tamil", "Telugu", "Bengali", "Kannada", "Marathi", "Gujarati", "Malayalam"];
-  const educations = ["B.Tech", "M.Tech", "MBA", "MBBS", "MD", "B.Com", "MCA", "B.Arch", "Ph.D."];
-  const occupations = ["Software Engineer", "Doctor", "Product Manager", "Business Analyst", "Architect", "Chartered Accountant", "Consultant", "Research Scientist", "Entrepreneur"];
+  const demoEducations = ["B.Tech", "M.Tech", "MBA", "MBBS", "MD", "B.Com", "MCA", "B.Arch", "Ph.D."];
+  const demoOccupations = ["Software Engineer", "Doctor", "Product Manager", "Business Analyst", "Architect", "Chartered Accountant", "Consultant", "Research Scientist", "Entrepreneur"];
   
   const userPassword = await bcrypt.hash("User@123", 10);
   const demoUsers: any[] = [];
@@ -421,6 +609,7 @@ async function main() {
     const birthMonth = Math.floor(Math.random() * 12);
     const birthDay = 1 + Math.floor(Math.random() * 28);
     const dateOfBirth = new Date(birthYear, birthMonth, birthDay);
+    const selectedOcc = demoOccupations[Math.floor(Math.random() * demoOccupations.length)];
 
     const profile = await prisma.profile.create({
       data: {
@@ -432,13 +621,13 @@ async function main() {
         caste: "General",
         height: 155 + Math.floor(Math.random() * 30), // 155 to 185 cm
         maritalStatus: "NEVER_MARRIED",
-        education: educations[Math.floor(Math.random() * educations.length)],
-        occupation: occupations[Math.floor(Math.random() * occupations.length)],
+        education: demoEducations[Math.floor(Math.random() * demoEducations.length)],
+        occupation: selectedOcc,
         income: 600000 + Math.floor(Math.random() * 2400000), // 6L to 30L
         city,
         state,
         country: "India",
-        bio: `Hi, I am a simple, down-to-earth person working as a ${occupations[Math.floor(Math.random() * occupations.length)].toLowerCase()}. I value family bonds and respect cultural morals. Looking for a partner who is compatibility-driven and supportive.`,
+        bio: `Hi, I am a simple, down-to-earth person working as a ${selectedOcc.toLowerCase()}. I value family bonds and respect cultural morals. Looking for a partner who is compatibility-driven and supportive.`,
         completionPercent: 75 + Math.floor(Math.random() * 25),
         status,
         approvedById: status === ProfileStatus.APPROVED ? adminUser.id : null,
