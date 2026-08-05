@@ -12,11 +12,12 @@ export default function InstallerWizardPage() {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const [formData, setFormData] = useState({
     adminName: "Super Admin",
     adminEmail: "admin@instantmatrimony.com",
-    adminPassword: "AdminPassword123!",
+    adminPassword: "",
     websiteName: "InstantMatrimony",
     companyName: "InstantMatrimony Tech Solutions Pvt Ltd",
     contactEmail: "support@instantmatrimony.com",
@@ -34,9 +35,31 @@ export default function InstallerWizardPage() {
 
   const handleChange = (key: string, val: string) => {
     setFormData((prev) => ({ ...prev, [key]: val }));
+    if (key === "adminPassword") {
+      setPasswordError("");
+    }
+  };
+
+  const handleNextStep1 = () => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`])[A-Za-z\d@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`]{12,}$/;
+    if (!passwordRegex.test(formData.adminPassword)) {
+      setPasswordError(
+        "Password must be at least 12 characters and include uppercase, lowercase, numbers, and special characters."
+      );
+      return;
+    }
+    setPasswordError("");
+    setStep(2);
   };
 
   const handleFinish = async () => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`])[A-Za-z\d@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`]{12,}$/;
+    if (!passwordRegex.test(formData.adminPassword)) {
+      alert("Invalid password. Please go back to step 1 and set a secure password.");
+      setStep(1);
+      return;
+    }
+
     setSubmitting(true);
     const res = await runSetupWizardAction(formData);
     setSubmitting(false);
@@ -99,8 +122,11 @@ export default function InstallerWizardPage() {
               <div>
                 <Label>Admin Password</Label>
                 <Input type="password" value={formData.adminPassword} onChange={(e) => handleChange("adminPassword", e.target.value)} />
+                {passwordError && (
+                  <p className="text-sm text-red-500 mt-2 font-medium">{passwordError}</p>
+                )}
               </div>
-              <Button className="w-full" onClick={() => setStep(2)}>Next: Website Branding</Button>
+              <Button className="w-full mt-4" onClick={handleNextStep1}>Next: Website Branding</Button>
             </div>
           )}
 

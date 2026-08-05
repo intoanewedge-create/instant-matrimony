@@ -19,7 +19,7 @@ export class BackupRestoreService {
       const fileName = `backup-${type.toLowerCase()}-${timestamp}.json`;
       const filePath = path.join(this.backupDir, fileName);
 
-      let backupData: any = {};
+      const backupData: any = {};
 
       if (type === "FULL" || type === "SETTINGS") {
         backupData.siteSettings = await prisma.siteSettings.findMany();

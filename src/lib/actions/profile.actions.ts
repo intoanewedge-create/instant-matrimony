@@ -5,6 +5,8 @@ import { container } from "../container";
 import { profileUpdateSchema, step7Schema } from "../validators/profile.validator";
 import { ProfileMapper } from "../mappers/profile.mapper";
 import { revalidatePath } from "next/cache";
+import { verifyActionPermission } from "./action-utils";
+import { returnFailure } from "../result";
 
 export async function updateProfileAction(formData: any) {
   const session = await auth();
@@ -125,63 +127,63 @@ export async function updateNotificationPreferencesAction(data: any) {
 }
 
 export async function approveProfileAction(profileId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.profileService.approveProfile(adminUserId, profileId);
   if (!res.success) return { success: false, error: res.error };
 
   revalidatePath("/admin/profiles");
   revalidatePath("/dashboard");
-  return { success: true, profile: res.data };
+  return { success: true, profile: res.data, error: undefined };
 }
 
 export async function rejectProfileAction(profileId: string, reason: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.profileService.rejectProfile(adminUserId, profileId, reason);
   if (!res.success) return { success: false, error: res.error };
 
   revalidatePath("/admin/profiles");
   revalidatePath("/dashboard");
-  return { success: true, profile: res.data };
+  return { success: true, profile: res.data, error: undefined };
 }
 
 export async function suspendProfileAction(profileId: string, reason?: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.profileService.suspendProfile(adminUserId, profileId, reason);
   if (!res.success) return { success: false, error: res.error };
 
   revalidatePath("/admin/profiles");
   revalidatePath("/dashboard");
-  return { success: true, profile: res.data };
+  return { success: true, profile: res.data, error: undefined };
 }
 
 export async function restoreProfileAction(profileId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.profileService.restoreProfile(adminUserId, profileId);
   if (!res.success) return { success: false, error: res.error };
 
   revalidatePath("/admin/profiles");
   revalidatePath("/dashboard");
-  return { success: true, profile: res.data };
+  return { success: true, profile: res.data, error: undefined };
 }
 
 export async function resubmitProfileAction() {
@@ -198,5 +200,3 @@ export async function resubmitProfileAction() {
   revalidatePath("/onboarding");
   return { success: true, profile: res.data };
 }
-
-

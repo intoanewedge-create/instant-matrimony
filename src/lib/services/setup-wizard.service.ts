@@ -32,6 +32,15 @@ export class SetupWizardService {
         return returnFailure("System is already configured and locked.", "ALREADY_INSTALLED");
       }
 
+      // Strong password validation
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`])[A-Za-z\d@$!%*?&()_\-+=\[\]{}|\\:;"'<>,.?\/~`]{12,}$/;
+      if (!passwordRegex.test(data.adminPassword)) {
+        return returnFailure(
+          "Admin password must be at least 12 characters and include uppercase, lowercase, numbers, and special characters.",
+          "WEAK_PASSWORD"
+        );
+      }
+
       // 1. Create or update Super Admin user
       const passwordHash = await bcrypt.hash(data.adminPassword, 10);
       await prisma.user.upsert({

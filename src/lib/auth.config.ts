@@ -11,9 +11,40 @@ export const authConfig = {
     maxAge: 30 * 24 * 60 * 60, // 30 days persistent HTTP-only cookie
   },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
+    async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
+
+      // 1. Setup Status Verification (Redirect to installer if not installed, block installer if installed)
+      const isApiOrAsset =
+        pathname.startsWith("/api") ||
+        pathname.startsWith("/_next") ||
+        pathname.includes(".");
+
+      let isInstalled = true;
+      if (!isApiOrAsset) {
+        try {
+          const statusRes = await fetch(new URL("/api/installer/status", nextUrl.origin));
+          if (statusRes.ok) {
+            const data = await statusRes.json();
+            isInstalled = !!data.isInstalled;
+          }
+        } catch (e) {
+          // Default to true on failure to prevent boot loop
+          isInstalled = true;
+        }
+      }
+
+      if (!isInstalled) {
+        if (pathname !== "/installer") {
+          return Response.redirect(new URL("/installer", nextUrl));
+        }
+        return true;
+      }
+
+      if (pathname === "/installer") {
+        return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
+      }
 
       // Guest Allowed Routes: Home, About, Contact, FAQ, Membership Plans, Login, Register, Terms, Privacy, Success Stories
       const isGuestAllowedPublicRoute =
@@ -46,7 +77,19 @@ export const authConfig = {
         return true;
       }
 
-      // All other routes (/browse, /profiles, /search, /messages, /dashboard, /profile, /admin, /onboarding, /settings) require authentication
+      // Enforce admin route authorization
+      if (pathname.startsWith("/admin")) {
+        if (!isLoggedIn) {
+          return Response.redirect(new URL("/login", nextUrl));
+        }
+        const role = (auth?.user as any)?.role;
+        if (role === "USER") {
+          return Response.redirect(new URL("/error/403", nextUrl));
+        }
+        return true;
+      }
+
+      // All other routes (/browse, /profiles, /search, /messages, /dashboard, /profile, /onboarding, /settings) require authentication
       if (!isLoggedIn) {
         return Response.redirect(new URL("/login", nextUrl));
       }
@@ -56,4 +99,5 @@ export const authConfig = {
   },
   providers: [], // Configured in main auth.ts
 } satisfies NextAuthConfig;
+
 

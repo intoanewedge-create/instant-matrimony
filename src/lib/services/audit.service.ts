@@ -59,4 +59,18 @@ export class AuditService extends BaseService {
       return this.returnFailure(e.message, "AUDIT_LOG_ADVANCED_ERROR");
     }
   }
+
+  async getLogs(params?: { userId?: string; action?: string; cursor?: string; limit?: number }): Promise<Result<any[]>> {
+    try {
+      const logs = await this.auditRepository.findLogs({
+        userId: params?.userId,
+        action: params?.action,
+        cursor: params?.cursor,
+        limit: params?.limit || 50,
+      });
+      return this.returnSuccess(logs);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "AUDIT_FETCH_ERROR");
+    }
+  }
 }

@@ -23,7 +23,7 @@ export default async function AdminLayout({
   if (!session?.user) redirect("/login");
 
   const userRole = (session.user as any).role;
-  if (userRole !== "ADMIN") {
+  if (userRole === "USER") {
     redirect("/error/403");
   }
 

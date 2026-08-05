@@ -186,12 +186,21 @@ async function runProductionTests() {
 
     // 6. Webhooks Signature & Replay protection
     console.log("\n[6. Webhooks & Replay Attacks]");
+    const crypto = require("crypto");
+    const t = Math.floor(Date.now() / 1000).toString();
+    const rawBody = JSON.stringify({ amount: 2000 });
+    const signedPayload = `${t}.${rawBody}`;
+    const hmac = crypto.createHmac("sha256", "signing_secret");
+    hmac.update(signedPayload);
+    const expectedSignature = hmac.digest("hex");
+    const signature = `t=${t},v1=${expectedSignature}`;
+
     const webhookPayload = {
       id: `evt_${Date.now()}`,
       provider: "stripe",
       type: "payment.succeeded",
       data: { amount: 2000 },
-      signature: "valid_secret_signature",
+      signature: signature,
       timestamp: Date.now()
     };
 

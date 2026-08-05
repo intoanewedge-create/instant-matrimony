@@ -4,6 +4,8 @@ import { auth } from "../auth";
 import { container } from "../container";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { verifyActionPermission } from "./action-utils";
+import { returnFailure } from "../result";
 
 const pageSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
@@ -32,9 +34,9 @@ const navSchema = z.object({
 });
 
 export async function createPageAction(input: any) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const result = pageSchema.safeParse(input);
@@ -44,7 +46,7 @@ export async function createPageAction(input: any) {
 
   const res = await container.services.cmsService.createPage({
     ...result.data,
-    publishedById: (session.user as any).id,
+    publishedById: permCheck.data!.userId,
     publishedAt: result.data.status === "PUBLISHED" ? new Date() : null,
   });
 
@@ -55,9 +57,9 @@ export async function createPageAction(input: any) {
 }
 
 export async function updatePageAction(id: string, input: any) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const result = pageSchema.safeParse(input);
@@ -77,14 +79,12 @@ export async function updatePageAction(id: string, input: any) {
 }
 
 export async function deletePageAction(id: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const res = await container.services.cmsService.deletePage(id);
-  if (res.success) {
-  }
   return res;
 }
 
@@ -99,9 +99,9 @@ export async function getPageBySlugAction(slug: string) {
 }
 
 export async function createSectionAction(input: any) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const result = sectionSchema.safeParse(input);
@@ -119,9 +119,9 @@ export async function createSectionAction(input: any) {
 }
 
 export async function createNavigationAction(input: any) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const result = navSchema.safeParse(input);
@@ -147,9 +147,9 @@ export async function getNavigationAction() {
 }
 
 export async function seedDefaultPagesAction() {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_CMS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
   const res = await container.services.cmsService.seedDefaultPages();
   return res;

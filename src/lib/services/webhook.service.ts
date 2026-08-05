@@ -2,6 +2,7 @@ import { BaseService } from "./base.service";
 import { Result } from "../result";
 import { IdempotencyService } from "./idempotency.service";
 import { logger } from "../logger";
+import crypto from "crypto";
 
 export interface WebhookPayload {
   id: string;
@@ -45,10 +46,54 @@ export class WebhookService extends BaseService {
     secret: string
   ): boolean {
     if (!signature || !secret) return false;
-    
-    // In production, we'd use crypto.createHmac. Here we perform a secure mock verification.
-    logger.info(`[WebhookValidator] Verifying signature for ${provider}.`);
-    return signature.length > 10;
+
+    try {
+      if (provider.toLowerCase() === "stripe") {
+        const parts = signature.split(",");
+        let timestamp = "";
+        const signatures: string[] = [];
+
+        for (const part of parts) {
+          const [key, val] = part.trim().split("=");
+          if (key === "t") timestamp = val;
+          if (key === "v1") signatures.push(val);
+        }
+
+        if (!timestamp || signatures.length === 0) return false;
+
+        const signedPayload = `${timestamp}.${rawBody}`;
+        const hmac = crypto.createHmac("sha256", secret);
+        hmac.update(signedPayload);
+        const expectedSignature = hmac.digest("hex");
+
+        let matched = false;
+        const expectedBuf = Buffer.from(expectedSignature, "utf-8");
+        for (const sig of signatures) {
+          const sigBuf = Buffer.from(sig, "utf-8");
+          if (sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+            matched = true;
+            break;
+          }
+        }
+        return matched;
+      } else if (provider.toLowerCase() === "razorpay") {
+        const hmac = crypto.createHmac("sha256", secret);
+        hmac.update(rawBody);
+        const expectedSignature = hmac.digest("hex");
+
+        const sigBuf = Buffer.from(signature, "utf-8");
+        const expectedBuf = Buffer.from(expectedSignature, "utf-8");
+
+        return sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf);
+      }
+
+      // Fallback for custom or mocked integrations
+      logger.info(`[WebhookValidator] Verifying signature for ${provider} using fallback check.`);
+      return signature.length > 10;
+    } catch (e: any) {
+      logger.error(e, `[WebhookValidator] Error verifying signature for ${provider}`);
+      return false;
+    }
   }
 
   /**

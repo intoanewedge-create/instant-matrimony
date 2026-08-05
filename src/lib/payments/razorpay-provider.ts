@@ -2,6 +2,7 @@ import { PaymentProvider, CreateCheckoutParams, CheckoutResult, WebhookVerificat
 import { Result } from "../result";
 import { PaymentStatus } from "@prisma/client";
 import { paymentConfig } from "../../config/payment.config";
+import crypto from "crypto";
 
 export class RazorpayPaymentProvider implements PaymentProvider {
   private keyId = paymentConfig.razorpay.keyId;
@@ -63,7 +64,36 @@ export class RazorpayPaymentProvider implements PaymentProvider {
 
   async verifyWebhook(rawBody: string, signature: string): Promise<Result<WebhookVerificationResult>> {
     try {
+      const webhookSecret = paymentConfig.razorpay.webhookSecret;
       const payload = JSON.parse(rawBody);
+
+      if (!webhookSecret || process.env.NODE_ENV !== "production") {
+        return {
+          success: true,
+          data: {
+            isValid: true,
+            event: payload.event,
+            payload,
+            eventId: payload.id || `rzp_evt_${Date.now()}`,
+          },
+        };
+      }
+
+      if (!signature) {
+        return { success: false, error: "Missing x-razorpay-signature header" };
+      }
+
+      const hmac = crypto.createHmac("sha256", webhookSecret);
+      hmac.update(rawBody);
+      const expectedSignature = hmac.digest("hex");
+
+      const sigBuf = Buffer.from(signature, "utf-8");
+      const expectedBuf = Buffer.from(expectedSignature, "utf-8");
+
+      if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+        return { success: false, error: "Razorpay webhook signature validation failed" };
+      }
+
       return {
         success: true,
         data: {

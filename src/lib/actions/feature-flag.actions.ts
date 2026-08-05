@@ -1,9 +1,9 @@
 "use server";
 
-import { auth } from "../auth";
 import { container } from "../container";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { verifyActionPermission } from "./action-utils";
+import { returnFailure } from "../result";
 
 const flagSchema = z.object({
   key: z.string().min(1, "Key is required"),
@@ -20,9 +20,9 @@ export async function setFlagAction(input: {
   description?: string;
   category?: string;
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_SYSTEM");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   const result = flagSchema.safeParse(input);
@@ -38,25 +38,23 @@ export async function setFlagAction(input: {
     result.data.category || undefined
   );
 
-
   return res;
 }
 
 export async function listFlagsAction() {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_SYSTEM");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
   const res = await container.services.featureFlagService.listFlags();
   return res;
 }
 
 export async function seedDefaultFlagsAction() {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_SYSTEM");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
   const res = await container.services.featureFlagService.seedDefaultFlags();
-
   return res;
 }

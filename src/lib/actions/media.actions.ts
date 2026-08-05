@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { eventDispatcher } from "../events/event-dispatcher";
 import { MediaType, DocumentType } from "@prisma/client";
 import { storageConfig } from "@/config/storage.config";
+import { verifyActionPermission } from "./action-utils";
+import { returnFailure } from "../result";
 
 export async function uploadPhoto(formData: FormData) {
   const session = await auth();
@@ -321,11 +323,11 @@ export async function submitVerification(data: {
 }
 
 export async function approveVerification(id: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_VERIFICATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const moderatorId = session.user.id || "admin";
+  const moderatorId = permCheck.data!.userId;
 
   try {
     const res = await container.services.moderationService.approveVerification(id, moderatorId);
@@ -341,11 +343,11 @@ export async function approveVerification(id: string) {
 }
 
 export async function rejectVerification(id: string, reason: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_VERIFICATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const moderatorId = session.user.id || "admin";
+  const moderatorId = permCheck.data!.userId;
 
   try {
     const res = await container.services.moderationService.rejectVerification(id, moderatorId, reason);
@@ -361,11 +363,11 @@ export async function rejectVerification(id: string, reason: string) {
 }
 
 export async function requestReUploadVerification(id: string, reason: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_VERIFICATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const moderatorId = session.user.id || "admin";
+  const moderatorId = permCheck.data!.userId;
 
   try {
     const res = await container.services.moderationService.requestReUploadVerification(id, moderatorId, reason);
@@ -381,11 +383,11 @@ export async function requestReUploadVerification(id: string, reason: string) {
 }
 
 export async function approvePhoto(photoId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const moderatorId = session.user.id || "admin";
+  const moderatorId = permCheck.data!.userId;
 
   try {
     const res = await container.services.moderationService.approvePhoto(photoId, moderatorId);
@@ -401,11 +403,11 @@ export async function approvePhoto(photoId: string) {
 }
 
 export async function rejectPhoto(photoId: string, reason: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Forbidden" };
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const moderatorId = session.user.id || "admin";
+  const moderatorId = permCheck.data!.userId;
 
   try {
     const res = await container.services.moderationService.rejectPhoto(photoId, moderatorId, reason);

@@ -2,6 +2,7 @@ import { PaymentProvider, CreateCheckoutParams, CheckoutResult, WebhookVerificat
 import { Result } from "../result";
 import { PaymentStatus } from "@prisma/client";
 import { paymentConfig } from "../../config/payment.config";
+import crypto from "crypto";
 
 export class StripePaymentProvider implements PaymentProvider {
   private secretKey = paymentConfig.stripe.secretKey;
@@ -59,7 +60,64 @@ export class StripePaymentProvider implements PaymentProvider {
 
   async verifyWebhook(rawBody: string, signature: string): Promise<Result<WebhookVerificationResult>> {
     try {
+      const webhookSecret = paymentConfig.stripe.webhookSecret;
       const payload = JSON.parse(rawBody);
+
+      if (!webhookSecret || process.env.NODE_ENV !== "production") {
+        return {
+          success: true,
+          data: {
+            isValid: true,
+            event: payload.type,
+            payload,
+            eventId: payload.id,
+          },
+        };
+      }
+
+      if (!signature) {
+        return { success: false, error: "Missing stripe-signature header" };
+      }
+
+      const parts = signature.split(",");
+      let timestamp = "";
+      const signatures: string[] = [];
+
+      for (const part of parts) {
+        const [key, val] = part.trim().split("=");
+        if (key === "t") timestamp = val;
+        if (key === "v1") signatures.push(val);
+      }
+
+      if (!timestamp || signatures.length === 0) {
+        return { success: false, error: "Missing Stripe timestamp or signature (v1)" };
+      }
+
+      // Replay attack protection: reject if timestamp is older than 5 minutes (300 seconds)
+      const diff = Math.floor(Date.now() / 1000) - parseInt(timestamp, 10);
+      if (Math.abs(diff) > 300) {
+        return { success: false, error: "Stripe signature timestamp is outside the valid 5-minute replay window" };
+      }
+
+      const signedPayload = `${timestamp}.${rawBody}`;
+      const hmac = crypto.createHmac("sha256", webhookSecret);
+      hmac.update(signedPayload);
+      const expectedSignature = hmac.digest("hex");
+
+      let matched = false;
+      const expectedBuf = Buffer.from(expectedSignature, "utf-8");
+      for (const sig of signatures) {
+        const sigBuf = Buffer.from(sig, "utf-8");
+        if (sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+          matched = true;
+          break;
+        }
+      }
+
+      if (!matched) {
+        return { success: false, error: "Stripe webhook signature validation failed" };
+      }
+
       return {
         success: true,
         data: {

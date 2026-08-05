@@ -3,6 +3,8 @@
 import { auth } from "../auth";
 import { container } from "../container";
 import { revalidatePath } from "next/cache";
+import { verifyActionPermission } from "./action-utils";
+import { returnFailure } from "../result";
 
 export async function submitManualPaymentAction(data: {
   planId: string;
@@ -40,11 +42,11 @@ export async function submitManualPaymentAction(data: {
 }
 
 export async function approvePaymentAction(paymentId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_PAYMENTS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.membershipService.approvePayment(adminUserId, paymentId);
   if (!res.success) return { success: false, error: res.error };
@@ -56,11 +58,11 @@ export async function approvePaymentAction(paymentId: string) {
 }
 
 export async function rejectPaymentAction(paymentId: string, reason: string) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_PAYMENTS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
-  const adminUserId = (session.user as any).id;
+  const adminUserId = permCheck.data!.userId;
 
   const res = await container.services.membershipService.rejectPayment(adminUserId, paymentId, reason);
   if (!res.success) return { success: false, error: res.error };
@@ -71,9 +73,9 @@ export async function rejectPaymentAction(paymentId: string, reason: string) {
 }
 
 export async function editMembershipPlanAction(planId: string, data: any) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    return { success: false, error: "Admin authorization required" };
+  const permCheck = await verifyActionPermission("MANAGE_PAYMENTS");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
   }
 
   try {

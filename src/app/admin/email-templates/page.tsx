@@ -32,12 +32,12 @@ export default function AdminEmailTemplatesPage() {
     });
   }, []);
 
-  const selectTemplate = (tpl: any) => {
+  function selectTemplate(tpl: any) {
     setSelectedTemplate(tpl);
     setSubject(tpl.subject);
     setBodyHtml(tpl.bodyHtml);
     setBodyText(tpl.bodyText);
-  };
+  }
 
   const handleSave = async () => {
     if (!selectedTemplate) return;
