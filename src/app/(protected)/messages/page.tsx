@@ -10,6 +10,14 @@ export default async function MessagesPage() {
   }
   const userId = (session.user as any).id;
 
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileResult.success) {
+    redirect("/onboarding");
+  }
+  if (profileResult.data.status !== "APPROVED") {
+    redirect("/dashboard");
+  }
+
   const convosResult = await container.services.messagingService.getConversations(userId);
   const conversations = convosResult.success ? convosResult.data : [];
 

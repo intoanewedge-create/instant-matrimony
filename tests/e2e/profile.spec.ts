@@ -41,8 +41,7 @@ test.describe("Profile Management Workspace", () => {
   test("should update personal details successfully", async ({ page }) => {
     // We are on details tab by default
     await page.fill("#height", "175");
-    await page.fill("#religion", "HINDU");
-    await page.fill("#caste", "BRAHMIN");
+    await page.fill("#religion", "Hindu");
     await page.fill("#city", "Bengaluru");
     await page.fill("#bio", "This is a test biography description.");
     

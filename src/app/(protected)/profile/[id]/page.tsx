@@ -15,6 +15,15 @@ export default async function ProfileDetailPage({
   const selfUserId = (session.user as any).id;
   const targetUserId = (await params).id;
 
+  const selfProfile = await prisma.profile.findUnique({
+    where: { userId: selfUserId },
+    select: { status: true },
+  });
+  const isAdmin = (session.user as any).role === "ADMIN";
+  if (!isAdmin && (!selfProfile || selfProfile.status !== "APPROVED")) {
+    redirect("/dashboard");
+  }
+
   // If viewing self, redirect to profile workspace
   if (selfUserId === targetUserId) {
     redirect("/profile");
@@ -70,6 +79,12 @@ export default async function ProfileDetailPage({
   const conversationId = hasChat ? conversationParticipant.conversation.id : null;
 
   const serializedProfile = JSON.parse(JSON.stringify(targetProfile));
+  if (!isUnlocked && !isAdmin) {
+    if (serializedProfile.user) {
+      delete serializedProfile.user.phone;
+      delete serializedProfile.user.email;
+    }
+  }
   const serializedSentInterest = sentInterest ? JSON.parse(JSON.stringify(sentInterest)) : null;
   const serializedReceivedInterest = receivedInterest ? JSON.parse(JSON.stringify(receivedInterest)) : null;
 

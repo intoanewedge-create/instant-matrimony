@@ -71,7 +71,11 @@ export class SearchService extends BaseService {
           compatibility: candidate.compatibility,
           rankingScore: candidate.rankingScore,
           privacy: candidate.privacy,
-          user: candidate.user,
+          user: candidate.user ? {
+            identityVerification: candidate.user.identityVerification ? {
+              status: candidate.user.identityVerification.status
+            } : null
+          } : null,
         };
       });
 

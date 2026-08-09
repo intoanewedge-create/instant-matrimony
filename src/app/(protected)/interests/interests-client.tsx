@@ -8,6 +8,7 @@ import {
   declineInterestAction,
   withdrawInterestAction,
 } from "@/lib/actions/interest.actions";
+import { formatDate } from "@/lib/utils/format";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -193,7 +194,7 @@ export function InterestsClient({
                       <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
                         <span className="text-xs text-slate-400 flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          {formatDate(item.createdAt)}
                         </span>
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${

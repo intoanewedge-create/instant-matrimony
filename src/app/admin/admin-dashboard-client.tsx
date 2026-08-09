@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Clock,
 } from "lucide-react";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils/format";
 
 export function AdminDashboardClient({
   metrics,
@@ -115,8 +116,8 @@ export function AdminDashboardClient({
             { label: "Active Subscriptions", val: metrics.activeMemberships, color: "text-rose-400" },
             { label: "Expiring Soon", val: metrics.expiringMemberships, color: "text-orange-400" },
             { label: "Expired Members", val: metrics.expiredMemberships, color: "text-slate-500" },
-            { label: "Total Revenue", val: `₹${metrics.totalRevenue.toLocaleString()}`, color: "text-emerald-400" },
-            { label: "Monthly Revenue", val: `₹${metrics.monthlyRevenue.toLocaleString()}`, color: "text-emerald-400" },
+            { label: "Total Revenue", val: formatCurrency(metrics.totalRevenue), color: "text-emerald-400" },
+            { label: "Monthly Revenue", val: formatCurrency(metrics.monthlyRevenue), color: "text-emerald-400" },
             { label: "Regs Today", val: metrics.newUsersToday, color: "text-blue-400" },
             { label: "Interests Today", val: metrics.interestsToday, color: "text-pink-400" },
             { label: "Messages Today", val: metrics.messagesToday, color: "text-indigo-400" },
@@ -171,7 +172,7 @@ export function AdminDashboardClient({
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                   <div className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    ₹{bar.revenue.toLocaleString()}
+                    {formatCurrency(bar.revenue)}
                   </div>
                   <div
                     style={{ height: `${heightPct}%` }}
@@ -230,7 +231,7 @@ export function AdminDashboardClient({
                   <span className="font-bold text-white">{u.name}</span>
                   <span className="text-slate-400 ml-2">({u.email})</span>
                 </div>
-                <span className="text-[10px] text-slate-500">{new Date(u.createdAt).toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">{formatDateTime(u.createdAt)}</span>
               </div>
             ))}
 
@@ -241,7 +242,7 @@ export function AdminDashboardClient({
                   <span className="font-bold text-emerald-400">Approved Profile:</span>
                   <span className="text-white ml-2">{p.user?.name}</span>
                 </div>
-                <span className="text-[10px] text-slate-500">{new Date(p.approvedAt || p.createdAt).toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">{formatDateTime(p.approvedAt || p.createdAt)}</span>
               </div>
             ))}
 
@@ -249,10 +250,10 @@ export function AdminDashboardClient({
             activityFeeds.recentPayments?.map((p: any) => (
               <div key={p.id} className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-bold text-rose-400">₹{p.amount?.toLocaleString()}</span>
+                  <span className="font-bold text-rose-400">{formatCurrency(p.amount)}</span>
                   <span className="text-slate-400 ml-2">[{p.status}] UTR: {p.utrNumber || "N/A"}</span>
                 </div>
-                <span className="text-[10px] text-slate-500">{new Date(p.createdAt).toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">{formatDateTime(p.createdAt)}</span>
               </div>
             ))}
 
@@ -264,7 +265,7 @@ export function AdminDashboardClient({
                   <span className="text-slate-400 mx-1.5">unlocked contact for</span>
                   <span className="font-bold text-rose-400">{u.targetUser?.name}</span>
                 </div>
-                <span className="text-[10px] text-slate-500">{new Date(u.unlockedAt).toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">{formatDateTime(u.unlockedAt)}</span>
               </div>
             ))}
 
@@ -275,7 +276,7 @@ export function AdminDashboardClient({
                   <span className="font-bold text-pink-400">{cu.case?.user?.name}:</span>
                   <span className="text-slate-300 ml-2">{cu.content}</span>
                 </div>
-                <span className="text-[10px] text-slate-500">{new Date(cu.createdAt).toLocaleString()}</span>
+                <span className="text-[10px] text-slate-500">{formatDateTime(cu.createdAt)}</span>
               </div>
             ))}
         </div>

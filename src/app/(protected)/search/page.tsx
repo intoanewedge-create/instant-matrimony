@@ -23,36 +23,7 @@ export default async function SearchPage() {
 
   // Profile approval check
   if (profile.status !== "APPROVED") {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4">
-        <Card className="max-w-md w-full border border-amber-800/60 bg-slate-900/80 backdrop-blur-xl shadow-2xl">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mb-3">
-              <AlertCircle className="w-6 h-6" />
-            </div>
-            <CardTitle className="text-xl font-bold text-amber-300">
-              Profile Approval Required
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-sm text-slate-300">
-              Search and matchmaking features are strictly restricted to members with <strong className="text-emerald-400">APPROVED</strong> profiles.
-            </p>
-            <p className="text-xs text-slate-400">
-              Current Status: <span className="font-semibold text-amber-400 uppercase">{profile.status}</span>
-            </p>
-            <div className="pt-2">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-lg font-semibold text-sm bg-rose-600 hover:bg-rose-500 text-white transition-colors"
-              >
-                Return to Dashboard
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    redirect("/dashboard");
   }
 
   const defaultGender = profile.gender === "MALE" ? "FEMALE" : "MALE";

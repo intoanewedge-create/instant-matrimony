@@ -11,6 +11,14 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
   const userId = (session.user as any).id;
   const { id: contactId } = await params;
 
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileResult.success) {
+    redirect("/onboarding");
+  }
+  if (profileResult.data.status !== "APPROVED") {
+    redirect("/dashboard");
+  }
+
   const allowed = await container.services.permissionService.canChat(userId, contactId);
   if (!allowed) {
     redirect("/messages?error=unauthorized");

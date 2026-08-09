@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { approvePaymentAction, rejectPaymentAction } from "@/lib/actions/membership.actions";
+import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,7 +106,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
             </div>
             <div>
               <p className="text-xs text-slate-400">Approved Revenue</p>
-              <h3 className="text-2xl font-bold text-emerald-400">₹{approvedTotal.toLocaleString()}</h3>
+              <h3 className="text-2xl font-bold text-emerald-400">{formatCurrency(approvedTotal)}</h3>
             </div>
           </div>
         </Card>
@@ -182,7 +183,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                       <div className="text-[10px] text-slate-400 font-normal">{p.user?.email}</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-bold text-rose-400">₹{p.amount?.toLocaleString()}</div>
+                      <div className="font-bold text-rose-400">{formatCurrency(p.amount)}</div>
                       <div className="text-[10px] text-slate-400">{p.plan?.name || "Standard Plan"}</div>
                     </td>
                     <td className="p-4">
@@ -190,7 +191,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                       <div className="text-[10px] text-slate-400">{p.paymentMethod || "QR_CODE"}</div>
                     </td>
                     <td className="p-4 text-slate-400">
-                      {new Date(p.createdAt).toLocaleDateString()}
+                      {formatDate(p.createdAt)}
                     </td>
                     <td className="p-4">
                       <span

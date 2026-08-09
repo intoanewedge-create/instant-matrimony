@@ -13,6 +13,14 @@ export default async function RecommendationsPage() {
   }
   const userId = (session.user as any).id;
 
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileResult.success) {
+    redirect("/onboarding");
+  }
+  if (profileResult.data.status !== "APPROVED") {
+    redirect("/dashboard");
+  }
+
   const recsRes = await container.services.recommendationService.getRecommendations(userId, 6);
   const recommendations = recsRes.success ? recsRes.data || [] : [];
 

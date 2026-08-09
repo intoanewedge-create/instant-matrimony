@@ -37,6 +37,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (
+    url.pathname.startsWith("/_next/") ||
+    url.searchParams.has("_rsc") ||
+    !url.protocol.startsWith("http")
+  ) {
+    return;
+  }
+
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)

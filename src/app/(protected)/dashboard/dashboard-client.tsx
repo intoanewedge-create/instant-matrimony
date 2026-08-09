@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { resubmitProfileAction } from "@/lib/actions/profile.actions";
+import { formatDate } from "@/lib/utils/format";
 import {
   Card,
   CardHeader,
@@ -818,7 +819,7 @@ export function DashboardClient({
                             </div>
                             <span className="text-[10px] text-slate-500 flex items-center gap-0.5 shrink-0">
                               <Clock className="w-3 h-3" aria-hidden="true" />{" "}
-                              {new Date(n.createdAt).toLocaleDateString()}
+                              {formatDate(n.createdAt)}
                             </span>
                           </div>
                           <p

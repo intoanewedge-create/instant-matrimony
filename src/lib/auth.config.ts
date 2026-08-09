@@ -68,7 +68,8 @@ export const authConfig = {
         pathname === "/terms" ||
         pathname === "/privacy" ||
         pathname === "/legal" ||
-        pathname === "/success-stories";
+        pathname === "/success-stories" ||
+        pathname === "/offline";
 
       const isGuestAuthRoute =
         pathname === "/login" ||

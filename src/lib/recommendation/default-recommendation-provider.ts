@@ -3,6 +3,7 @@ import { Result, returnSuccess, returnFailure } from "../result";
 import { prisma } from "../prisma";
 import { recommendationConfig } from "../../config/recommendation.config";
 import { calculateAge } from "../utils/date";
+import { ProfileMapper } from "../mappers/profile.mapper";
 
 export class DefaultRecommendationProvider implements RecommendationProvider {
   name(): string {
@@ -79,7 +80,23 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
 
       const sorted = scored.sort((a, b) => b.score - a.score).slice(0, limit);
 
-      return returnSuccess(sorted);
+      const mappedSorted = sorted.map((item) => {
+        const dto = ProfileMapper.toResponse(item.profile);
+        return {
+          ...item,
+          profile: {
+            ...dto,
+            user: item.profile.user ? {
+              name: item.profile.user.name,
+              identityVerification: item.profile.user.identityVerification ? {
+                status: item.profile.user.identityVerification.status
+              } : null
+            } : null
+          }
+        };
+      });
+
+      return returnSuccess(mappedSorted);
     } catch (e: any) {
       return returnFailure(e.message, "RECOMMENDATIONS_ERROR");
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { submitManualPaymentAction } from "@/lib/actions/membership.actions";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, QrCode, Building2, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/format";
 
 export function MembershipClient({
   plans,
@@ -19,6 +20,17 @@ export function MembershipClient({
 }) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<any>(plans[0] || null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planIdParam = params.get("planId");
+    if (planIdParam) {
+      const found = plans.find(p => p.id === planIdParam);
+      if (found) {
+        setSelectedPlan(found);
+      }
+    }
+  }, [plans]);
   const [paymentMethod, setPaymentMethod] = useState<"QR_CODE" | "BANK_TRANSFER">("QR_CODE");
   const [utrNumber, setUtrNumber] = useState("");
   const [receiptUrl, setReceiptUrl] = useState("");
@@ -114,7 +126,7 @@ export function MembershipClient({
                 <p className="text-xs text-slate-400 mt-2">{plan.description}</p>
 
                 <div className="my-6">
-                  <span className="text-4xl font-extrabold text-white">₹{plan.price.toLocaleString()}</span>
+                  <span className="text-4xl font-extrabold text-white">{formatCurrency(plan.price)}</span>
                   <span className="text-sm text-slate-400"> / {plan.durationDays} Days</span>
                 </div>
 
@@ -154,7 +166,7 @@ export function MembershipClient({
               <ShieldCheck className="w-5 h-5 text-rose-500" /> Manual Payment & Verification
             </CardTitle>
             <CardDescription className="text-xs">
-              Selected Plan: <strong className="text-rose-400">{selectedPlan?.name}</strong> (₹{selectedPlan?.price?.toLocaleString()})
+              Selected Plan: <strong className="text-rose-400">{selectedPlan?.name}</strong> ({formatCurrency(selectedPlan?.price)})
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">

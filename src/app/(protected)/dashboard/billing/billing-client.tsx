@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Zap, CreditCard, Calendar, Check, Download, AlertCircle, Trash2 } from "lucide-react";
+import { Zap, CreditCard, Calendar, Check, Download, AlertCircle, Trash2, Clock } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createCheckoutAction, cancelSubscriptionAction } from "@/lib/actions/billing.actions";
+import { formatDate, formatCurrency } from "@/lib/utils/format";
 
-export function BillingClient({ plans, activeMembership, invoices }: any) {
+export function BillingClient({ plans, activeMembership, invoices, payments = [] }: any) {
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
@@ -16,31 +17,7 @@ export function BillingClient({ plans, activeMembership, invoices }: any) {
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleCheckout = async (planId: string, price: number) => {
-    setLoadingPlan(planId);
-    setError(null);
-    setSuccess(null);
-
-    const successUrl = `${window.location.origin}/dashboard?checkout=success`;
-    const cancelUrl = `${window.location.origin}/dashboard/billing?checkout=cancel`;
-
-    try {
-      const res = await createCheckoutAction({
-        planId,
-        amount: price,
-        successUrl,
-        cancelUrl,
-      });
-
-      if (res.success && res.data?.checkoutUrl) {
-        window.location.assign(res.data.checkoutUrl);
-      } else {
-        setError(res.error || "Failed to initiate checkout");
-      }
-    } catch (e: any) {
-      setError(e.message || "An unexpected error occurred");
-    } finally {
-      setLoadingPlan(null);
-    }
+    router.push(`/membership?planId=${planId}`);
   };
 
   const handleCancelSubscription = async () => {
@@ -91,6 +68,45 @@ export function BillingClient({ plans, activeMembership, invoices }: any) {
         </div>
       )}
 
+      {/* Pending & Rejected Manual Payments Banners */}
+      {payments.filter((p: any) => p.status === "PENDING").map((p: any) => (
+        <div key={p.id} className="p-4 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-amber-950/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
+              <Clock className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-300">Payment Verification Pending</h3>
+              <p className="text-xs text-amber-200/80">
+                Your manual payment of <strong>{formatCurrency(p.amount)}</strong> (UTR: <strong>{p.utrNumber}</strong>) is under review. Standard matching controls will activate once verified.
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 shrink-0">
+            PENDING VERIFICATION
+          </span>
+        </div>
+      ))}
+
+      {payments.filter((p: any) => p.status === "FAILED" && p.rejectionReason).map((p: any) => (
+        <div key={p.id} className="p-4 rounded-xl bg-red-950/40 border border-red-800/60 text-red-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-red-950/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-500/20 rounded-lg text-red-400 shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-red-300">Payment Rejected</h3>
+              <p className="text-xs text-red-200/80">
+                Your manual payment reference (UTR: <strong>{p.utrNumber}</strong>) was rejected. Reason: <strong>{p.rejectionReason}</strong>. Please check details and submit again.
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-500/20 border border-red-500/30 text-red-300 shrink-0 font-mono">
+            REJECTED
+          </span>
+        </div>
+      ))}
+
       {/* Active Membership Status */}
       <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md overflow-hidden relative">
         <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-r from-rose-500/5 to-transparent blur-2xl pointer-events-none" />
@@ -119,7 +135,7 @@ export function BillingClient({ plans, activeMembership, invoices }: any) {
                 <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Billing Cycle</span>
                 <p className="text-lg font-semibold text-slate-200 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  Expires on {new Date(activeMembership.endDate).toLocaleDateString()}
+                  Expires on {formatDate(activeMembership.endDate)}
                 </p>
               </div>
               <div className="flex items-center md:justify-end">
@@ -175,7 +191,7 @@ export function BillingClient({ plans, activeMembership, invoices }: any) {
                       )}
                     </div>
                     <div className="flex items-baseline gap-1 my-3">
-                      <span className="text-4xl font-extrabold">₹{plan.price}</span>
+                      <span className="text-4xl font-extrabold">{formatCurrency(plan.price)}</span>
                       <span className="text-slate-400 text-sm">/{plan.durationDays} days</span>
                     </div>
                     <CardDescription className="text-xs text-slate-400 leading-relaxed mt-2">
@@ -245,8 +261,8 @@ export function BillingClient({ plans, activeMembership, invoices }: any) {
                   invoices.map((inv: any) => (
                     <tr key={inv.id} className="hover:bg-slate-900/10 transition-colors">
                       <td className="px-6 py-4 font-mono text-xs">{inv.invoiceNumber}</td>
-                      <td className="px-6 py-4">{new Date(inv.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 font-bold">₹{inv.amount}</td>
+                      <td className="px-6 py-4">{formatDate(inv.createdAt)}</td>
+                      <td className="px-6 py-4 font-bold">{formatCurrency(inv.amount)}</td>
                       <td className="px-6 py-4 text-xs font-medium text-rose-400">{inv.order?.plan?.name || "Premium Plan"}</td>
                       <td className="px-6 py-4">
                         <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { InterestsClient } from "./interests-client";
+import { container } from "@/lib/container";
 
 export default async function InterestsPage() {
   const session = await auth();
@@ -9,6 +10,14 @@ export default async function InterestsPage() {
     redirect("/login");
   }
   const userId = (session.user as any).id;
+
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileResult.success) {
+    redirect("/onboarding");
+  }
+  if (profileResult.data.status !== "APPROVED") {
+    redirect("/dashboard");
+  }
 
   // Fetch received and sent interests with member profiles and photos
   const [receivedInterests, sentInterests] = await Promise.all([

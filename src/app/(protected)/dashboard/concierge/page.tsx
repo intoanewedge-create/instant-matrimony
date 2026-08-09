@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { conciergeService } from "@/lib/services/concierge.service";
 import { UserConciergeClient } from "./user-concierge-client";
+import { container } from "@/lib/container";
 
 export default async function UserConciergePage() {
   const session = await auth();
@@ -9,6 +10,14 @@ export default async function UserConciergePage() {
     redirect("/login");
   }
   const userId = (session.user as any).id;
+
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  if (!profileResult.success) {
+    redirect("/onboarding");
+  }
+  if (profileResult.data.status !== "APPROVED") {
+    redirect("/dashboard");
+  }
 
   const caseRes = await conciergeService.getUserCase(userId);
   const caseData = caseRes.success ? caseRes.data : null;
