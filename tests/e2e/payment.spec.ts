@@ -1,0 +1,29 @@
+import { test, expect } from "@playwright/test";
+import { loginAs } from "./helpers";
+
+test.describe("Manual Payment Processing", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, "user@instantmatrimony.com", "User@123");
+    await page.goto("/membership");
+  });
+
+  test("should successfully submit a manual payment via UPI/QR code", async ({ page }) => {
+    // Select the first plan card if not already selected
+    const planCards = page.locator(".cursor-pointer");
+    await planCards.first().click();
+
+    // Click on UPI / QR Code Payment option
+    await page.click('button:has-text("UPI / QR Code Payment")');
+
+    // Fill UTR number
+    const utrValue = `UTR${Date.now()}`;
+    await page.fill("#utrNumber", utrValue);
+
+    // Submit payment
+    await page.click('button:has-text("Submit Payment for Verification")');
+
+    // Check for success screen
+    await expect(page.locator("text=Payment Submitted for Admin Verification")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(`text=${utrValue}`)).toBeVisible();
+  });
+});

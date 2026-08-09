@@ -5,29 +5,17 @@ import {
   tenantMigrationService,
   encryptionService,
   disasterRecoveryService,
-  aiPlatformService,
   aiOrchestrationService,
   embeddingService,
   promptRegistryService,
   modelRegistryService,
-  aiEvaluationService,
-  featureStoreService,
-  governanceService,
   dataCatalogService,
   ruleEngineService,
   decisionEngineService,
-  policyEngineService,
   dataQualityService,
   reportBuilderService,
-  dashboardEngineService,
-  forecastingService,
-  capacityPlanningService,
-  costManagementService,
   saasMetricsService,
   securityIntelligenceService,
-  identityService,
-  webAuthnService,
-  mfaService,
   sessionRiskService,
   authorizationService,
   policyEvaluatorService,
@@ -36,13 +24,9 @@ import {
   agentPlatformService,
   reliabilityService,
   developerPlatformService,
-  eventStore
 } from "../container";
 import {
-  SnapshotStore,
-  AggregateRebuilder,
-  ProjectionEngine,
-  ReplayEngine
+  SnapshotStore
 } from "../events/event-sourcing";
 
 async function runTests() {
@@ -141,7 +125,7 @@ async function runTests() {
   const riskAssessment = await securityIntelligenceService.assessRisk("user_99", "fingerprint_xyz", "192.168.99.12");
   assert.ok(riskAssessment.success && riskAssessment.data!.riskScore > 40, "Security risk scoring check failed");
 
-  const impossibleTravel = await sessionRiskService.assessSessionRisk("user_99", "203.0.113.5", "IN");
+  await sessionRiskService.assessSessionRisk("user_99", "203.0.113.5", "IN");
   const impossibleTravelBreach = await sessionRiskService.assessSessionRisk("user_99", "198.51.100.12", "US");
   assert.ok(impossibleTravelBreach.success && impossibleTravelBreach.data!.riskScore === 95, "Session travel risk calculation failed");
 
@@ -161,7 +145,7 @@ async function runTests() {
     name: "Custom Exporter",
     enabled: true,
     permissions: ["READ"],
-    execute: async (ctx: any) => "Plugin Result"
+    execute: async () => "Plugin Result"
   };
   await pluginService.registerPlugin(myPlugin);
   const pluginExec = await pluginService.executePlugin("my_plug", { userRoles: ["USER"] });

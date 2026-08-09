@@ -8,7 +8,7 @@ import {
   declineInterestAction,
   withdrawInterestAction,
 } from "@/lib/actions/interest.actions";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +18,6 @@ import {
   XCircle,
   RotateCcw,
   Eye,
-  Lock,
   Clock,
   Send,
   Inbox,
@@ -49,7 +48,7 @@ export function InterestsClient({
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoadingId(null);
@@ -66,7 +65,7 @@ export function InterestsClient({
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoadingId(null);
@@ -83,7 +82,7 @@ export function InterestsClient({
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoadingId(null);

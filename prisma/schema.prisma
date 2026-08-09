@@ -8,67 +8,67 @@ datasource db {
 }
 
 model User {
-  id                       String                    @id @default(uuid())
-  name                     String?
-  email                    String                    @unique
-  emailVerified            DateTime?
-  password                 String
-  role                     Role                      @default(USER)
-  accountStatus            AccountStatus             @default(ACTIVE)
-  verificationStatus       VerificationStatus        @default(PENDING)
-  image                    String?
-  phone                    String?                   @unique
-  isActive                 Boolean                   @default(true)
-  isEmailVerified          Boolean                   @default(false)
-  isPhoneVerified          Boolean                   @default(false)
-  lastPasswordChangedAt    DateTime?
-  lastLoginAt              DateTime?
-  deletedAt                DateTime?
-  createdAt                DateTime                  @default(now())
-  updatedAt                DateTime                  @updatedAt
-  accounts                 Account[]
-  appeals                  Appeal[]
-  auditLogs                AuditLog[]
-  blocksOf                 Block[]                   @relation("BlocksOf")
-  blocksBy                 Block[]                   @relation("BlocksBy")
-  publishedPages           CmsPage[]                 @relation("PagePublishedBy")
-  cmsVersions              CmsPageVersion[]          @relation("VersionPublishedBy")
-  conversationParticipants ConversationParticipant[]
-  favoritesOf              Favorite[]                @relation("FavoritesOf")
-  favoritesBy              Favorite[]                @relation("FavoritesBy")
-  fraudCases               FraudCase[]
-  identityVerification     IdentityVerification?
-  interestsReceived        Interest[]                @relation("InterestsReceived")
-  interestsSent            Interest[]                @relation("InterestsSent")
-  media                    Media[]
-  memberships              Membership[]
-  messagesReceived         Message[]                 @relation("MessagesReceived")
-  messagesSent             Message[]                 @relation("MessagesSent")
-  messageReactions         MessageReaction[]
-  notifications            Notification[]
-  notificationPreference   NotificationPreference?
-  orders                   Order[]
-  passwordHistories        PasswordHistory[]
-  approvedProfiles         Profile[]                 @relation("ProfileApprovedBy")
-  profile                  Profile?                  @relation("UserProfile")
-  visitorsReceived         ProfileVisitor[]          @relation("Visited")
-  visitorsSent             ProfileVisitor[]          @relation("Visitor")
-  recommendationTargets    RecommendationHistory[]   @relation("RecommendationTarget")
-  recommendationUsers      RecommendationHistory[]   @relation("RecommendationUser")
-  referralReceived         Referral?                 @relation("Referee")
-  referralsSent            Referral[]                @relation("Referrer")
-  reportsOf                Report[]                  @relation("ReportsOf")
-  reportsBy                Report[]                  @relation("ReportsBy")
-  savedSearches            SavedSearch[]
-  searchHistories          SearchHistory[]
-  sessions                 Session[]
-  transactions             Transaction[]
-  sessionHistories         UserSessionHistory[]
-  contactUnlocksMade       ContactUnlock[]           @relation("ContactUnlocksMade")
-  contactUnlocksReceived   ContactUnlock[]           @relation("ContactUnlocksReceived")
-  conciergeCase            ConciergeCase?            @relation("ConciergeUser")
-  assignedConciergeCases   ConciergeCase[]           @relation("AssignedConciergeAdmin")
-  conciergeShortlistsReceived ConciergeShortlist[]   @relation("ConciergeShortlistTarget")
+  id                          String                    @id @default(uuid())
+  name                        String?
+  email                       String                    @unique
+  emailVerified               DateTime?
+  password                    String
+  role                        Role                      @default(USER)
+  image                       String?
+  phone                       String?                   @unique
+  isActive                    Boolean                   @default(true)
+  isEmailVerified             Boolean                   @default(false)
+  isPhoneVerified             Boolean                   @default(false)
+  lastPasswordChangedAt       DateTime?
+  lastLoginAt                 DateTime?
+  deletedAt                   DateTime?
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+  accountStatus               AccountStatus             @default(ACTIVE)
+  verificationStatus          VerificationStatus        @default(PENDING)
+  accounts                    Account[]
+  appeals                     Appeal[]
+  auditLogs                   AuditLog[]
+  blocksOf                    Block[]                   @relation("BlocksOf")
+  blocksBy                    Block[]                   @relation("BlocksBy")
+  publishedPages              CmsPage[]                 @relation("PagePublishedBy")
+  cmsVersions                 CmsPageVersion[]          @relation("VersionPublishedBy")
+  assignedConciergeCases      ConciergeCase[]           @relation("AssignedConciergeAdmin")
+  conciergeCase               ConciergeCase?            @relation("ConciergeUser")
+  conciergeShortlistsReceived ConciergeShortlist[]      @relation("ConciergeShortlistTarget")
+  contactUnlocksReceived      ContactUnlock[]           @relation("ContactUnlocksReceived")
+  contactUnlocksMade          ContactUnlock[]           @relation("ContactUnlocksMade")
+  conversationParticipants    ConversationParticipant[]
+  favoritesOf                 Favorite[]                @relation("FavoritesOf")
+  favoritesBy                 Favorite[]                @relation("FavoritesBy")
+  fraudCases                  FraudCase[]
+  identityVerification        IdentityVerification?
+  interestsReceived           Interest[]                @relation("InterestsReceived")
+  interestsSent               Interest[]                @relation("InterestsSent")
+  media                       Media[]
+  memberships                 Membership[]
+  messagesReceived            Message[]                 @relation("MessagesReceived")
+  messagesSent                Message[]                 @relation("MessagesSent")
+  messageReactions            MessageReaction[]
+  notifications               Notification[]
+  notificationPreference      NotificationPreference?
+  orders                      Order[]
+  passwordHistories           PasswordHistory[]
+  approvedProfiles            Profile[]                 @relation("ProfileApprovedBy")
+  profile                     Profile?                  @relation("UserProfile")
+  visitorsReceived            ProfileVisitor[]          @relation("Visited")
+  visitorsSent                ProfileVisitor[]          @relation("Visitor")
+  recommendationTargets       RecommendationHistory[]   @relation("RecommendationTarget")
+  recommendationUsers         RecommendationHistory[]   @relation("RecommendationUser")
+  referralReceived            Referral?                 @relation("Referee")
+  referralsSent               Referral[]                @relation("Referrer")
+  reportsOf                   Report[]                  @relation("ReportsOf")
+  reportsBy                   Report[]                  @relation("ReportsBy")
+  savedSearches               SavedSearch[]
+  searchHistories             SearchHistory[]
+  sessions                    Session[]
+  transactions                Transaction[]
+  sessionHistories            UserSessionHistory[]
 }
 
 model Account {
@@ -101,10 +101,10 @@ model VerificationToken {
   id         String   @id @default(uuid())
   identifier String
   token      String   @unique
-  tokenHash  String?
-  otpHash    String?
   expires    DateTime
   createdAt  DateTime @default(now())
+  otpHash    String?
+  tokenHash  String?
 
   @@unique([identifier, token])
 }
@@ -117,20 +117,15 @@ model Profile {
   religion          String?
   motherTongue      String?
   caste             String?
-  subCaste          String?
-  gothram           String?
   height            Int?
-  weight            Int?
   maritalStatus     String?
   education         String?
   occupation        String?
   income            Float?
   city              String?
-  district          String?
   state             String?
   country           String?
   bio               String?
-  familyDetails     String?
   smoking           String?
   drinking          String?
   foodPreference    String?
@@ -144,11 +139,16 @@ model Profile {
   deletedAt         DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  district          String?
+  familyDetails     String?
+  gothram           String?
+  subCaste          String?
+  weight            Int?
   partnerPreference PartnerPreference?
-  privacy           ProfilePrivacy?
   photos            Photo[]
   approvedBy        User?              @relation("ProfileApprovedBy", fields: [approvedById], references: [id])
   user              User               @relation("UserProfile", fields: [userId], references: [id], onDelete: Cascade)
+  privacy           ProfilePrivacy?
 
   @@index([city])
   @@index([state])
@@ -182,16 +182,16 @@ model PartnerPreference {
 }
 
 model Photo {
-  id         String   @id @default(uuid())
+  id         String         @id @default(uuid())
   profileId  String
   url        String
-  mediaId    String?  @unique
-  isMain     Boolean  @default(false)
-  isApproved Boolean  @default(false)
-  status     PhotoStatus @default(PENDING)
+  mediaId    String?        @unique
+  isMain     Boolean        @default(false)
+  isApproved Boolean        @default(false)
   deletedAt  DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+  status     PhotoStatus    @default(PENDING)
   metadata   ImageMetadata?
   media      Media?         @relation(fields: [mediaId], references: [id], onDelete: Cascade)
   profile    Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
@@ -227,9 +227,9 @@ model Membership {
   deletedAt             DateTime?
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
+  contactUnlocks        ContactUnlock[]
   plan                  MembershipPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contactUnlocks        ContactUnlock[]
 
   @@index([userId])
   @@index([status])
@@ -258,24 +258,24 @@ model Order {
 model Payment {
   id                   String          @id @default(uuid())
   orderId              String?
-  userId               String?
-  planId               String?
   amount               Float
   status               PaymentStatus   @default(PENDING)
   gateway              PaymentGateway  @default(MANUAL)
   provider             PaymentProvider @default(MOCK)
   gatewayTransactionId String?
-  paymentMethod        String?
-  utrNumber            String?
-  receiptUrl           String?
-  bankName             String?
-  accountHolder        String?
-  rejectionReason      String?
-  verifiedById         String?
-  verifiedAt           DateTime?
   deletedAt            DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
+  accountHolder        String?
+  bankName             String?
+  paymentMethod        String?
+  planId               String?
+  receiptUrl           String?
+  rejectionReason      String?
+  userId               String?
+  utrNumber            String?
+  verifiedAt           DateTime?
+  verifiedById         String?
   order                Order?          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
@@ -390,16 +390,16 @@ model Report {
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String?
-  module    String?
   action    String
-  oldValue  String?
-  newValue  String?
   ipAddress String?
   userAgent String?
-  device    String?
   details   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  device    String?
+  module    String?
+  newValue  String?
+  oldValue  String?
   user      User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -844,180 +844,6 @@ model CmsPageVersion {
   publishedBy    User?    @relation("VersionPublishedBy", fields: [publishedById], references: [id])
 }
 
-enum Role {
-  USER
-  ADMIN
-  SUPER_ADMIN
-  FINANCE
-  MODERATOR
-  MARKETING_MANAGER
-  CONTENT_MANAGER
-  CUSTOMER_SUPPORT
-  OPERATIONS
-  ANALYST
-  PROFILE_MODERATOR
-  PAYMENT_MANAGER
-  CONCIERGE_MANAGER
-  REPORT_VIEWER
-}
-
-enum AccountStatus {
-  ACTIVE
-  SUSPENDED
-  BLOCKED
-}
-
-enum ProfileStatus {
-  DRAFT
-  PENDING
-  APPROVED
-  REJECTED
-  SUSPENDED
-  DELETED
-}
-
-enum MembershipStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
-enum PaymentStatus {
-  PENDING
-  AUTHORIZED
-  PAID
-  FAILED
-  CANCELLED
-  REFUNDED
-}
-
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PAID
-  VOID
-  UNPAID
-}
-
-enum ConversationStatus {
-  ACTIVE
-  ARCHIVED
-  DELETED
-}
-
-enum DeliveryStatus {
-  SENT
-  DELIVERED
-  READ
-}
-
-enum WebhookStatus {
-  PENDING
-  PROCESSED
-  FAILED
-}
-
-enum PaymentProvider {
-  STRIPE
-  RAZORPAY
-  MOCK
-}
-
-enum RealtimeProvider {
-  SOCKETIO
-  SUPABASE
-  PUSHER
-  MOCK
-}
-
-enum NotificationType {
-  INFO
-  SUCCESS
-  WARNING
-  ERROR
-}
-
-enum ReportStatus {
-  PENDING
-  UNDER_REVIEW
-  RESOLVED
-  REJECTED
-}
-
-enum InterestStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  WITHDRAWN
-}
-
-enum PaymentGateway {
-  RAZORPAY
-  CASHFREE
-  PHONEPE
-  PAYU
-  STRIPE
-  MANUAL
-}
-
-enum TransactionType {
-  CREDIT
-  DEBIT
-}
-
-enum VerificationStatus {
-  PENDING
-  VERIFIED
-  APPROVED
-  REJECTED
-  RE_UPLOAD
-}
-
-enum DocumentType {
-  AADHAAR
-  PAN
-  PASSPORT
-  DRIVING_LICENCE
-}
-
-enum MediaType {
-  PHOTO
-  DOCUMENT
-  ATTACHMENT
-}
-
-enum ModerationAction {
-  PHOTO_APPROVE
-  PHOTO_REJECT
-  VERIFICATION_APPROVE
-  VERIFICATION_REJECT
-  RE_UPLOAD_REQUEST
-}
-
-enum PhotoStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum ConciergeStatus {
-  OPEN
-  SEARCHING_MATCHES
-  SHORTLIST_PREPARED
-  FAMILY_CONTACT
-  MEETING_SCHEDULED
-  NEGOTIATION
-  MARRIAGE_CONFIRMED
-  CLOSED
-}
-
 model ProfilePrivacy {
   id                String   @id @default(uuid())
   profileId         String   @unique
@@ -1061,8 +887,8 @@ model MasterSubCaste {
   order     Int             @default(0)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
-  caste     MasterCaste     @relation(fields: [casteId], references: [id], onDelete: Cascade)
   gothrams  MasterGothram[]
+  caste     MasterCaste     @relation(fields: [casteId], references: [id], onDelete: Cascade)
 
   @@unique([casteId, name])
 }
@@ -1074,7 +900,7 @@ model MasterGothram {
   order      Int             @default(0)
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
-  subCaste   MasterSubCaste? @relation(fields: [subCasteId], references: [id], onDelete: SetNull)
+  subCaste   MasterSubCaste? @relation(fields: [subCasteId], references: [id])
 }
 
 model MasterMotherTongue {
@@ -1121,8 +947,8 @@ model MasterState {
   order     Int              @default(0)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-  country   MasterCountry    @relation(fields: [countryId], references: [id], onDelete: Cascade)
   districts MasterDistrict[]
+  country   MasterCountry    @relation(fields: [countryId], references: [id], onDelete: Cascade)
 
   @@unique([countryId, name])
 }
@@ -1134,8 +960,8 @@ model MasterDistrict {
   order     Int          @default(0)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  state     MasterState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
   cities    MasterCity[]
+  state     MasterState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
   @@unique([stateId, name])
 }
@@ -1161,9 +987,9 @@ model ContactUnlock {
   paymentId    String?
   unlockReason String?
   unlockedAt   DateTime    @default(now())
-  user         User        @relation("ContactUnlocksMade", fields: [userId], references: [id], onDelete: Cascade)
+  membership   Membership? @relation(fields: [membershipId], references: [id])
   targetUser   User        @relation("ContactUnlocksReceived", fields: [targetUserId], references: [id], onDelete: Cascade)
-  membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+  user         User        @relation("ContactUnlocksMade", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, targetUserId])
   @@index([userId])
@@ -1181,13 +1007,13 @@ model ConciergeCase {
   closedAt             DateTime?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
-  user                 User                  @relation("ConciergeUser", fields: [userId], references: [id], onDelete: Cascade)
-  assignedAdmin        User?                 @relation("AssignedConciergeAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
-  updates              ConciergeUpdate[]
-  meetings             ConciergeMeeting[]
-  callLogs             ConciergeCallLog[]
   attachments          ConciergeAttachment[]
+  callLogs             ConciergeCallLog[]
+  assignedAdmin        User?                 @relation("AssignedConciergeAdmin", fields: [assignedAdminId], references: [id])
+  user                 User                  @relation("ConciergeUser", fields: [userId], references: [id], onDelete: Cascade)
+  meetings             ConciergeMeeting[]
   shortlists           ConciergeShortlist[]
+  updates              ConciergeUpdate[]
 }
 
 model ConciergeShortlist {
@@ -1234,13 +1060,13 @@ model ConciergeMeeting {
 }
 
 model ConciergeCallLog {
-  id        String        @id @default(uuid())
-  caseId    String
-  person    String
-  duration  Int?
-  notes     String
-  calledAt  DateTime      @default(now())
-  case      ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  id       String        @id @default(uuid())
+  caseId   String
+  person   String
+  duration Int?
+  notes    String
+  calledAt DateTime      @default(now())
+  case     ConciergeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
   @@index([caseId])
 }
@@ -1438,4 +1264,176 @@ model BackupRecord {
   createdAt  DateTime @default(now())
 }
 
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  FINANCE
+  MODERATOR
+  MARKETING_MANAGER
+  CONTENT_MANAGER
+  CUSTOMER_SUPPORT
+  OPERATIONS
+  ANALYST
+  PROFILE_MODERATOR
+  PAYMENT_MANAGER
+  CONCIERGE_MANAGER
+  REPORT_VIEWER
+}
 
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+enum ProfileStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+  DELETED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  VOID
+  UNPAID
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum DeliveryStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum WebhookStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  MOCK
+}
+
+enum RealtimeProvider {
+  SOCKETIO
+  SUPABASE
+  PUSHER
+  MOCK
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum PaymentGateway {
+  RAZORPAY
+  CASHFREE
+  PHONEPE
+  PAYU
+  STRIPE
+  MANUAL
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RE_UPLOAD
+  VERIFIED
+}
+
+enum DocumentType {
+  AADHAAR
+  PAN
+  PASSPORT
+  DRIVING_LICENCE
+}
+
+enum MediaType {
+  PHOTO
+  DOCUMENT
+  ATTACHMENT
+}
+
+enum ModerationAction {
+  PHOTO_APPROVE
+  PHOTO_REJECT
+  VERIFICATION_APPROVE
+  VERIFICATION_REJECT
+  RE_UPLOAD_REQUEST
+}
+
+enum PhotoStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ConciergeStatus {
+  OPEN
+  SEARCHING_MATCHES
+  SHORTLIST_PREPARED
+  FAMILY_CONTACT
+  MEETING_SCHEDULED
+  NEGOTIATION
+  MARRIAGE_CONFIRMED
+  CLOSED
+}

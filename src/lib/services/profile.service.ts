@@ -96,7 +96,7 @@ export class ProfileService extends BaseService {
       }
 
       // Strip submitForReview flag from actual database fields
-      const { submitForReview, ...dbFields } = stepData;
+      const { submitForReview: _submitForReview, ...dbFields } = stepData;
 
       const mergedProfile = { ...profile, ...dbFields };
       const completionPercent = this.completionService.calculate(mergedProfile);
@@ -217,7 +217,6 @@ export class ProfileService extends BaseService {
       const profile = await this.profileRepository.findById(profileId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
-      const previousStatus = profile.status;
       const updated = await this.profileRepository.update(profileId, {
         status: "SUSPENDED",
         rejectionReason: reason || null,

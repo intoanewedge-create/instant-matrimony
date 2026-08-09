@@ -1,8 +1,6 @@
 import { BaseService } from "./base.service";
 import { Result } from "../result";
 import { prisma } from "../prisma";
-import { eventDispatcher } from "../events/event-dispatcher";
-import { DOMAIN_EVENTS } from "@/constants";
 import { NotificationService } from "./notification.service";
 
 export class ConciergeService extends BaseService {

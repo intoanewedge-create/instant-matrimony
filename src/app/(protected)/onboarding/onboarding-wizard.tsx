@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
+import { AlertCircle, CheckCircle2, Image as ImageIcon } from "lucide-react";
 
 export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const router = useRouter();
@@ -28,13 +28,9 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const [educations, setEducations] = useState<any[]>([]);
   const [occupations, setOccupations] = useState<any[]>([]);
 
-  // Photos State
-  const [photos, setPhotos] = useState<any[]>(initialProfile?.photos || []);
-
   const {
     register,
     handleSubmit,
-    setValue,
     watch,
     formState: { errors },
   } = useForm({
@@ -141,7 +137,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
           }
         }
       }
-    } catch (e: any) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);

@@ -35,7 +35,6 @@ export class SystemHealthService {
       const memoryTotalMB = Math.round(totalMem / (1024 * 1024));
       const memoryUsagePercent = Math.round((usedMem / totalMem) * 100);
 
-      const cpus = os.cpus();
       const cpuUsagePercent = Math.round(Math.random() * 15 + 5); // Estimated CPU load %
 
       const health: SystemHealthStatus = {

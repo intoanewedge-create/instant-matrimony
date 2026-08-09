@@ -1,7 +1,7 @@
 import { BaseService } from "./base.service";
 import { Result, returnSuccess, returnFailure } from "../result";
 import { prisma } from "../prisma";
-import { CampaignDto, CouponDto } from "../domain/admin-contracts";
+import { CampaignDto } from "../domain/admin-contracts";
 
 export class MarketingCampaignService extends BaseService {
   constructor() {

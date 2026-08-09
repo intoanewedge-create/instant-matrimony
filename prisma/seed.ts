@@ -233,6 +233,7 @@ async function main() {
   // 2. Seed Site Settings
   console.log("Seeding Site Settings...");
   const settingsData = [
+    { key: "isInstalled", value: "true", description: "Flag indicating whether installation wizard has been completed" },
     { key: "site_name", value: "InstantMatrimony", description: "Name of the matrimonial portal" },
     { key: "support_email", value: "support@instantmatrimony.com", description: "Official support email address" },
     { key: "support_phone", value: "+91 98765 43210", description: "Official support helpline number" },

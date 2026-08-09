@@ -19,7 +19,6 @@ import {
   AlertOctagon,
   RotateCcw,
   Eye,
-  Search,
   X,
 } from "lucide-react";
 

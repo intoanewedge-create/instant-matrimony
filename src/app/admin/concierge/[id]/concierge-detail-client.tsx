@@ -8,30 +8,22 @@ import {
   assignConciergeAdminAction,
   publishConciergeUpdateAction,
   shortlistMatchAction,
-  updateShortlistStatusAction,
   scheduleConciergeMeetingAction,
   logConciergeCallAction,
   addConciergeAttachmentAction,
 } from "@/lib/actions/concierge.actions";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import {
   ArrowLeft,
-  Headphones,
-  UserCheck,
   Calendar,
   PhoneCall,
   FileText,
   Paperclip,
-  CheckCircle,
-  Clock,
   Sparkles,
-  Send,
   Plus,
-  Eye,
 } from "lucide-react";
 
 export function ConciergeDetailClient({
@@ -73,7 +65,7 @@ export function ConciergeDetailClient({
         setCaseData((prev: any) => ({ ...prev, status }));
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -89,7 +81,7 @@ export function ConciergeDetailClient({
         setCaseData((prev: any) => ({ ...prev, assignedAdminId: adminId, assignedAdmin: adminObj }));
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -111,7 +103,7 @@ export function ConciergeDetailClient({
         setNewUpdate("");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -130,7 +122,7 @@ export function ConciergeDetailClient({
         setShortlistTargetId("");
         setShortlistNotes("");
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -155,7 +147,7 @@ export function ConciergeDetailClient({
         setMeetingNotes("");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -179,7 +171,7 @@ export function ConciergeDetailClient({
         setCallNotes("");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -202,7 +194,7 @@ export function ConciergeDetailClient({
         setFileUrl("");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);

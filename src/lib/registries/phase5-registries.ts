@@ -120,11 +120,11 @@ export class MessageBrokerProvider implements RegistryProvider {
     return true;
   }
 
-  async publish(topic: string, message: any): Promise<void> {
+  async publish(_topic: string, _message: any): Promise<void> {
     // mock streaming broker publish
   }
 
-  async subscribe(topic: string, handler: (msg: any) => void): Promise<void> {
+  async subscribe(_topic: string, _handler: (msg: any) => void): Promise<void> {
     // mock streaming broker subscribe
   }
 }

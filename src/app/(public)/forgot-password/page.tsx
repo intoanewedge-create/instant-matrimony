@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
           router.push(`/reset-password?email=${encodeURIComponent(data.email)}`);
         }, 2000);
       }
-    } catch (e: any) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);

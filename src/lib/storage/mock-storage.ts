@@ -9,7 +9,7 @@ export class MockStorageProvider implements StorageProvider {
     };
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     // Mock delete does nothing
   }
 }

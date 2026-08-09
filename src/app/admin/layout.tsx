@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   MessageSquare,
   FileText,
+  LogOut,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -72,8 +73,24 @@ export default async function AdminLayout({
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-slate-800 text-xs text-slate-500">
-          Logged in as <span className="text-slate-300 font-semibold">{session.user.name}</span>
+        <div className="pt-6 border-t border-slate-800 flex items-center justify-between gap-2 text-xs text-slate-500">
+          <div>
+            Logged in as <span className="text-slate-300 font-semibold">{session.user.name}</span>
+          </div>
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/login" });
+            }}
+          >
+            <button
+              type="submit"
+              className="text-slate-400 hover:text-rose-500 p-1.5 hover:bg-slate-800 rounded-lg transition-all"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       </aside>
 

@@ -85,7 +85,7 @@ export class WorkflowService extends BaseService {
           logger.info({ email: ctx.email }, "[WF:UserReg] Verifying email address");
           return { emailVerified: true };
         },
-        compensate: async (ctx) => {
+        compensate: async (_ctx) => {
           logger.info("[WF:UserReg] Rollback: mark email as unverified");
         }
       },
@@ -95,20 +95,20 @@ export class WorkflowService extends BaseService {
           logger.info("[WF:UserReg] Initializing user profile database record");
           return { profileId: `prof_${ctx.userId}` };
         },
-        compensate: async (ctx) => {
+        compensate: async (_ctx) => {
           logger.info("[WF:UserReg] Rollback: delete initialized profile record");
         }
       },
       {
         name: "moderationCheck",
-        action: async (ctx) => {
+        action: async (_ctx) => {
           logger.info("[WF:UserReg] Queueing profile verification for moderation review");
           return { status: "PENDING_MODERATION" };
         }
       },
       {
         name: "triggerWelcomeCampaign",
-        action: async (ctx) => {
+        action: async (_ctx) => {
           logger.info("[WF:UserReg] Publishing welcome campaign subscription event");
           return { welcomeCampaignTriggered: true };
         }
@@ -125,16 +125,16 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "extractMetadata",
-        action: async (ctx) => ({ extracted: true })
+        action: async (_ctx) => ({ extracted: true })
       },
       {
         name: "runFaceVerificationCheck",
-        action: async (ctx) => ({ faceMatch: true }),
+        action: async (_ctx) => ({ faceMatch: true }),
         retryCount: 2
       },
       {
         name: "censorPII",
-        action: async (ctx) => ({ piiMasked: true })
+        action: async (_ctx) => ({ piiMasked: true })
       }
     ];
     return this.executeSequential(steps, context);
@@ -147,21 +147,21 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "chargeCard",
-        action: async (ctx) => {
+        action: async (_ctx) => {
           logger.info("[WF:Premium] Processing credit card payment");
           return { charged: true, transactionId: "tx_12345" };
         },
-        compensate: async (ctx) => {
+        compensate: async (_ctx) => {
           logger.info("[WF:Premium] Rollback: refund credit card charge");
         }
       },
       {
         name: "activateSubscription",
-        action: async (ctx) => {
+        action: async (_ctx) => {
           logger.info("[WF:Premium] Activating premium membership benefits");
           return { active: true };
         },
-        compensate: async (ctx) => {
+        compensate: async (_ctx) => {
           logger.info("[WF:Premium] Rollback: deactivate subscription benefits");
         }
       }
@@ -176,11 +176,11 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "calculateCompatibility",
-        action: async (ctx) => ({ score: 87 })
+        action: async (_ctx) => ({ score: 87 })
       },
       {
         name: "createMatchRecord",
-        action: async (ctx) => ({ matchId: "match_xyz" })
+        action: async (_ctx) => ({ matchId: "match_xyz" })
       }
     ];
     return this.executeSequential(steps, context);
@@ -193,11 +193,11 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "queryData",
-        action: async (ctx) => ({ rowsCount: 50 })
+        action: async (_ctx) => ({ rowsCount: 50 })
       },
       {
         name: "renderPDF",
-        action: async (ctx) => ({ pdfUrl: "https://bucket.s3/reports/rep_1.pdf" })
+        action: async (_ctx) => ({ pdfUrl: "https://bucket.s3/reports/rep_1.pdf" })
       }
     ];
     return this.executeSequential(steps, context);
@@ -210,12 +210,12 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "gatherRiskTelemetry",
-        action: async (ctx) => ({ score: 0.92 })
+        action: async (_ctx) => ({ score: 0.92 })
       },
       {
         name: "autoSuspendAccount",
-        action: async (ctx) => ({ suspended: true }),
-        compensate: async (ctx) => ({ suspended: false })
+        action: async (_ctx) => ({ suspended: true }),
+        compensate: async (_ctx) => ({ suspended: false })
       }
     ];
     return this.executeSequential(steps, context);
@@ -228,11 +228,11 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "assessAppealReasons",
-        action: async (ctx) => ({ validity: "VALID" })
+        action: async (_ctx) => ({ validity: "VALID" })
       },
       {
         name: "restoreAccount",
-        action: async (ctx) => ({ status: "ACTIVE" })
+        action: async (_ctx) => ({ status: "ACTIVE" })
       }
     ];
     return this.executeSequential(steps, context);
@@ -245,11 +245,11 @@ export class WorkflowService extends BaseService {
     const steps: WorkflowStep[] = [
       {
         name: "segmentUsers",
-        action: async (ctx) => ({ count: 1200 })
+        action: async (_ctx) => ({ count: 1200 })
       },
       {
         name: "dispatchEmails",
-        action: async (ctx) => ({ sent: true })
+        action: async (_ctx) => ({ sent: true })
       }
     ];
     return this.executeSequential(steps, context);

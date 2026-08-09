@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { container } from "@/lib/container";
 import Link from "next/link";
-import { Sparkles, Heart, MapPin, User, Compass, Star } from "lucide-react";
+import { Sparkles, MapPin, User, Compass, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

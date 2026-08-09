@@ -15,7 +15,7 @@ export class S3StorageProvider implements StorageProvider {
     return { url, key };
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     // S3 delete simulation
   }
 }

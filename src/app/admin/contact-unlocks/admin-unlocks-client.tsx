@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Lock, Unlock, Search, Calendar, UserCheck } from "lucide-react";
+import { Unlock, Search, Calendar, UserCheck } from "lucide-react";
 
 export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }) {
   const [unlocks] = useState(initialUnlocks || []);

@@ -13,7 +13,7 @@ export class MockRealtimeProvider implements IRealtimeProvider {
     return { success: true, data: true };
   }
 
-  async emitPresence(userId: string, isOnline: boolean, lastSeen?: Date): Promise<Result<boolean>> {
+  async emitPresence(userId: string, isOnline: boolean, _lastSeen?: Date): Promise<Result<boolean>> {
     logger.info(`[MockRealtime] User ${userId} presence: ${isOnline ? "ONLINE" : "OFFLINE"}`);
     return { success: true, data: true };
   }
@@ -33,22 +33,22 @@ export class MockRealtimeProvider implements IRealtimeProvider {
     return { success: true, data: true };
   }
 
-  async emitMatchNotification(userId: string, matchData: any): Promise<Result<boolean>> {
+  async emitMatchNotification(userId: string, _matchData: any): Promise<Result<boolean>> {
     logger.info(`[MockRealtime] Match notification sent to ${userId}`);
     return { success: true, data: true };
   }
 
-  async emitAdminNotification(adminId: string, alertData: any): Promise<Result<boolean>> {
+  async emitAdminNotification(adminId: string, _alertData: any): Promise<Result<boolean>> {
     logger.info(`[MockRealtime] Admin notification sent to ${adminId}`);
     return { success: true, data: true };
   }
 
-  async emitLiveModerationEvent(moderatorId: string, eventData: any): Promise<Result<boolean>> {
+  async emitLiveModerationEvent(moderatorId: string, _eventData: any): Promise<Result<boolean>> {
     logger.info(`[MockRealtime] Live moderation event sent to ${moderatorId}`);
     return { success: true, data: true };
   }
 
-  async emitDashboardRefreshEvent(adminId: string, refreshData: any): Promise<Result<boolean>> {
+  async emitDashboardRefreshEvent(adminId: string, _refreshData: any): Promise<Result<boolean>> {
     logger.info(`[MockRealtime] Dashboard refresh event sent to ${adminId}`);
     return { success: true, data: true };
   }

@@ -48,7 +48,7 @@ export class RuleEngineService extends BaseService {
         else if (operator === "<") match = targetVal < val;
         else if (operator === "==") match = targetVal === val;
       }
-    } catch (e) {
+    } catch {
       match = false;
     }
 

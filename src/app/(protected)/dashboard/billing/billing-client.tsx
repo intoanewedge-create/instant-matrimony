@@ -8,7 +8,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { createCheckoutAction, cancelSubscriptionAction } from "@/lib/actions/billing.actions";
 
-export function BillingClient({ plans, activeMembership, invoices, orders }: any) {
+export function BillingClient({ plans, activeMembership, invoices }: any) {
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);

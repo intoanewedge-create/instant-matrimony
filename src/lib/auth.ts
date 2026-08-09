@@ -8,19 +8,6 @@ import bcrypt from "bcryptjs";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
 
-  cookies: {
-    sessionToken: {
-      name: "instant-matrimony-session",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60,
-        path: "/",
-      },
-    },
-  },
-
   providers: [
     Credentials({
       name: "Credentials",

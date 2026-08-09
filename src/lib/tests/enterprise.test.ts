@@ -105,7 +105,7 @@ async function runEnterpriseTests() {
         undefined,
         { maxRetries: 0, initialRetryDelayMs: 10 }
       );
-    } catch (e: any) {}
+    } catch {}
 
     // Call 2
     try {
@@ -115,7 +115,7 @@ async function runEnterpriseTests() {
         undefined,
         { maxRetries: 0, initialRetryDelayMs: 10 }
       );
-    } catch (e: any) {}
+    } catch {}
 
     // Call 3
     try {
@@ -125,7 +125,7 @@ async function runEnterpriseTests() {
         undefined,
         { maxRetries: 0, initialRetryDelayMs: 10 }
       );
-    } catch (e: any) {}
+    } catch {}
 
     // Attempt 4th call to trigger open circuit immediate rejection
     try {

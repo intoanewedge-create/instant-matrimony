@@ -1,6 +1,6 @@
 import { BaseService } from "./base.service";
 import { Result, returnSuccess } from "../result";
-import { ModelDeployment, ModelEvaluation, ModelDriftReport } from "../domain/phase5-contracts";
+import { ModelDeployment, ModelDriftReport } from "../domain/phase5-contracts";
 import { IModelRegistryRepository } from "../repositories/interfaces/phase5-repositories.interface";
 import { IEventBus } from "../events/event-bus";
 

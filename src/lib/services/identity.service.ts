@@ -13,7 +13,7 @@ export class IdentityService extends BaseService {
   /**
    * Generates SAML OIDC federation assertion.
    */
-  async configureSso(tenantId: string, entryPoint: string, cert: string): Promise<Result<{ ssoUrl: string; enabled: boolean }>> {
+  async configureSso(tenantId: string, entryPoint: string, _cert: string): Promise<Result<{ ssoUrl: string; enabled: boolean }>> {
     return returnSuccess({
       ssoUrl: `${entryPoint}?tenant=${tenantId}`,
       enabled: true
@@ -23,7 +23,7 @@ export class IdentityService extends BaseService {
   /**
    * Synchronizes enterprise personnel records via SCIM directory endpoints.
    */
-  async scimProvisionUser(tenantId: string, scimPayload: { email: string; name: string }): Promise<Result<{ externalId: string; status: string }>> {
+  async scimProvisionUser(_tenantId: string, _scimPayload: { email: string; name: string }): Promise<Result<{ externalId: string; status: string }>> {
     const externalId = `ext_${Math.random().toString(36).substring(2, 10)}`;
     
     await this.eventBus.publish({

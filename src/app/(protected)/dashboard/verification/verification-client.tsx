@@ -30,7 +30,7 @@ import {
   submitVerification,
 } from "@/lib/actions/media.actions";
 
-export function VerificationClient({ profile, initialPhotos, initialVerification }: any) {
+export function VerificationClient({ initialPhotos, initialVerification }: any) {
   const [photos, setPhotos] = useState<any[]>(initialPhotos);
   const [verification, setVerification] = useState<any>(initialVerification);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);

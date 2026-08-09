@@ -9,6 +9,26 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: instant_matrimony
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/instant_matrimony?schema=public"
+      NEXTAUTH_SECRET: "mock_nextauth_secret_for_tests_123456"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -31,11 +51,32 @@ jobs:
       - name: Run TypeScript Verification
         run: npx tsc --noEmit
 
+      - name: Setup Database Schema
+        run: |
+          npx prisma db push
+          npx prisma db seed
+
+      - name: Run Integration Tests
+        run: npm test
+
       - name: Build Application
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/instantmatrimony?schema=public"
+
+      - name: Install Playwright Browsers and Deps
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E Tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
 
   docker-build:
     needs: validate

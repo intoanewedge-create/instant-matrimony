@@ -1,9 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { MessageSquare, ArrowLeft, ChevronRight, Compass } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function ChatListClient({ conversations }: { conversations: any[] }) {

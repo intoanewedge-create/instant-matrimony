@@ -93,7 +93,7 @@ function VerifyEmailForm() {
           router.push(`/login?verified=true&email=${encodeURIComponent(email)}`);
         }, 2000);
       }
-    } catch (e: any) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -117,7 +117,7 @@ function VerifyEmailForm() {
         setSuccessMsg("A new verification code has been sent to your email.");
         setCountdown(60); // 60 seconds rate limit resend countdown
       }
-    } catch (e: any) {
+    } catch {
       setError("Failed to resend code");
     } finally {
       setResending(false);

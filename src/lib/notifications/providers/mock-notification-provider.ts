@@ -6,10 +6,10 @@ export class MockNotificationProvider implements INotificationProvider {
   }
 
   async send(
-    userId: string,
-    title: string,
-    message: string,
-    category: "SYSTEM" | "MATCH" | "MESSAGE" | "PAYMENT" | "SECURITY" | "PROFILE" | "ADMIN"
+    _userId: string,
+    _title: string,
+    _message: string,
+    _category: "SYSTEM" | "MATCH" | "MESSAGE" | "PAYMENT" | "SECURITY" | "PROFILE" | "ADMIN"
   ): Promise<boolean> {
     return true;
   }

@@ -14,7 +14,7 @@ export class R2StorageProvider implements StorageProvider {
     return { url, key };
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     // Cloudflare R2 delete simulation
   }
 }

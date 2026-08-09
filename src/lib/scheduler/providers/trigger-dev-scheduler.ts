@@ -40,10 +40,10 @@ export class TriggerDevScheduler implements IScheduler {
     this.jobs.push(job);
   }
 
-  pauseJob(name: string): void {}
-  resumeJob(name: string): void {}
-  async runJob(name: string): Promise<void> {}
-  cancelJob(name: string): void {}
+  pauseJob(_name: string): void {}
+  resumeJob(_name: string): void {}
+  async runJob(_name: string): Promise<void> {}
+  cancelJob(_name: string): void {}
   getAllJobsDetails(): any[] {
     return [];
   }
@@ -57,6 +57,6 @@ export class TriggerDevScheduler implements IScheduler {
       throughputJobsPerSec: 0,
     };
   }
-  async forceExecuteJob(name: string): Promise<void> {}
+  async forceExecuteJob(_name: string): Promise<void> {}
 }
 

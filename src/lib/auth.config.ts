@@ -10,6 +10,18 @@ export const authConfig = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days persistent HTTP-only cookie
   },
+  cookies: {
+    sessionToken: {
+      name: "instant-matrimony-session",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60,
+        path: "/",
+      },
+    },
+  },
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

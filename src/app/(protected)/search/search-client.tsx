@@ -17,10 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Compass,
-  Filter,
   Heart,
   MapPin,
   Search,
@@ -32,7 +31,6 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
-  UserCheck,
 } from "lucide-react";
 
 export function SearchClient({
@@ -56,7 +54,6 @@ export function SearchClient({
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
-  const [favLoadingId, setFavLoadingId] = useState<string | null>(null);
 
   // Master Data State
   const [religions, setReligions] = useState<any[]>([]);
@@ -66,7 +63,7 @@ export function SearchClient({
   const [educations, setEducations] = useState<any[]>([]);
   const [occupations, setOccupations] = useState<any[]>([]);
 
-  const { register, handleSubmit, watch, setValue } = useForm({
+  const { register, handleSubmit, watch } = useForm({
     defaultValues: {
       gender: defaultGender,
       minAge: "",
@@ -162,7 +159,7 @@ export function SearchClient({
           totalRecords: res.totalRecords || 0,
         });
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);
@@ -195,7 +192,7 @@ export function SearchClient({
           ),
         );
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setInterestLoadingId(null);
@@ -203,7 +200,6 @@ export function SearchClient({
   };
 
   const handleToggleFavorite = async (targetUserId: string) => {
-    setFavLoadingId(targetUserId);
     try {
       const res = await toggleFavoriteAction(targetUserId);
       if (res.success) {
@@ -215,10 +211,8 @@ export function SearchClient({
           ),
         );
       }
-    } catch (e) {
+    } catch {
       // ignore
-    } finally {
-      setFavLoadingId(null);
     }
   };
 

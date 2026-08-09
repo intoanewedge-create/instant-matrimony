@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { assignConciergeAdminAction, updateConciergeStatusAction } from "@/lib/actions/concierge.actions";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { assignConciergeAdminAction } from "@/lib/actions/concierge.actions";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import { Headphones, Search, Filter, Sparkles, UserCheck, Calendar, ArrowRight, Shield } from "lucide-react";
+import { Headphones, Search, Sparkles, UserCheck, ArrowRight } from "lucide-react";
 
 export function AdminConciergeClient({
   initialCases,
@@ -21,10 +20,8 @@ export function AdminConciergeClient({
   const [cases, setCases] = useState(initialCases || []);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleAssignAdmin = async (caseId: string, adminId: string) => {
-    setLoadingId(caseId);
     try {
       const res = await assignConciergeAdminAction(caseId, adminId);
       if (res.success) {
@@ -33,27 +30,8 @@ export function AdminConciergeClient({
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
-    } finally {
-      setLoadingId(null);
-    }
-  };
-
-  const handleStatusChange = async (caseId: string, newStatus: string) => {
-    setLoadingId(caseId);
-    try {
-      const res = await updateConciergeStatusAction(caseId, newStatus);
-      if (res.success) {
-        setCases((prev) =>
-          prev.map((c) => (c.id === caseId ? { ...c, status: newStatus } : c))
-        );
-        router.refresh();
-      }
-    } catch (e) {
-      // ignore
-    } finally {
-      setLoadingId(null);
     }
   };
 

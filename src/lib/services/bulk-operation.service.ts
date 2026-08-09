@@ -1,6 +1,6 @@
 import { BaseService } from "./base.service";
 import { IBulkOperationRepository } from "../repositories/interfaces/bulk-operation.repository";
-import { BulkOperation, BulkOperationResult } from "../domain/admin/contracts";
+import { BulkOperation } from "../domain/admin/contracts";
 import { prisma } from "../prisma";
 import { returnSuccess, Result } from "../result";
 import { loggerService } from "./logger.service";
@@ -53,7 +53,7 @@ export class BulkOperationService extends BaseService {
     entity: string,
     type: BulkOperation["type"],
     ids: string[],
-    payload?: any
+    _payload?: any
   ): Promise<void> {
     let success = 0;
     let failure = 0;

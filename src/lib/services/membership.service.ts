@@ -84,7 +84,7 @@ export class MembershipService extends BaseService {
       const tierRes = await this.getSubscriptionTier(userId);
       if (!tierRes.success) return this.returnSuccess(false);
 
-      const { isPremium, features } = tierRes.data;
+      const { isPremium, features: _features } = tierRes.data;
       if (!isPremium) {
         const freeAllowed = ["SEARCH_PROFILES", "LIMITED_INTERESTS"];
         return this.returnSuccess(freeAllowed.includes(feature.toUpperCase()));

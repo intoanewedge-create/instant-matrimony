@@ -6,7 +6,7 @@ import { IUserSessionHistoryRepository } from "../repositories/interfaces/user-s
 import { OtpService } from "./otp.service";
 import { EmailProvider } from "../email/email-provider";
 import { hashPassword, verifyPassword } from "../utils/crypto";
-import { welcomeTemplate, resetPasswordTemplate } from "../email/templates";
+import { resetPasswordTemplate } from "../email/templates";
 import { logger } from "../logger/logger";
 
 export class AuthService extends BaseService {

@@ -6,7 +6,6 @@ import { NotificationDispatcher } from "../notifications/pipeline/notification-p
 import { MockNotificationProvider } from "../notifications/providers/mock-notification-provider";
 import { RecommendationPipeline } from "../recommendation/pipeline/recommendation-pipeline";
 import { RuleBasedMatchExplanationProvider } from "../recommendation/rule-based-match-explanation-provider";
-import { UserProfile } from "../domain/contracts";
 
 async function runTests() {
   console.log("=========================================");

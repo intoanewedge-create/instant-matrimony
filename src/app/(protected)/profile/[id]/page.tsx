@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { container } from "@/lib/container";
 import { prisma } from "@/lib/prisma";
 import { ProfileDetailClient } from "./profile-detail-client";
 

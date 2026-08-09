@@ -2,29 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  UserCheck,
   ShieldCheck,
   CreditCard,
-  Crown,
-  DollarSign,
-  Heart,
-  MessageSquare,
   Headphones,
-  AlertTriangle,
   ArrowRight,
+  Activity,
   TrendingUp,
   Clock,
-  Unlock,
-  CheckCircle,
-  FileText,
-  Activity,
-  Calendar,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 export function AdminDashboardClient({
   metrics,
@@ -35,9 +23,6 @@ export function AdminDashboardClient({
 }) {
   const [timeframe, setTimeframe] = useState<"today" | "7d" | "30d" | "monthly" | "yearly">("30d");
   const [activeActivityTab, setActiveActivityTab] = useState<"users" | "profiles" | "payments" | "unlocks" | "concierge">("users");
-
-  // Chart data calculation
-  const multiplier = timeframe === "today" ? 1 : timeframe === "7d" ? 7 : timeframe === "30d" ? 30 : timeframe === "monthly" ? 12 : 365;
   const chartData = [
     { label: "Mon", users: Math.round(metrics.newUsersToday * 1.2 + 2), revenue: Math.round((metrics.monthlyRevenue / 30) * 1.1), approvals: Math.round(metrics.approvedProfiles / 10 + 1) },
     { label: "Tue", users: Math.round(metrics.newUsersToday * 0.8 + 1), revenue: Math.round((metrics.monthlyRevenue / 30) * 0.9), approvals: Math.round(metrics.approvedProfiles / 10) },

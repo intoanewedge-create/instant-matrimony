@@ -62,19 +62,19 @@ export class MediaPipelineService extends BaseService {
     return Buffer.concat([buffer, Buffer.from("_watermarked")]);
   }
 
-  private async scanForMalware(buffer: Buffer): Promise<boolean> {
+  private async scanForMalware(_buffer: Buffer): Promise<boolean> {
     logger.info("[MediaPipeline] Performing anti-virus and binary integrity checks.");
     // Simulated scan. Returns safe (true).
     return true;
   }
 
-  private async detectNSFW(buffer: Buffer): Promise<boolean> {
+  private async detectNSFW(_buffer: Buffer): Promise<boolean> {
     logger.info("[MediaPipeline] Evaluating NSFW content classification scores.");
     // Simulated classification. Returns safe (false).
     return false;
   }
 
-  private async detectFace(buffer: Buffer): Promise<boolean> {
+  private async detectFace(_buffer: Buffer): Promise<boolean> {
     logger.info("[MediaPipeline] Running face landmark detector.");
     // Simulated detection. Returns face found (true).
     return true;

@@ -53,7 +53,11 @@ export function DashboardClient({
 }: any) {
   const router = useRouter();
   const [received, setReceived] = useState(initialReceived || []);
-  const [suggestions, setSuggestions] = useState(initialSuggestions || []);
+  const [suggestions, setSuggestions] = useState(
+    Array.isArray(initialSuggestions)
+      ? initialSuggestions
+      : (initialSuggestions?.data || []),
+  );
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [tourStep, setTourStep] = useState<number>(0); // 0 = inactive, 1 = welcome, 2 = suggestions, 3 = subscription
   const [notifications, setNotifications] = useState<any[]>(
@@ -85,7 +89,7 @@ export function DashboardClient({
           ),
         );
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setProcessingId(null);
@@ -102,7 +106,7 @@ export function DashboardClient({
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setProcessingId(null);

@@ -26,7 +26,7 @@ export class LocalStorageProvider implements StorageProvider {
     const filePath = path.join(this.uploadDir, filename);
     try {
       await fs.unlink(filePath);
-    } catch (e) {
+    } catch {
       // Ignore if not found
     }
   }

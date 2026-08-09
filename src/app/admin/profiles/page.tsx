@@ -1,14 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import {
-  approveProfileAction,
-  rejectProfileAction,
-  suspendProfileAction,
-  restoreProfileAction,
-} from "@/lib/actions/profile.actions";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ShieldCheck, XCircle, AlertCircle, RefreshCw, Eye } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ShieldCheck, XCircle, AlertCircle } from "lucide-react";
 import { AdminProfileTable } from "./admin-profile-table";
 
 export default async function AdminProfilesPage({

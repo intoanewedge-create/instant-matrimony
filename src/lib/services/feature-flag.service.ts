@@ -211,7 +211,7 @@ export class FeatureFlagService extends BaseService {
     }
   }
 
-  async rollbackFlag(key: string, index: number, updatedBy: string): Promise<Result<any>> {
+  async rollbackFlag(key: string, index: number, _updatedBy: string): Promise<Result<any>> {
     try {
       const flag = await this.repository.findByKey(key);
       if (!flag) {

@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { editMembershipPlanAction } from "@/lib/actions/membership.actions";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Shield, Edit3, Check, Users, Sparkles } from "lucide-react";
+import { Shield, Edit3, Users, Sparkles } from "lucide-react";
 
 export function AdminMembershipsClient({
   plans: initialPlans,
@@ -53,7 +53,7 @@ export function AdminMembershipsClient({
         setEditingPlan(null);
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       // ignore
     } finally {
       setLoading(false);

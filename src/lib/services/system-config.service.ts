@@ -4,7 +4,6 @@ import { SystemConfiguration, ProviderHealth } from "../domain/admin/contracts";
 import { Result, returnSuccess } from "../result";
 import { z } from "zod";
 import { healthProviderRegistry } from "./health/health-provider-registry";
-import { loggerService } from "./logger.service";
 
 // Zod System Settings Validator
 export const SystemConfigurationSchema = z.object({

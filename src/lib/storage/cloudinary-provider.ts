@@ -36,7 +36,7 @@ export class CloudinaryStorageProvider implements StorageProvider {
     }
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     // In production, a secure server-side signature is generated to call Cloudinary's destroy API
     // We log the deletion action
   }

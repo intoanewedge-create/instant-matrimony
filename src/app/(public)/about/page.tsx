@@ -1,6 +1,4 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Heart, Target, Star, Award, Compass, ShieldAlert } from "lucide-react";
+import { Target, Award, Compass } from "lucide-react";
 import { container } from "@/lib/container";
 import { CmsPageRenderer } from "@/components/cms-page-renderer";
 
@@ -11,7 +9,7 @@ export default async function About() {
     if (cmsRes.success && cmsRes.data && cmsRes.data.status === "PUBLISHED") {
       cmsData = cmsRes.data;
     }
-  } catch (e) {
+  } catch {
     // Fallback to static
   }
 

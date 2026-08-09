@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { approvePaymentAction, rejectPaymentAction } from "@/lib/actions/membership.actions";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { CheckCircle, XCircle, Eye, Search, Filter, AlertTriangle, ShieldCheck, DollarSign, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Eye, Search, AlertTriangle, ShieldCheck, DollarSign, Clock } from "lucide-react";
 
 export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[] }) {
   const router = useRouter();
@@ -34,7 +34,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
         );
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoadingId(null);
@@ -54,7 +54,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
         setRejectReason("");
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setRejectingLoading(false);

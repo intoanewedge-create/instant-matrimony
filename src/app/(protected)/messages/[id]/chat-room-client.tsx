@@ -4,16 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import {
   sendMessageAction,
   addMessageReactionAction,
-  removeMessageReactionAction,
-  markConversationAsReadAction,
-  setTypingStatusAction,
   updatePresenceAction
 } from "@/lib/actions/chat.actions";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { ArrowLeft, Send, Paperclip, Smile, Image as ImageIcon, FileText, X, Check, CheckCheck, SmilePlus, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, Check, CheckCheck, SmilePlus, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -167,7 +164,7 @@ export function ChatRoomClient({
       } else {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
       }
-    } catch (err) {
+    } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
     } finally {
       setSending(false);
@@ -197,7 +194,7 @@ export function ChatRoomClient({
 
     try {
       await addMessageReactionAction(messageId, emoji);
-    } catch (err) {
+    } catch {
       // ignore
     }
   };

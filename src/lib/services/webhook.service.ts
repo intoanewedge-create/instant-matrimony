@@ -100,8 +100,6 @@ export class WebhookService extends BaseService {
    * Processes an incoming webhook payload idempotently with replay attack protection.
    */
   public async processWebhook(payload: WebhookPayload, secret: string): Promise<Result<boolean>> {
-    const correlationId = `wh_${payload.id}`;
-
     // 1. Replay attack check: verify if event timestamp is older than 5 minutes
     const now = Date.now();
     if (now - payload.timestamp > 300000) {

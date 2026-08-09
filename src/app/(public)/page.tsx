@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Heart, ShieldCheck, MessageSquareCode, Award, Users2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Heart, ShieldCheck, MessageSquareCode, Award, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   return (

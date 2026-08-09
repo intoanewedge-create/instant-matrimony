@@ -1,17 +1,13 @@
 import { container } from "../container";
 import { validateEnterpriseProduction } from "./enterprise-validation";
 import { DomainEvent } from "../events/domain-event";
+import crypto from "crypto";
 
 const {
-  workflowService,
   idempotencyService,
   webhookService,
   complianceService,
   releaseService,
-  billingService,
-  aiService,
-  localizationService,
-  maintenanceService,
   mediaPipelineService,
   healthService
 } = container.services;
@@ -24,7 +20,7 @@ const {
 
 import { resilienceService } from "../services/resilience.service";
 
-import { commandBus, queryBus, ICommand, IQuery, ICommandHandler, IQueryHandler } from "../cqrs";
+import { commandBus, ICommand, ICommandHandler } from "../cqrs";
 import { Result } from "../result";
 
 // Simple test commands for CQRS validation
@@ -186,7 +182,6 @@ async function runProductionTests() {
 
     // 6. Webhooks Signature & Replay protection
     console.log("\n[6. Webhooks & Replay Attacks]");
-    const crypto = require("crypto");
     const t = Math.floor(Date.now() / 1000).toString();
     const rawBody = JSON.stringify({ amount: 2000 });
     const signedPayload = `${t}.${rawBody}`;

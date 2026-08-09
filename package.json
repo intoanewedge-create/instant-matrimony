@@ -13,7 +13,8 @@
     "test:media": "npx tsx tests/media-verification.test.ts",
     "test:enterprise": "npx tsx src/lib/tests/enterprise.test.ts",
     "test:production": "npx tsx src/lib/tests/production.test.ts",
-    "test:phase5": "npx tsx src/lib/tests/phase5.test.ts"
+    "test:phase5": "npx tsx src/lib/tests/phase5.test.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
@@ -53,6 +54,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

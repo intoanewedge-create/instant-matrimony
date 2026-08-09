@@ -1,6 +1,5 @@
 import { BaseService } from "./base.service";
 import { Result, returnSuccess } from "../result";
-import { loggerService } from "./logger.service";
 import { TelemetryService } from "./telemetry.service";
 import { IEventBus } from "../events/event-bus";
 

@@ -25,7 +25,7 @@ export class WebAuthnService extends BaseService {
   /**
    * Validates passkey signature assertion.
    */
-  async verifyAssertion(userId: string, credentialId: string, clientDataJson: string, signatureBase64: string): Promise<Result<boolean>> {
+  async verifyAssertion(userId: string, _credentialId: string, clientDataJson: string, _signatureBase64: string): Promise<Result<boolean>> {
     const expectedChallenge = this.challenges.get(userId);
     if (!expectedChallenge) {
       throw new Error("Challenge expired or not found");

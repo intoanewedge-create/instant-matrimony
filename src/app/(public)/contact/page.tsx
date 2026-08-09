@@ -13,7 +13,7 @@ export default async function Contact() {
     if (cmsRes.success && cmsRes.data && cmsRes.data.status === "PUBLISHED") {
       cmsData = cmsRes.data;
     }
-  } catch (e) {
+  } catch {
     // Fallback to static
   }
 

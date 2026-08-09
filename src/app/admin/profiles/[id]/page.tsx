@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowLeft, Image as ImageIcon, User, MapPin, Briefcase, GraduationCap, Heart, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, User, Briefcase } from "lucide-react";
 import { AdminProfileDetailActions } from "./admin-profile-detail-actions";
 
 export default async function AdminProfileDetailPage({

@@ -22,7 +22,7 @@ export class FraudDetectionService extends BaseService {
       const isAutoSuspend = score >= 85;
 
       // Upsert Fraud Case record
-      const fraudCase = await prisma.fraudCase.create({
+      await prisma.fraudCase.create({
         data: {
           userId,
           score,
@@ -81,7 +81,7 @@ export class FraudDetectionService extends BaseService {
     }
   }
 
-  async resolveFraudCase(caseId: string, status: "RESOLVED_SUSPENDED" | "RESOLVED_CLEARED", note?: string): Promise<Result<any>> {
+  async resolveFraudCase(caseId: string, status: "RESOLVED_SUSPENDED" | "RESOLVED_CLEARED", _note?: string): Promise<Result<any>> {
     try {
       const fraudCase = await prisma.fraudCase.update({
         where: { id: caseId },

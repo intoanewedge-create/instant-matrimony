@@ -1,5 +1,5 @@
 import { Result } from "../result";
-import { Order, Payment, Invoice, Transaction, MembershipStatus, OrderStatus, PaymentStatus } from "@prisma/client";
+import { MembershipStatus, OrderStatus, PaymentStatus } from "@prisma/client";
 import { IOrderRepository } from "../repositories/interfaces/order.repository";
 import { IPaymentRepository } from "../repositories/interfaces/payment.repository";
 import { IInvoiceRepository } from "../repositories/interfaces/invoice.repository";

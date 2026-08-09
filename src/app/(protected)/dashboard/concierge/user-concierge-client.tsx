@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Headphones, Calendar, Clock, CheckCircle, FileText, Paperclip, Shield, ArrowLeft } from "lucide-react";
+import { Sparkles, Calendar, CheckCircle, FileText, Paperclip, ArrowLeft } from "lucide-react";
 
 export function UserConciergeClient({ caseData }: { caseData: any }) {
   if (!caseData) {

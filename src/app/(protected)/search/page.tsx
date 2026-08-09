@@ -4,7 +4,6 @@ import { container } from "@/lib/container";
 import { prisma } from "@/lib/prisma";
 import { SearchClient } from "./search-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 

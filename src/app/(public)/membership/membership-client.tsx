@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Check, QrCode, Building2, ShieldCheck, Sparkles, Upload, AlertCircle } from "lucide-react";
+import { Check, QrCode, Building2, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
 
 export function MembershipClient({
   plans,
@@ -63,7 +63,7 @@ export function MembershipClient({
       } else {
         setError(res.error || "Failed to submit payment details");
       }
-    } catch (err: any) {
+    } catch {
       setError("An error occurred while submitting payment proof");
     } finally {
       setLoading(false);

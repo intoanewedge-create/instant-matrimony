@@ -51,7 +51,7 @@ export function ProfileDetailClient({
       } else {
         alert(res.error || "Could not unlock contact. Active membership and accepted interest are required.");
       }
-    } catch (e) {
+    } catch {
       alert("Failed to process contact unlock.");
     } finally {
       setUnlockLoading(false);
@@ -84,7 +84,7 @@ export function ProfileDetailClient({
         } else {
           setAiError(res.error || "Failed to load AI compatibility metadata");
         }
-      } catch (err: any) {
+      } catch {
         setAiError("Could not retrieve AI Matchmaker scores.");
       } finally {
         setLoadingAi(false);
@@ -101,7 +101,7 @@ export function ProfileDetailClient({
         setSentInterest(res.interest);
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setInterestLoading(false);
@@ -117,7 +117,7 @@ export function ProfileDetailClient({
         setReceivedInterest((prev: any) => ({ ...prev, status: "ACCEPTED" }));
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setInterestLoading(false);
@@ -133,7 +133,7 @@ export function ProfileDetailClient({
         setReceivedInterest((prev: any) => ({ ...prev, status: "DECLINED" }));
         router.refresh();
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setInterestLoading(false);
@@ -149,7 +149,7 @@ export function ProfileDetailClient({
         setShowChatModal(false);
         router.push("/messages");
       }
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setIsSendingMessage(false);

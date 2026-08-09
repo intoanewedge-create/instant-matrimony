@@ -31,7 +31,6 @@ export class AgentPlatformService extends BaseService {
     const stepsExecuted: string[] = ["PLAN", "TOOL_RESOLUTION"];
     
     // Simulate reflection step
-    const initialPlan = "Search catalog and filter matches";
     const reflectionReview = "Plan correct. Execute tool similarity lookup.";
     stepsExecuted.push("SELF_REFLECTION");
 

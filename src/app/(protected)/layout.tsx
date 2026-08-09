@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import { Heart, Search, MessageSquare, User, Settings, Sparkles, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -92,7 +92,13 @@ export default async function ProtectedLayout({
             </Link>
 
             {/* Logout form */}
-            <form action="/api/auth/signout" method="POST" className="inline">
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/login" });
+              }}
+              className="inline"
+            >
               <Button type="submit" variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive rounded-xl" title="Logout">
                 <LogOut className="w-4.5 h-4.5" />
               </Button>

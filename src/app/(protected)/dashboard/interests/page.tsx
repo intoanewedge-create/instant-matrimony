@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Heart, Compass, Check, X, Clock, ArrowRight, User } from "lucide-react";
+import { Heart, Check, X, Clock, ArrowRight, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { acceptInterestAction, declineInterestAction } from "@/lib/actions/interest.actions";

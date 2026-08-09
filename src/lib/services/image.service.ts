@@ -7,7 +7,7 @@ import sharp from "sharp";
 export class ImageService extends BaseService {
   async validateImage(
     buffer: Buffer,
-    originalName: string,
+    _originalName: string,
     mimeType: string
   ): Promise<Result<void>> {
     // 1. MIME validation
@@ -35,7 +35,7 @@ export class ImageService extends BaseService {
       if (metadata.width < 300 || metadata.height < 300) {
         return this.returnFailure("Image must be at least 300x300 pixels", "IMAGE_TOO_SMALL");
       }
-    } catch (e: any) {
+    } catch {
       return this.returnFailure("Failed to read image metadata", "INVALID_IMAGE_FILE");
     }
 
@@ -44,7 +44,7 @@ export class ImageService extends BaseService {
 
   async processImage(
     buffer: Buffer,
-    originalName: string
+    _originalName: string
   ): Promise<Result<{
     processedBuffer: Buffer;
     mimeType: string;
