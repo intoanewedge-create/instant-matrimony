@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "npx tsx src/lib/tests/verify.ts && npx tsx tests/media-verification.test.ts && npx tsx src/lib/tests/enterprise.test.ts && npx tsx src/lib/tests/production.test.ts && npx tsx src/lib/tests/phase5.test.ts",
