@@ -47,22 +47,34 @@ export function DashboardClient({
   profile,
   membership,
   receivedInterests: initialReceived,
-  sentInterests = [],
+  sentInterests: initialSent = [],
   suggestions: initialSuggestions = [],
-  conversations = [],
+  conversations: initialConversations = [],
   notifications: initialNotifications = [],
 }: any) {
   const router = useRouter();
-  const [received, setReceived] = useState(initialReceived || []);
-  const [suggestions, setSuggestions] = useState(
+  const [received, setReceived] = useState<any[]>(
+    Array.isArray(initialReceived) ? initialReceived : initialReceived?.data || [],
+  );
+  const [suggestions, setSuggestions] = useState<any[]>(
     Array.isArray(initialSuggestions)
       ? initialSuggestions
-      : (initialSuggestions?.data || []),
+      : initialSuggestions?.data || [],
+  );
+  const [sentInterests] = useState<any[]>(
+    Array.isArray(initialSent) ? initialSent : initialSent?.data || [],
+  );
+  const [conversations] = useState<any[]>(
+    Array.isArray(initialConversations)
+      ? initialConversations
+      : initialConversations?.data || [],
   );
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [tourStep, setTourStep] = useState<number>(0); // 0 = inactive, 1 = welcome, 2 = suggestions, 3 = subscription
   const [notifications, setNotifications] = useState<any[]>(
-    initialNotifications || [],
+    Array.isArray(initialNotifications)
+      ? initialNotifications
+      : initialNotifications?.notifications || initialNotifications?.data || [],
   );
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;
@@ -80,13 +92,16 @@ export function DashboardClient({
   };
 
   const handleSendInterest = async (receiverId: string) => {
+    if (!receiverId) return;
     setProcessingId(receiverId);
     try {
       const res = await sendInterestAction(receiverId);
       if (res.success) {
         setSuggestions((prev: any) =>
           prev.map((s: any) =>
-            s.profile.userId === receiverId ? { ...s, interestSent: true } : s,
+            (s?.profile?.userId === receiverId || s?.userId === receiverId)
+              ? { ...s, interestSent: true }
+              : s,
           ),
         );
       }
@@ -98,6 +113,7 @@ export function DashboardClient({
   };
 
   const handleAcceptInterest = async (interestId: string) => {
+    if (!interestId) return;
     setProcessingId(interestId);
     try {
       const res = await acceptInterestAction(interestId);
@@ -480,52 +496,64 @@ export function DashboardClient({
                   </div>
                 ) : (
                   <div className="space-y-3" role="list">
-                    {suggestions.map((s: any) => (
-                      <div
-                        key={s.profile.id}
-                        role="listitem"
-                        className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40 hover:bg-slate-950/80 transition-all gap-4"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-500">
-                            {s.profile.name?.charAt(0) || "U"}
+                    {suggestions.map((s: any, idx: number) => {
+                      const suggProfile = s?.profile || s;
+                      const suggId = suggProfile?.id || s?.id || `sugg-${idx}`;
+                      const suggUserId = suggProfile?.userId || s?.userId || "";
+                      const suggName = suggProfile?.name || s?.name || "Premium Member";
+                      const suggAge = suggProfile?.age ?? s?.age ?? "N/A";
+                      const suggCity = suggProfile?.city || s?.city || "N/A";
+                      const suggState = suggProfile?.state || s?.state || "N/A";
+                      const matchScore = s?.compatibility?.score || s?.rankingScore || s?.score || 85;
+
+                      return (
+                        <div
+                          key={suggId}
+                          role="listitem"
+                          className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40 hover:bg-slate-950/80 transition-all gap-4"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-500">
+                              {suggName.charAt(0) || "U"}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-200">
+                                <Link
+                                  href={`/profile/${suggUserId}`}
+                                  className="hover:text-rose-400 transition-colors"
+                                >
+                                  {suggName}
+                                </Link>
+                              </h4>
+                              <p className="text-xs text-slate-400">
+                                {suggAge} yrs • {suggCity},{" "}
+                                {suggState}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-slate-200">
-                              <Link
-                                href={`/profile/${s.profile.userId}`}
-                                className="hover:text-rose-400 transition-colors"
-                              >
-                                {s.profile.name || "Premium Member"}
-                              </Link>
-                            </h4>
-                            <p className="text-xs text-slate-400">
-                              {s.profile.age} yrs • {s.profile.city || "N/A"},{" "}
-                              {s.profile.state || "N/A"}
-                            </p>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                {matchScore}% Match
+                              </span>
+                            </div>
+                            <Button
+                              disabled={
+                                s?.interestSent ||
+                                !suggUserId ||
+                                processingId === suggUserId
+                              }
+                              onClick={() => handleSendInterest(suggUserId)}
+                              size="sm"
+                              aria-busy={processingId === suggUserId}
+                              className="bg-rose-600 hover:bg-rose-500 text-white font-medium min-w-[80px]"
+                            >
+                              {s?.interestSent ? "Sent" : "Connect"}
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                              {s.compatibility?.score || s.score || 85}% Match
-                            </span>
-                          </div>
-                          <Button
-                            disabled={
-                              s.interestSent ||
-                              processingId === s.profile.userId
-                            }
-                            onClick={() => handleSendInterest(s.profile.userId)}
-                            size="sm"
-                            aria-busy={processingId === s.profile.userId}
-                            className="bg-rose-600 hover:bg-rose-500 text-white font-medium min-w-[80px]"
-                          >
-                            {s.interestSent ? "Sent" : "Connect"}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -568,51 +596,58 @@ export function DashboardClient({
                   </p>
                 ) : (
                   <div className="space-y-3" role="list">
-                    {received.map((r: any) => (
-                      <div
-                        key={r.id}
-                        role="listitem"
-                        className="flex items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-400">
-                            {r.sender?.name?.charAt(0) || "S"}
+                    {received.map((r: any, idx: number) => {
+                      const senderName = r?.sender?.name || "Member";
+                      const senderReligion = r?.sender?.profile?.religion || "N/A";
+                      const senderLanguage = r?.sender?.profile?.motherTongue || "N/A";
+                      const intId = r?.id || `rec-${idx}`;
+                      const senderId = r?.senderId || "";
+
+                      return (
+                        <div
+                          key={intId}
+                          role="listitem"
+                          className="flex items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-400">
+                              {senderName.charAt(0) || "S"}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-slate-200">
+                                <Link
+                                  href={`/profile/${senderId}`}
+                                  className="hover:text-rose-400 transition-colors"
+                                >
+                                  {senderName}
+                                </Link>
+                              </h4>
+                              <p className="text-xs text-slate-400">
+                                {senderReligion} • {senderLanguage}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-slate-200">
-                              <Link
-                                href={`/profile/${r.senderId}`}
-                                className="hover:text-rose-400 transition-colors"
-                              >
-                                {r.sender?.name || "Member"}
-                              </Link>
-                            </h4>
-                            <p className="text-xs text-slate-400">
-                              {r.sender?.profile?.religion} •{" "}
-                              {r.sender?.profile?.motherTongue}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={processingId === intId}
+                              className="border-slate-800 hover:bg-slate-800 text-slate-300"
+                            >
+                              Ignore
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={processingId === intId}
+                              onClick={() => handleAcceptInterest(intId)}
+                              className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white"
+                            >
+                              Accept
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={processingId === r.id}
-                            className="border-slate-800 hover:bg-slate-800 text-slate-300"
-                          >
-                            Ignore
-                          </Button>
-                          <Button
-                            size="sm"
-                            disabled={processingId === r.id}
-                            onClick={() => handleAcceptInterest(r.id)}
-                            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white"
-                          >
-                            Accept
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -638,11 +673,11 @@ export function DashboardClient({
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Completion Percent</span>
                   <span className="text-rose-400 font-bold">
-                    {profile.completionPercent}%
+                    {profile?.completionPercent || 0}%
                   </span>
                 </div>
                 <Progress
-                  value={profile.completionPercent}
+                  value={profile?.completionPercent || 0}
                   className="h-2 bg-slate-800"
                   aria-label="Profile completeness progression"
                 />
@@ -686,10 +721,9 @@ export function DashboardClient({
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400">Days Remaining</span>
                     <span className="font-semibold text-slate-200">
-                      {Math.ceil(
-                        (new Date(membership.endDate).getTime() - Date.now()) /
-                          (1000 * 60 * 60 * 24),
-                      )}{" "}
+                      {membership?.endDate && !isNaN(new Date(membership.endDate).getTime())
+                        ? Math.max(0, Math.ceil((new Date(membership.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+                        : 0}{" "}
                       Days
                     </span>
                   </div>

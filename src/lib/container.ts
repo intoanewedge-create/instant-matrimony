@@ -328,6 +328,9 @@ export const dashboardAggregateService = new DashboardAggregateService(
   notificationService,
   savedSearchService,
   aiProviderRegistry,
+  interestRepository,
+  notificationRepository,
+  analyticsRepository,
 );
 
 export const billingAggregate = new BillingAggregate(

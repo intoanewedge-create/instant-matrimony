@@ -6,8 +6,6 @@ import { DashboardClient } from "./dashboard-client";
 export default async function DashboardPage() {
   const session = await auth();
 
-  console.log("SESSION USER:", session?.user);
-
   if (!session?.user) {
     redirect("/login");
   }
@@ -18,22 +16,16 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  console.log("USER ID:", userId);
-
   const aggregateRes =
     await container.services.dashboardAggregateService.getDashboardData(userId);
 
-  console.log("AGGREGATE RESULT:", aggregateRes);
-
-  if (!aggregateRes.success) {
+  if (!aggregateRes.success || !aggregateRes.data) {
     redirect("/onboarding");
   }
 
   const data = aggregateRes.data;
 
-  console.log("PROFILE STATUS:", data.profile.status);
-
-  if (data.profile.status === "DRAFT") {
+  if (data.profile?.status === "DRAFT") {
     redirect("/onboarding");
   }
 
@@ -51,3 +43,4 @@ export default async function DashboardPage() {
     </div>
   );
 }
+
