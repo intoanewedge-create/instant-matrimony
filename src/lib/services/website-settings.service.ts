@@ -51,8 +51,8 @@ export const DEFAULT_BRANDING_SETTINGS: SystemBrandingSettings = {
   dangerColor: "#dc2626", // Red-600
   borderRadius: "0.5rem",
   fontFamily: "Inter, sans-serif",
-  contactNumber: "+91 98765 43210",
-  whatsappNumber: "+91 98765 43210",
+  contactNumber: "+91 8885678080",
+  whatsappNumber: "+91 8885678080",
   emailAddress: "support@instantmatrimony.com",
   officeAddress: "Financial District, Gachibowli, Hyderabad, TS, India",
   googleMapsUrl: "https://maps.google.com",

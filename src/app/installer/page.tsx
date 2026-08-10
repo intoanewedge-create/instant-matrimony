@@ -21,7 +21,7 @@ export default function InstallerWizardPage() {
     websiteName: "InstantMatrimony",
     companyName: "InstantMatrimony Tech Solutions Pvt Ltd",
     contactEmail: "support@instantmatrimony.com",
-    contactPhone: "+91 98765 43210",
+    contactPhone: "+91 8885678080",
     primaryColor: "#e11d48",
     currency: "INR",
   });

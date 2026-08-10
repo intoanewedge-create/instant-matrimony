@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import { submitManualPaymentAction } from "@/lib/actions/membership.actions";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Check, QrCode, Building2, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
+import { Check, ShieldCheck, Sparkles, AlertCircle, Smartphone, Copy } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 
 export function MembershipClient({
@@ -20,13 +18,17 @@ export function MembershipClient({
 }) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<any>(plans && plans.length > 0 ? plans[0] : null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (plans && plans.length > 0) {
       const params = new URLSearchParams(window.location.search);
       const planIdParam = params.get("planId");
       if (planIdParam) {
-        const found = plans.find(p => p.id === planIdParam);
+        const found = plans.find((p) => p.id === planIdParam);
         if (found) {
           setSelectedPlan(found);
           return;
@@ -35,14 +37,12 @@ export function MembershipClient({
       setSelectedPlan((current: any) => current || plans[0]);
     }
   }, [plans]);
-  const [paymentMethod, setPaymentMethod] = useState<"QR_CODE" | "BANK_TRANSFER">("QR_CODE");
-  const [utrNumber, setUtrNumber] = useState("");
-  const [receiptUrl, setReceiptUrl] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountHolder, setAccountHolder] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+
+  const handleCopyNumber = () => {
+    navigator.clipboard.writeText("8885678080");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,22 +56,13 @@ export function MembershipClient({
       return;
     }
 
-    if (!utrNumber.trim()) {
-      setError("Please enter the UTR or Bank Transaction Reference Number");
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
       const res = await submitManualPaymentAction({
         planId: selectedPlan.id,
-        paymentMethod,
-        utrNumber,
-        receiptUrl,
-        bankName,
-        accountHolder,
+        paymentMethod: "MANUAL_UPI",
       });
 
       if (res.success) {
@@ -80,7 +71,7 @@ export function MembershipClient({
         setError(res.error || "Failed to submit payment details");
       }
     } catch {
-      setError("An error occurred while submitting payment proof");
+      setError("An error occurred while submitting payment verification");
     } finally {
       setLoading(false);
     }
@@ -162,12 +153,12 @@ export function MembershipClient({
         })}
       </div>
 
-      {/* Manual Payment Section */}
+      {/* Payment Section */}
       <div id="payment-section" className="max-w-2xl mx-auto pt-8">
         <Card className="border border-slate-800 bg-slate-900/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="border-b border-slate-800 pb-4">
             <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-rose-500" /> Manual Payment & Verification
+              <ShieldCheck className="w-5 h-5 text-rose-500" /> Payment & Membership Activation
             </CardTitle>
             <CardDescription className="text-xs">
               Selected Plan: <strong className="text-rose-400">{selectedPlan?.name}</strong> ({formatCurrency(selectedPlan?.price)})
@@ -179,7 +170,7 @@ export function MembershipClient({
                 <Check className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
                 <h3 className="text-xl font-bold text-emerald-200">Payment Submitted for Admin Verification!</h3>
                 <p className="text-xs text-emerald-200/80 max-w-md mx-auto">
-                  Your UTR reference (<strong>{utrNumber}</strong>) has been logged. Our payment team will verify the transfer within 2–4 hours and automatically activate your membership.
+                  Your payment request for <strong>{selectedPlan?.name}</strong> has been logged. Our payment team will verify the transfer within 2–4 hours and automatically activate your membership.
                 </p>
                 <div className="pt-3">
                   <Button onClick={() => router.push("/dashboard")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
@@ -195,128 +186,45 @@ export function MembershipClient({
                   </div>
                 )}
 
-                {/* Method Switcher */}
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("QR_CODE")}
-                    className={`p-4 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                      paymentMethod === "QR_CODE"
-                        ? "border-rose-500 bg-rose-950/30 text-rose-300"
-                        : "border-slate-800 bg-slate-950/50 text-slate-400"
-                    }`}
-                  >
-                    <QrCode className="w-4 h-4" /> UPI / QR Code Payment
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("BANK_TRANSFER")}
-                    className={`p-4 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                      paymentMethod === "BANK_TRANSFER"
-                        ? "border-rose-500 bg-rose-950/30 text-rose-300"
-                        : "border-slate-800 bg-slate-950/50 text-slate-400"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" /> Bank Account Transfer
-                  </button>
-                </div>
-
-                {/* Account Details Box */}
-                {paymentMethod === "QR_CODE" ? (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 text-center">
-                    <div className="w-40 h-40 bg-white rounded-lg mx-auto p-2 flex items-center justify-center">
-                      <QrCode className="w-32 h-32 text-slate-950" />
-                    </div>
-                    <div className="text-xs text-slate-300 space-y-1">
-                      <p className="font-semibold text-rose-400">UPI ID: instantmatrimony@upi</p>
-                      <p className="text-[11px] text-slate-400">Scan QR Code using Google Pay, PhonePe, or Paytm</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Account Holder:</span>
-                      <span className="font-bold text-white">InstantMatrimony Tech Pvt Ltd</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Bank Name:</span>
-                      <span className="font-bold text-white">HDFC Bank Ltd</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Account Number:</span>
-                      <span className="font-mono text-rose-400 font-bold">50200088991122</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">IFSC Code:</span>
-                      <span className="font-mono text-white font-bold">HDFC0001234</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Inputs */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="utrNumber" className="text-xs text-slate-200 font-medium">
-                      UTR / Bank Transaction Reference Number *
-                    </Label>
-                    <Input
-                      id="utrNumber"
-                      type="text"
-                      placeholder="e.g. 329188204910 or UTR129038192"
-                      value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value)}
-                      className="border-slate-800 bg-slate-950/60 text-white"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="receiptUrl" className="text-xs text-slate-200 font-medium">
-                      Screenshot / Receipt Image URL (Optional)
-                    </Label>
-                    <Input
-                      id="receiptUrl"
-                      type="text"
-                      placeholder="e.g. https://storage.com/receipt.jpg"
-                      value={receiptUrl}
-                      onChange={(e) => setReceiptUrl(e.target.value)}
-                      className="border-slate-800 bg-slate-950/60 text-white"
-                    />
-                  </div>
-
-                  {paymentMethod === "BANK_TRANSFER" && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="bankName" className="text-xs text-slate-200 font-medium">Your Bank Name</Label>
-                        <Input
-                          id="bankName"
-                          type="text"
-                          placeholder="e.g. ICICI Bank"
-                          value={bankName}
-                          onChange={(e) => setBankName(e.target.value)}
-                          className="border-slate-800 bg-slate-950/60 text-white"
-                        />
+                {/* Simple Payment Number Display */}
+                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-rose-500/10 text-rose-400 rounded-xl">
+                        <Smartphone className="w-5 h-5" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="accountHolder" className="text-xs text-slate-200 font-medium">Sender Name</Label>
-                        <Input
-                          id="accountHolder"
-                          type="text"
-                          placeholder="e.g. Rahul Sharma"
-                          value={accountHolder}
-                          onChange={(e) => setAccountHolder(e.target.value)}
-                          className="border-slate-800 bg-slate-950/60 text-white"
-                        />
+                      <div>
+                        <h4 className="text-xs text-slate-400 font-medium">Payment / UPI Number</h4>
+                        <p className="text-xl font-extrabold text-white tracking-wider">8885678080</p>
                       </div>
                     </div>
-                  )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyNumber}
+                      className="border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white text-xs gap-1.5 h-8"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+
+                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-xs text-slate-300 space-y-1 leading-relaxed">
+                    <p className="font-semibold text-slate-200">Payment Instructions:</p>
+                    <p className="text-slate-400 text-[11px]">
+                      Send <strong className="text-rose-400">{formatCurrency(selectedPlan?.price)}</strong> using any UPI app (Google Pay, PhonePe, Paytm, BHIM) to the payment number <strong className="text-white">8885678080</strong>.
+                    </p>
+                    <p className="text-slate-400 text-[11px]">
+                      After sending the payment, click the button below to submit your payment verification request.
+                    </p>
+                  </div>
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold shadow-lg shadow-rose-600/30"
+                  className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold py-6 text-sm rounded-xl shadow-lg shadow-rose-600/30"
                 >
                   {loading ? <Spinner className="w-5 h-5 mr-2" /> : null} Submit Payment for Verification
                 </Button>

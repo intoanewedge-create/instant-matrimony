@@ -299,7 +299,7 @@ export function ProfileDetailClient({
               {unlockedState ? (
                 <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-xl space-y-1.5 text-xs text-emerald-300">
                   <div className="flex items-center gap-2 font-mono font-bold">
-                    <Phone className="w-3.5 h-3.5" /> {profile.user?.phone || "+91 98765 43210"}
+                    <Phone className="w-3.5 h-3.5" /> {profile.user?.phone || "Not Provided"}
                   </div>
                   <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
                     <Mail className="w-3.5 h-3.5 text-slate-500" /> {profile.user?.email}

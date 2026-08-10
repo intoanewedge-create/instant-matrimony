@@ -162,7 +162,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
               <tr>
                 <th className="p-4">User</th>
                 <th className="p-4">Plan & Amount</th>
-                <th className="p-4">Method & UTR</th>
+                <th className="p-4">Method & Reference</th>
                 <th className="p-4">Submitted Date</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
@@ -187,8 +187,8 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                       <div className="text-[10px] text-slate-400">{p.plan?.name || "Standard Plan"}</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-mono text-white">{p.utrNumber}</div>
-                      <div className="text-[10px] text-slate-400">{p.paymentMethod || "QR_CODE"}</div>
+                      <div className="font-mono text-white">{p.utrNumber || "Direct / Phone"}</div>
+                      <div className="text-[10px] text-slate-400">{p.paymentMethod || "MANUAL_UPI"}</div>
                     </td>
                     <td className="p-4 text-slate-400">
                       {formatDate(p.createdAt)}

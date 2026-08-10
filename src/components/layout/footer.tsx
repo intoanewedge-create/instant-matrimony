@@ -149,7 +149,7 @@ export function Footer() {
             </p>
 
             <p className="text-sm font-medium text-foreground">
-              Phone: +91 98765 43210
+              Phone: +91 8885678080
             </p>
           </div>
         </div>

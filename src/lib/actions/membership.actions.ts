@@ -8,8 +8,8 @@ import { returnFailure } from "../result";
 
 export async function submitManualPaymentAction(data: {
   planId: string;
-  paymentMethod: string;
-  utrNumber: string;
+  paymentMethod?: string;
+  utrNumber?: string;
   receiptUrl?: string;
   bankName?: string;
   accountHolder?: string;
@@ -20,15 +20,17 @@ export async function submitManualPaymentAction(data: {
   }
   const userId = (session.user as any).id;
 
-  if (!data.planId || !data.utrNumber) {
-    return { success: false, error: "Plan ID and UTR / Transaction reference number are required." };
+  if (!data.planId) {
+    return { success: false, error: "Plan ID is required." };
   }
+
+  const generatedRef = data.utrNumber?.trim() || `PAY-${Date.now().toString(36).toUpperCase()}`;
 
   const res = await container.services.membershipService.submitManualPayment(
     userId,
     data.planId,
-    data.paymentMethod || "QR_CODE",
-    data.utrNumber.trim(),
+    data.paymentMethod || "MANUAL_UPI",
+    generatedRef,
     data.receiptUrl,
     data.bankName,
     data.accountHolder

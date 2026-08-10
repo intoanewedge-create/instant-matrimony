@@ -7,23 +7,18 @@ test.describe("Manual Payment Processing", () => {
     await page.goto("/membership", { waitUntil: "domcontentloaded" });
   });
 
-  test("should successfully submit a manual payment via UPI/QR code", async ({ page }) => {
+  test("should successfully submit a payment verification request", async ({ page }) => {
     // Select the first plan card if not already selected
     const planCards = page.locator(".cursor-pointer");
     await planCards.first().click();
 
-    // Click on UPI / QR Code Payment option
-    await page.click('button:has-text("UPI / QR Code Payment")');
-
-    // Fill UTR number
-    const utrValue = `UTR${Date.now()}`;
-    await page.fill("#utrNumber", utrValue);
+    // Verify payment number is displayed in the payment section
+    await expect(page.locator("#payment-section").getByText("8885678080").first()).toBeVisible({ timeout: 10000 });
 
     // Submit payment
     await page.click('button:has-text("Submit Payment for Verification")');
 
     // Check for success screen
     await expect(page.locator("text=Payment Submitted for Admin Verification")).toBeVisible({ timeout: 10000 });
-    await expect(page.locator(`text=${utrValue}`)).toBeVisible();
   });
 });

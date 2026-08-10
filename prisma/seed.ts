@@ -236,7 +236,7 @@ async function main() {
     { key: "isInstalled", value: "true", description: "Flag indicating whether installation wizard has been completed" },
     { key: "site_name", value: "InstantMatrimony", description: "Name of the matrimonial portal" },
     { key: "support_email", value: "support@instantmatrimony.com", description: "Official support email address" },
-    { key: "support_phone", value: "+91 98765 43210", description: "Official support helpline number" },
+    { key: "support_phone", value: "+91 8885678080", description: "Official support helpline number" },
     { key: "primary_color", value: "#1e40af", description: "Brand primary color (Royal Blue)" },
     { key: "accent_color", value: "#d97706", description: "Brand accent color (Gold)" },
     { key: "seo_title", value: "InstantMatrimony - Find Your Perfect Life Partner", description: "Default homepage SEO title" },

@@ -53,7 +53,7 @@ export default async function Contact() {
                 <Phone className="h-5 w-5 text-primary mt-0.5" />
                 <div>
                   <p className="font-semibold">Helpline Number</p>
-                  <p className="text-muted-foreground mt-1">+91 98765 43210</p>
+                  <p className="text-muted-foreground mt-1">+91 8885678080</p>
                   <p className="text-muted-foreground">(Available 24x7)</p>
                 </div>
               </div>

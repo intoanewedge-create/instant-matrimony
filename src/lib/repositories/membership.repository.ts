@@ -144,8 +144,8 @@ export class PrismaMembershipRepository implements IMembershipRepository {
     userId: string;
     planId: string;
     amount: number;
-    paymentMethod: string;
-    utrNumber: string;
+    paymentMethod?: string;
+    utrNumber?: string;
     receiptUrl?: string;
     bankName?: string;
     accountHolder?: string;

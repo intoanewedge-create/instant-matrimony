@@ -78,7 +78,7 @@ export function BillingClient({ plans, activeMembership, invoices, payments = []
             <div>
               <h3 className="font-bold text-amber-300">Payment Verification Pending</h3>
               <p className="text-xs text-amber-200/80">
-                Your manual payment of <strong>{formatCurrency(p.amount)}</strong> (UTR: <strong>{p.utrNumber}</strong>) is under review. Standard matching controls will activate once verified.
+                Your payment of <strong>{formatCurrency(p.amount)}</strong>{p.utrNumber ? ` (Ref: ${p.utrNumber})` : ""} is under review. Standard matching controls will activate once verified.
               </p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export function BillingClient({ plans, activeMembership, invoices, payments = []
             <div>
               <h3 className="font-bold text-red-300">Payment Rejected</h3>
               <p className="text-xs text-red-200/80">
-                Your manual payment reference (UTR: <strong>{p.utrNumber}</strong>) was rejected. Reason: <strong>{p.rejectionReason}</strong>. Please check details and submit again.
+                Your payment request{p.utrNumber ? ` (Ref: ${p.utrNumber})` : ""} was rejected. Reason: <strong>{p.rejectionReason}</strong>. Please check details and submit again.
               </p>
             </div>
           </div>

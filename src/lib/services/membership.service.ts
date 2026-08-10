@@ -168,8 +168,8 @@ export class MembershipService extends BaseService {
   async submitManualPayment(
     userId: string,
     planId: string,
-    paymentMethod: string,
-    utrNumber: string,
+    paymentMethod?: string,
+    utrNumber?: string,
     receiptUrl?: string,
     bankName?: string,
     accountHolder?: string
