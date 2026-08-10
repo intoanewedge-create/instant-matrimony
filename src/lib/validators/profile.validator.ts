@@ -60,16 +60,32 @@ export const step6Schema = z.object({
 
 export const step7Schema = z.object({
   minAge: z
-    .preprocess((val) => Number(val), z.number().min(18).max(100))
+    .preprocess((val: any) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(18, "Minimum partner age must be at least 18").max(100, "Maximum partner age must be under 100").optional())
     .optional(),
   maxAge: z
-    .preprocess((val) => Number(val), z.number().min(18).max(100))
+    .preprocess((val: any) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(18, "Maximum partner age must be at least 18").max(100, "Maximum partner age must be under 100").optional())
     .optional(),
   minHeight: z
-    .preprocess((val) => Number(val), z.number().min(100).max(250))
+    .preprocess((val: any) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(100, "Height must be at least 100 cm").max(250, "Height must be under 250 cm").optional())
     .optional(),
   maxHeight: z
-    .preprocess((val) => Number(val), z.number().min(100).max(250))
+    .preprocess((val: any) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(100, "Height must be at least 100 cm").max(250, "Height must be under 250 cm").optional())
     .optional(),
   maritalStatus: z.string().optional(),
   religion: z.string().optional(),

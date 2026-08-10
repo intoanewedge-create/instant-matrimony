@@ -4,6 +4,46 @@ import { IProfileRepository } from "../repositories/interfaces/profile.repositor
 import { CompletionService } from "./completion.service";
 import { eventDispatcher } from "../events/event-dispatcher";
 import { DOMAIN_EVENTS } from "@/constants";
+import { prisma } from "../prisma";
+
+const ALLOWED_PROFILE_FIELDS = [
+  "gender",
+  "dateOfBirth",
+  "religion",
+  "motherTongue",
+  "caste",
+  "subCaste",
+  "gothram",
+  "height",
+  "weight",
+  "maritalStatus",
+  "education",
+  "occupation",
+  "income",
+  "city",
+  "state",
+  "country",
+  "district",
+  "bio",
+  "familyDetails",
+  "familyValues",
+  "horoscope",
+  "smoking",
+  "drinking",
+  "foodPreference",
+] as const;
+
+const ALLOWED_PREF_FIELDS = [
+  "minAge",
+  "maxAge",
+  "minHeight",
+  "maxHeight",
+  "maritalStatus",
+  "religion",
+  "motherTongue",
+  "education",
+  "country",
+] as const;
 
 export class ProfileService extends BaseService {
   constructor(
@@ -55,16 +95,29 @@ export class ProfileService extends BaseService {
         }
       }
 
-      const mergedProfile = { ...profile, ...data };
+      // Filter to only allowed profile fields
+      const cleanProfileData: Record<string, any> = {};
+      for (const field of ALLOWED_PROFILE_FIELDS) {
+        if (data[field] !== undefined) {
+          cleanProfileData[field] = data[field];
+        }
+      }
+
+      const mergedProfile = { ...profile, ...cleanProfileData };
       const completionPercent = this.completionService.calculate(mergedProfile);
 
       const status = resetToPending ? "PENDING" : profile.status;
 
       const updated = await this.profileRepository.update(profile.id, {
-        ...data,
+        ...cleanProfileData,
         completionPercent,
         status,
       });
+
+      // If partner preference data was also provided in updateProfile, sync it
+      if (data.partnerPreference) {
+        await this.updatePartnerPreference(userId, data.partnerPreference);
+      }
 
       if (resetToPending) {
         await eventDispatcher.publish(DOMAIN_EVENTS.PROFILE_SUBMITTED, {
@@ -90,19 +143,46 @@ export class ProfileService extends BaseService {
       if (!profile)
         return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
+      // Step 1: User name and phone
+      if (step === 1) {
+        const { name, phone } = stepData;
+        if (name || phone) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              ...(name ? { name } : {}),
+              ...(phone ? { phone } : {}),
+            },
+          });
+        }
+        return this.returnSuccess(profile);
+      }
+
+      // Step 7: Partner Preferences
+      if (step === 7) {
+        return this.updatePartnerPreference(userId, stepData);
+      }
+
       let status = profile.status;
       if (step === 8 && stepData.submitForReview) {
         status = "PENDING";
       }
 
-      // Strip submitForReview flag from actual database fields
-      const { submitForReview: _submitForReview, ...dbFields } = stepData;
+      // Strip submitForReview flag and filter only allowed Profile fields
+      const { submitForReview: _submitForReview, ...rawFields } = stepData;
 
-      const mergedProfile = { ...profile, ...dbFields };
+      const cleanDbFields: Record<string, any> = {};
+      for (const field of ALLOWED_PROFILE_FIELDS) {
+        if (rawFields[field] !== undefined) {
+          cleanDbFields[field] = rawFields[field];
+        }
+      }
+
+      const mergedProfile = { ...profile, ...cleanDbFields };
       const completionPercent = this.completionService.calculate(mergedProfile);
 
       const updated = await this.profileRepository.update(profile.id, {
-        ...dbFields,
+        ...cleanDbFields,
         completionPercent,
         status,
       });
@@ -130,11 +210,18 @@ export class ProfileService extends BaseService {
       if (!profile)
         return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
+      const cleanPrefData: Record<string, any> = {};
+      for (const field of ALLOWED_PREF_FIELDS) {
+        if (prefData[field] !== undefined) {
+          cleanPrefData[field] = prefData[field];
+        }
+      }
+
       const updated = await this.executeTransaction(async (tx) => {
         const pref = await tx.partnerPreference.upsert({
           where: { profileId: profile.id },
-          create: { ...prefData, profileId: profile.id },
-          update: prefData,
+          create: { ...cleanPrefData, profileId: profile.id },
+          update: cleanPrefData,
         });
 
         const fullProfile = await tx.profile.findFirst({

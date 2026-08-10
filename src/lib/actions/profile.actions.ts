@@ -48,6 +48,7 @@ export async function updatePreferencesAction(formData: any) {
   }
 
   revalidatePath("/profile");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 

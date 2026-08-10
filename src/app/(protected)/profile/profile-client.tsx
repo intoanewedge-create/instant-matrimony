@@ -238,10 +238,10 @@ export function ProfileClient({
     try {
       const payload = {
         ...data,
-        minAge: Number(data.minAge),
-        maxAge: Number(data.maxAge),
-        minHeight: Number(data.minHeight),
-        maxHeight: Number(data.maxHeight),
+        minAge: data.minAge ? Number(data.minAge) : undefined,
+        maxAge: data.maxAge ? Number(data.maxAge) : undefined,
+        minHeight: data.minHeight ? Number(data.minHeight) : undefined,
+        maxHeight: data.maxHeight ? Number(data.maxHeight) : undefined,
       };
       const res = await updatePreferencesAction(payload);
       if (res.success) {
