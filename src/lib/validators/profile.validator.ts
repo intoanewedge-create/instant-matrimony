@@ -93,12 +93,20 @@ export const profileUpdateSchema = z.object({
   motherTongue: z.string().optional(),
   caste: z.string().optional(),
 
-  height: z.number().optional(),
+  height: z.preprocess((val: any) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  }, z.number().min(50).max(300).optional()),
   maritalStatus: z.string().optional(),
 
   education: z.string().optional(),
   occupation: z.string().optional(),
-  income: z.number().optional(),
+  income: z.preprocess((val: any) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  }, z.number().min(0).max(100000000).optional()),
 
   city: z.string().optional(),
   state: z.string().optional(),

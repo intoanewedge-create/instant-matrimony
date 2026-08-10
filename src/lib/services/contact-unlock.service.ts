@@ -54,25 +54,19 @@ export class ContactUnlockService extends BaseService {
         return this.returnSuccess({ unlock: existingUnlock, isAlreadyUnlocked: true });
       }
 
-      // 4. Check quota limits for Plan 1 (Standard) vs Plan 2 (Concierge)
-      const planName = activeMembership.plan?.name || "";
-      const isConcierge = planName.toLowerCase().includes("concierge") || activeMembership.plan?.price >= 100000;
+      // 4. Check quota limits (Max 5 unlocks per active membership)
+      const unlocksCount = await prisma.contactUnlock.count({
+        where: {
+          userId,
+          membershipId: activeMembership.id,
+        },
+      });
 
-      if (!isConcierge) {
-        // Plan 1: Max 5 unlocks limit check
-        const unlocksCount = await prisma.contactUnlock.count({
-          where: {
-            userId,
-            membershipId: activeMembership.id,
-          },
-        });
-
-        if (unlocksCount >= 5) {
-          return this.returnFailure(
-            "You have reached the maximum 5 contact unlocks quota for your current Standard plan.",
-            "UNLOCK_LIMIT_REACHED"
-          );
-        }
+      if (unlocksCount >= 5) {
+        return this.returnFailure(
+          "You have reached the maximum 5 contact unlocks quota for your current membership plan.",
+          "UNLOCK_LIMIT_REACHED"
+        );
       }
 
       // 5. Create permanent ContactUnlock record
@@ -82,7 +76,7 @@ export class ContactUnlockService extends BaseService {
           targetUserId,
           membershipId: activeMembership.id,
           interestId: interest.id,
-          unlockReason: `Unlocked via ${planName}`,
+          unlockReason: `Unlocked via ${activeMembership.plan?.name || "Standard Plan"}`,
         },
       });
 
@@ -111,14 +105,6 @@ export class ContactUnlockService extends BaseService {
 
       if (!activeMembership) {
         return this.returnSuccess({ remainingUnlocks: 0, totalUnlocksUsed: 0, isUnlimited: false });
-      }
-
-      const planName = activeMembership.plan?.name || "";
-      const isConcierge = planName.toLowerCase().includes("concierge") || activeMembership.plan?.price >= 100000;
-
-      if (isConcierge) {
-        const totalUsed = await prisma.contactUnlock.count({ where: { userId } });
-        return this.returnSuccess({ remainingUnlocks: 9999, totalUnlocksUsed: totalUsed, isUnlimited: true });
       }
 
       const usedInCurrentPlan = await prisma.contactUnlock.count({

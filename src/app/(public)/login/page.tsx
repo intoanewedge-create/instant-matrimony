@@ -74,29 +74,30 @@ function LoginForm() {
       });
 
       if (res?.error) {
-        if (
+        const isUnverified =
           res.error.includes("EMAIL_UNVERIFIED") ||
-          res.error.includes("unverified")
-        ) {
+          res.error.includes("unverified") ||
+          res.error === "CallbackRouteError" ||
+          res.error.includes("CallbackRoute") ||
+          (res as any).code === "EMAIL_UNVERIFIED";
+
+        if (isUnverified) {
           setError(
             <span>
-              Your email is not verified.{" "}
+              Please verify your email before signing in. Check your inbox for the verification code.{" "}
               <Link
                 href={`/verify-email?email=${encodeURIComponent(data.email)}`}
-                className="text-rose-400 underline font-semibold"
+                className="text-rose-400 underline font-semibold ml-1"
               >
                 Click here to verify.
               </Link>
             </span>,
           );
         } else {
-          setError(
-            "Invalid email or password. (Default test password: User@123 or Admin@123)",
-          );
+          setError("Invalid email or password.");
         }
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
       }
     } catch {
       setError("An unexpected error occurred");

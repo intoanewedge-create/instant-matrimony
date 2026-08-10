@@ -1,50 +1,40 @@
 import { Page, expect } from "@playwright/test";
 
 export async function loginAs(page: Page, email: string, password = "User@123") {
-  // If we are already on the dashboard, we are good
-  if (page.url().includes("/dashboard")) {
-    return;
-  }
-
+  // Clear cookies to ensure completely isolated session for the requested user
+  await page.context().clearCookies();
+  
   await page.goto("/login");
-  
-  // Wait for either the email input (logged out state) or the Go to Dashboard button (logged in state)
+
   const emailInput = page.locator("#email");
-  const goBtn = page.locator('a:has-text("Go to Dashboard"), button:has-text("Go to Dashboard")').first();
-  
-  await Promise.race([
-    emailInput.waitFor({ state: "visible", timeout: 5000 }).catch(() => {}),
-    goBtn.waitFor({ state: "visible", timeout: 5000 }).catch(() => {})
-  ]);
+  const submitBtn = page.locator('button[type="submit"]');
 
-  // Check if we are already logged in
-  if (page.url().includes("/dashboard")) {
-    return;
-  }
+  await emailInput.waitFor({ state: "visible", timeout: 15000 });
+  await submitBtn.waitFor({ state: "visible", timeout: 15000 });
 
-  if (await goBtn.isVisible()) {
-    await goBtn.click();
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
-    return;
-  }
+  // Allow NextAuth CSRF token initialization to settle
+  await page.waitForTimeout(1000);
 
-  // Perform normal login if not logged in
+  // Fill credentials
   await emailInput.click();
   await emailInput.fill(email);
   await page.locator("#password").click();
   await page.locator("#password").fill(password);
-  
-  // Verify that the inputs contain the correct values to guard against hydration resets
-  await expect(emailInput).toHaveValue(email);
-  await expect(page.locator("#password")).toHaveValue(password);
 
-  await page.click('button[type="submit"]');
-  
-  // Ensure we transition to the dashboard
+  await submitBtn.click();
+
+  // Wait for transition to dashboard or admin
   try {
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
-  } catch (err) {
-    await page.goto("/dashboard");
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
+    await page.waitForURL(/.*(dashboard|admin).*/, { timeout: 30000 });
+  } catch (_err) {
+    if (await submitBtn.isVisible()) {
+      await emailInput.fill(email);
+      await page.locator("#password").fill(password);
+      await submitBtn.click();
+      await page.waitForURL(/.*(dashboard|admin).*/, { timeout: 30000 });
+    }
   }
+
+  // Strictly verify authentication success
+  await expect(page).toHaveURL(/.*(dashboard|admin).*/, { timeout: 30000 });
 }

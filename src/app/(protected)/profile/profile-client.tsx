@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
@@ -102,7 +102,7 @@ export function ProfileClient({
   const [activeTab, setActiveTab] = useState<
     "details" | "preferences" | "photos" | "preview"
   >("details");
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   // Photo uploading states
   const [uploading, setUploading] = useState(false);
@@ -209,7 +209,8 @@ export function ProfileClient({
   const onUpdateDetails = async (data: Record<string, any>) => {
     setDetailsSuccess(null);
     setDetailsError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const payload = {
         ...data,
         height: Number(data.height),
@@ -223,13 +224,18 @@ export function ProfileClient({
       } else {
         setDetailsError(res.error || "Failed to update profile details");
       }
-    });
+    } catch (e: any) {
+      setDetailsError(e.message || "Failed to update profile details");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const onUpdatePref = async (data: Record<string, any>) => {
     setPrefSuccess(null);
     setPrefError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const payload = {
         ...data,
         minAge: Number(data.minAge),
@@ -248,7 +254,11 @@ export function ProfileClient({
       } else {
         setPrefError(res.error || "Failed to update preferences");
       }
-    });
+    } catch (e: any) {
+      setPrefError(e.message || "Failed to update preferences");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

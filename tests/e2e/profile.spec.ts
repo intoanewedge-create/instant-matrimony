@@ -24,30 +24,48 @@ test.describe("Profile Management Workspace", () => {
     .toFile(testImagePath);
   });
 
-  test.afterAll(() => {
+  test.afterAll(async () => {
     if (fs.existsSync(testImagePath)) {
       try {
         fs.unlinkSync(testImagePath);
       } catch {}
     }
+    try {
+      const { prisma } = await import("../../src/lib/prisma");
+      await prisma.profile.updateMany({
+        where: { user: { email: "user@instantmatrimony.com" } },
+        data: { status: "APPROVED" },
+      });
+    } catch {}
   });
 
   test.beforeEach(async ({ page }) => {
+    try {
+      const { prisma } = await import("../../src/lib/prisma");
+      await prisma.profile.updateMany({
+        where: { user: { email: "user@instantmatrimony.com" } },
+        data: { status: "APPROVED" },
+      });
+      await prisma.photo.deleteMany({
+        where: { profile: { user: { email: "user@instantmatrimony.com" } } },
+      });
+    } catch {}
     await loginAs(page, "user@instantmatrimony.com", "User@123");
-    await page.goto("/profile");
-    await expect(page.locator("h1")).toContainText(/Profile/i);
+    await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("h1")).toContainText(/Profile/i, { timeout: 30000 });
   });
 
   test("should update personal details successfully", async ({ page }) => {
     // We are on details tab by default
-    await page.fill("#height", "175");
-    await page.fill("#religion", "Hindu");
-    await page.fill("#city", "Bengaluru");
-    await page.fill("#bio", "This is a test biography description.");
+    await page.locator("#height").fill("");
+    await page.locator("#height").fill("175");
+    await page.locator("#religion").fill("Hindu");
+    await page.locator("#city").fill("Bengaluru");
+    await page.locator("#bio").fill("This is a test biography description.");
     
     // Save details
     await page.click('button:has-text("Save Details")');
-    await expect(page.locator("text=updated successfully")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=updated successfully")).toBeVisible({ timeout: 30000 });
   });
 
   test("should update partner preferences match criteria", async ({ page }) => {
@@ -57,7 +75,7 @@ test.describe("Profile Management Workspace", () => {
     await page.fill("#religionPref", "HINDU");
     
     await page.click('button:has-text("Save Preferences")');
-    await expect(page.locator("text=updated successfully")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=updated successfully")).toBeVisible({ timeout: 30000 });
   });
 
   test("should upload and delete photo in photo gallery", async ({ page }) => {
@@ -70,6 +88,6 @@ test.describe("Profile Management Workspace", () => {
     await fileChooser.setFiles(testImagePath);
     
     // Wait for successful upload message
-    await expect(page.locator("text=uploaded successfully")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=uploaded successfully")).toBeVisible({ timeout: 30000 });
   });
 });

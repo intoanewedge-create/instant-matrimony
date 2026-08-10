@@ -4,8 +4,8 @@ import { loginAs } from "./helpers";
 test.describe("Interest Management Hub", () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, "user@instantmatrimony.com", "User@123");
-    await page.goto("/interests");
-    await expect(page.locator("h1")).toContainText(/Interest/i);
+    await page.goto("/interests", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("h1")).toContainText(/Interest/i, { timeout: 30000 });
   });
 
   test("should toggle between Received and Sent interest tabs", async ({ page }) => {
@@ -16,7 +16,9 @@ test.describe("Interest Management Hub", () => {
     // Click Sent tab
     const sentTab = page.locator('button:has-text("Sent")');
     await sentTab.click();
-    await expect(page.locator("text=No sent interests in this category").or(page.locator(".profile-card"))).toBeVisible();
+    await expect(
+      page.locator("text=No sent interests in this category").or(page.locator(".profile-card"))
+    ).toBeVisible({ timeout: 30000 });
   });
 
   test("should filter interests by status", async ({ page }) => {

@@ -4,7 +4,7 @@ import { loginAs } from "./helpers";
 test.describe("Conversations and Instant Messaging", () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, "user@instantmatrimony.com", "User@123");
-    await page.goto("/messages");
+    await page.goto("/messages", { waitUntil: "domcontentloaded" });
   });
 
   test("should load the conversations index page", async ({ page }) => {

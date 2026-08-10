@@ -120,11 +120,48 @@ export class MembershipService extends BaseService {
   }
 
   async getPlans(): Promise<Result<any>> {
+    const defaultPlans = [
+      {
+        id: "plan-standard-1000",
+        name: "Standard Membership",
+        description: "Essential contact unlocks and unlimited messaging for verified matchmaking.",
+        price: 1000,
+        durationDays: 30,
+        features: [
+          "Unlock up to 5 Contact Numbers",
+          "Unlimited Match Express Interests",
+          "Direct Messaging with Mutual Matches",
+          "Verified Match Badges",
+          "Standard Profile Search & Filters",
+        ],
+        isActive: true,
+      },
+      {
+        id: "plan-concierge-500000",
+        name: "VIP Matrimony Concierge",
+        description: "Dedicated Relationship Manager, handpicked shortlists, background verification & family introductions.",
+        price: 500000,
+        durationDays: 180,
+        features: [
+          "Dedicated Relationship Manager",
+          "Handpicked & Vetted Match Shortlists",
+          "Direct Family Introduction & Coordination",
+          "Kundli & Horoscope Matching by Astrologers",
+          "VIP Profile Highlighting & Priority Placement",
+          "Confidential & Private Matchmaking Assistance",
+        ],
+        isActive: true,
+      },
+    ];
+
     try {
       const plans = await this.membershipRepository.findAllPlans(true);
-      return this.returnSuccess(plans);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PLANS_FETCH_ERROR");
+      if (plans && plans.length > 0) {
+        return this.returnSuccess(plans);
+      }
+      return this.returnSuccess(defaultPlans);
+    } catch {
+      return this.returnSuccess(defaultPlans);
     }
   }
 

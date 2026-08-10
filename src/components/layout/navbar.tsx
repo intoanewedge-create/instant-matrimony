@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { Button } from "../ui/button";
 import { Heart } from "lucide-react";
+import { MobileNav } from "./mobile-nav";
 
 export async function Navbar() {
   const session = await auth();
@@ -75,10 +76,10 @@ export async function Navbar() {
           </Link>
         </nav>
 
-        {/* Action Button */}
-        <div className="flex items-center space-x-4">
+        {/* Action Button & Mobile Nav */}
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {isLoggedIn ? (
-            <Link href="/dashboard">
+            <Link href="/dashboard" className="hidden sm:inline-block">
               <Button size="sm">Go to Dashboard</Button>
             </Link>
           ) : (
@@ -89,13 +90,15 @@ export async function Navbar() {
                 </Button>
               </Link>
 
-              <Link href="/register">
+              <Link href="/register" className="hidden sm:inline-block">
                 <Button size="sm" variant="accent">
                   Register Free
                 </Button>
               </Link>
             </>
           )}
+
+          <MobileNav isLoggedIn={isLoggedIn} />
         </div>
       </div>
     </header>

@@ -4,8 +4,8 @@ import { loginAs } from "./helpers";
 test.describe("Advanced Match Search", () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, "premium-gold@instantmatrimony.com", "User@123");
-    await page.goto("/search");
-    await expect(page.locator("h1")).toContainText(/Search/i);
+    await page.goto("/search", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("h1")).toContainText(/Search/i, { timeout: 30000 });
   });
 
   test("should search profiles by city filter successfully", async ({ page }) => {

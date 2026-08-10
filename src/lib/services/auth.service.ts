@@ -183,13 +183,32 @@ export class AuthService extends BaseService {
     try {
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
-        return this.returnFailure("No user account matches this email address.", "USER_NOT_FOUND");
+        // Return generic success to prevent email/account enumeration
+        logger.info({ email }, "Forgot password requested for non-existent email");
+        return this.returnSuccess(true);
       }
 
+      const cryptoModule = await import("crypto");
+      const resetToken = cryptoModule.randomBytes(32).toString("hex");
+      const tokenHash = cryptoModule.createHash("sha256").update(resetToken).digest("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      const { prisma } = await import("../prisma");
+      await prisma.verificationToken.create({
+        data: {
+          identifier: email,
+          token: resetToken,
+          tokenHash: tokenHash,
+          expires: expiresAt,
+        },
+      }).catch((err) => logger.warn({ err: err.message }, "Could not store reset verification token"));
+
       const otpResult = await this.otpService.sendVerificationOtp(email, "PASSWORD_RESET", "email");
-      if (!otpResult.success) {
-        return otpResult;
-      }
+      const otpCode = (otpResult as any).data?.code;
+
+      const { emailService } = await import("../email");
+      emailService.sendPasswordResetEmail(email, resetToken, otpCode)
+        .catch(err => logger.error({ err: err.message }, "Failed to send password reset email"));
 
       return this.returnSuccess(true);
     } catch (e: any) {

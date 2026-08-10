@@ -27,38 +27,23 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
 
-      // 1. Setup Status Verification (Redirect to installer if not installed, block installer if installed)
-      const isApiOrAsset =
-        pathname.startsWith("/api") ||
-        pathname.startsWith("/_next") ||
-        pathname.includes(".");
-
-      let isInstalled = true;
-      if (!isApiOrAsset) {
+      // 1. Installer Route Protection
+      if (pathname === "/installer") {
         try {
           const statusRes = await fetch(new URL("/api/installer/status", nextUrl.origin));
           if (statusRes.ok) {
             const data = await statusRes.json();
-            isInstalled = !!data.isInstalled;
+            if (data.isInstalled) {
+              return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
+            }
           }
-        } catch (e) {
-          // Default to true on failure to prevent boot loop
-          isInstalled = true;
-        }
-      }
-
-      if (!isInstalled) {
-        if (pathname !== "/installer") {
-          return Response.redirect(new URL("/installer", nextUrl));
+        } catch {
+          return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
         }
         return true;
       }
 
-      if (pathname === "/installer") {
-        return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
-      }
-
-      // Guest Allowed Routes: Home, About, Contact, FAQ, Membership Plans, Login, Register, Terms, Privacy, Success Stories
+      // Guest Allowed Routes: Home, About, Contact, FAQ, Membership Plans, Terms, Privacy, Legal, Success Stories, Verify Email, Offline, Browse, Find, Public Profile Previews, Blog, Error, Maintenance
       const isGuestAllowedPublicRoute =
         pathname === "/" ||
         pathname === "/about" ||
@@ -69,7 +54,15 @@ export const authConfig = {
         pathname === "/privacy" ||
         pathname === "/legal" ||
         pathname === "/success-stories" ||
-        pathname === "/offline";
+        pathname === "/verify-email" ||
+        pathname === "/offline" ||
+        pathname === "/browse" ||
+        pathname === "/find" ||
+        pathname === "/blog" ||
+        pathname.startsWith("/blog/") ||
+        pathname.startsWith("/profiles/") ||
+        pathname.startsWith("/error") ||
+        pathname === "/maintenance";
 
       const isGuestAuthRoute =
         pathname === "/login" ||
@@ -102,7 +95,7 @@ export const authConfig = {
         return true;
       }
 
-      // All other routes (/browse, /profiles, /search, /messages, /dashboard, /profile, /onboarding, /settings) require authentication
+      // All other routes (/dashboard, /profile, /search, /messages, /favorites, /interests, /settings, /onboarding) require authentication
       if (!isLoggedIn) {
         return Response.redirect(new URL("/login", nextUrl));
       }

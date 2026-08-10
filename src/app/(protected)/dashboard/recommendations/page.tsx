@@ -17,11 +17,12 @@ export default async function RecommendationsPage() {
   if (!profileResult.success) {
     redirect("/onboarding");
   }
-  if (profileResult.data.status !== "APPROVED") {
-    redirect("/dashboard");
-  }
+  const profile = profileResult.data;
+  const isApproved = profile.status === "APPROVED";
 
-  const recsRes = await container.services.recommendationService.getRecommendations(userId, 6);
+  const recsRes = isApproved
+    ? await container.services.recommendationService.getRecommendations(userId, 6)
+    : { success: true, data: [] };
   const recommendations = recsRes.success ? recsRes.data || [] : [];
 
   return (
@@ -38,7 +39,22 @@ export default async function RecommendationsPage() {
         </p>
       </div>
 
-      {recommendations.length > 0 ? (
+      {!isApproved ? (
+        <Card className="border border-amber-800/40 bg-amber-950/20 p-12 text-center text-amber-200/80 max-w-xl mx-auto space-y-4">
+          <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-amber-300 text-lg">Profile Under Review</h3>
+          <p className="text-xs">
+            Your profile details have been submitted and are currently under review by our moderation team. AI Match Recommendations will be available as soon as your profile is approved.
+          </p>
+          <Link href="/dashboard" className="inline-block">
+            <Button variant="outline" className="border-amber-700/50 hover:bg-amber-900/30 text-amber-300 text-xs font-semibold px-6">
+              Return to Dashboard
+            </Button>
+          </Link>
+        </Card>
+      ) : recommendations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recommendations.map((rec: any, idx: number) => {
             const candidate = rec.profile;
@@ -84,18 +100,18 @@ export default async function RecommendationsPage() {
                       <h3 className="font-bold text-slate-100 group-hover:text-rose-400 transition-colors">
                         {candidate.user?.name || candidate.name || "Matrimony Member"}
                       </h3>
-                      <span className="text-xs text-slate-500">{age} yrs • {candidate.height} cm</span>
+                      <span className="text-xs text-slate-500">{age} yrs {candidate.height ? `• ${candidate.height} cm` : ""}</span>
                     </div>
 
                     <p className="text-slate-400 text-xs flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-rose-500" /> {candidate.city}, {candidate.state}
+                      <MapPin className="w-3.5 h-3.5 text-rose-500" /> {candidate.city || "City"}, {candidate.state || "State"}
                     </p>
 
                     <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1.5 text-[11px] text-slate-400 border-t border-slate-950/60">
-                      <div><span className="text-slate-600">Religion:</span> {candidate.religion}</div>
+                      <div><span className="text-slate-600">Religion:</span> {candidate.religion || "N/A"}</div>
                       <div><span className="text-slate-600">Caste:</span> {candidate.caste || "N/A"}</div>
-                      <div><span className="text-slate-600">Tongue:</span> {candidate.motherTongue}</div>
-                      <div><span className="text-slate-600">Income:</span> ₹{candidate.income}L</div>
+                      <div><span className="text-slate-600">Tongue:</span> {candidate.motherTongue || "N/A"}</div>
+                      <div><span className="text-slate-600">Income:</span> {candidate.income ? `₹${candidate.income}L` : "N/A"}</div>
                     </div>
 
                     {rec.explanation && (

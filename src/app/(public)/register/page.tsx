@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/validators/auth.validator";
 import { registerAction } from "@/lib/actions/auth.actions";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,20 +45,8 @@ export default function RegisterPage() {
       if (!res.success) {
         setError(res.error || "Registration failed");
       } else {
-        setSuccessMsg("Registration successful! Redirecting to profile creation...");
-        // Auto sign-in and redirect to onboarding wizard
-        const signInRes = await signIn("credentials", {
-          email: data.email,
-          password: data.password,
-          redirect: false,
-        });
-
-        if (signInRes?.ok) {
-          router.push("/onboarding");
-          router.refresh();
-        } else {
-          router.push("/login?registered=true");
-        }
+        setSuccessMsg("Registration successful! Redirecting to email verification...");
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       }
     } catch {
       setError("An unexpected error occurred");

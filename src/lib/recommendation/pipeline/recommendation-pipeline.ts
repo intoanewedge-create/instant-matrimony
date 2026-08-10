@@ -75,6 +75,8 @@ export class DbCandidateCollector implements ICandidateCollector {
       isVerified: p.user?.identityVerification?.status === "APPROVED",
       isPremium: (p.user?.memberships?.length || 0) > 0,
       lastLoginAt: p.user?.lastLoginAt || null,
+      photos: p.photos || [],
+      user: p.user,
     }));
   }
 }

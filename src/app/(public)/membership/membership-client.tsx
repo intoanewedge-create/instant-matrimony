@@ -19,16 +19,20 @@ export function MembershipClient({
   user: any;
 }) {
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<any>(plans[0] || null);
+  const [selectedPlan, setSelectedPlan] = useState<any>(plans && plans.length > 0 ? plans[0] : null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const planIdParam = params.get("planId");
-    if (planIdParam) {
-      const found = plans.find(p => p.id === planIdParam);
-      if (found) {
-        setSelectedPlan(found);
+    if (plans && plans.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const planIdParam = params.get("planId");
+      if (planIdParam) {
+        const found = plans.find(p => p.id === planIdParam);
+        if (found) {
+          setSelectedPlan(found);
+          return;
+        }
       }
+      setSelectedPlan((current: any) => current || plans[0]);
     }
   }, [plans]);
   const [paymentMethod, setPaymentMethod] = useState<"QR_CODE" | "BANK_TRANSFER">("QR_CODE");
@@ -253,7 +257,7 @@ export function MembershipClient({
                 {/* Inputs */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="utrNumber" className="text-xs">
+                    <Label htmlFor="utrNumber" className="text-xs text-slate-200 font-medium">
                       UTR / Bank Transaction Reference Number *
                     </Label>
                     <Input
@@ -268,7 +272,7 @@ export function MembershipClient({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="receiptUrl" className="text-xs">
+                    <Label htmlFor="receiptUrl" className="text-xs text-slate-200 font-medium">
                       Screenshot / Receipt Image URL (Optional)
                     </Label>
                     <Input
@@ -284,7 +288,7 @@ export function MembershipClient({
                   {paymentMethod === "BANK_TRANSFER" && (
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bankName" className="text-xs">Your Bank Name</Label>
+                        <Label htmlFor="bankName" className="text-xs text-slate-200 font-medium">Your Bank Name</Label>
                         <Input
                           id="bankName"
                           type="text"
@@ -295,7 +299,7 @@ export function MembershipClient({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="accountHolder" className="text-xs">Sender Name</Label>
+                        <Label htmlFor="accountHolder" className="text-xs text-slate-200 font-medium">Sender Name</Label>
                         <Input
                           id="accountHolder"
                           type="text"

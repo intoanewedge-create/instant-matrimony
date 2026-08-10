@@ -11,12 +11,21 @@ export default async function SettingsPage() {
   const userId = (session.user as any).id;
 
   const prefRes = await container.services.notificationService.getPreferences(userId);
-  if (!prefRes.success) {
-    redirect("/dashboard");
-  }
 
-  // Ensure serializability
-  const serializedPreferences = JSON.parse(JSON.stringify(prefRes.data));
+  const defaultPreferences = {
+    emailMatches: true,
+    emailInterests: true,
+    emailMessages: true,
+    emailSecurity: true,
+    browserMatches: true,
+    browserInterests: true,
+    browserMessages: true,
+    browserSecurity: true,
+  };
+
+  const serializedPreferences = prefRes.success && prefRes.data
+    ? JSON.parse(JSON.stringify(prefRes.data))
+    : defaultPreferences;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-12">

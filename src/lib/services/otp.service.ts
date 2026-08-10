@@ -21,7 +21,7 @@ export class OtpService extends BaseService {
     target: string,
     purpose: string,
     type: "email" | "sms",
-  ): Promise<Result<boolean>> {
+  ): Promise<Result<any>> {
     try {
       // 1. Rate limiting check (60 seconds)
       const latest = await this.otpRepository.findLatest(target, purpose);
@@ -66,7 +66,7 @@ export class OtpService extends BaseService {
         console.log("=============================================\n");
       }
 
-      return this.returnSuccess(true);
+      return this.returnSuccess({ code });
     } catch (e: any) {
       return this.returnFailure(
         e.message ?? "Failed to generate OTP.",

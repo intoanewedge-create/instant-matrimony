@@ -4,7 +4,7 @@ import { loginAs } from "./helpers";
 test.describe("Manual Payment Processing", () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, "user@instantmatrimony.com", "User@123");
-    await page.goto("/membership");
+    await page.goto("/membership", { waitUntil: "domcontentloaded" });
   });
 
   test("should successfully submit a manual payment via UPI/QR code", async ({ page }) => {
