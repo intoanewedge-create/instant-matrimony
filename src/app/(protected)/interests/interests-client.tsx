@@ -189,7 +189,7 @@ export function InterestsClient({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                 >
-                  <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all flex flex-col justify-between h-full">
+                  <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all flex flex-col justify-between h-full profile-card">
                     <div>
                       <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
                         <span className="text-xs text-slate-400 flex items-center gap-1">
