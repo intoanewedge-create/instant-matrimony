@@ -24,6 +24,7 @@ import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -35,6 +36,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<React.ReactNode | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -192,13 +194,27 @@ function LoginForm() {
                   </Link>
                 </div>
 
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="border-slate-800 bg-slate-950/50 text-white placeholder-slate-500 focus:border-rose-500 focus:ring-rose-500"
-                  {...register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="border-slate-800 bg-slate-950/50 text-white placeholder-slate-500 focus:border-rose-500 focus:ring-rose-500 pr-10"
+                    {...register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
 
                 {errors.password && (
                   <p className="text-xs text-red-400">

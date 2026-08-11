@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Heart, ShieldCheck, MessageSquareCode, Award, Sparkles, CheckCircle2 } from "lucide-react";
+import { QuickMatchForm } from "@/components/home/quick-match-form";
 
 export default function Home() {
   return (
@@ -28,46 +30,31 @@ export default function Home() {
               </p>
 
               {/* Quick Profile Search Box */}
-              <div className="bg-card border border-border/60 p-5 rounded-2xl shadow-xl shadow-black/5 max-w-xl">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">I am a</label>
-                    <select className="w-full bg-secondary border border-border/40 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                      <option>Male</option>
-                      <option>Female</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Looking for a</label>
-                    <select className="w-full bg-secondary border border-border/40 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
-                      <option>Female</option>
-                      <option>Male</option>
-                    </select>
-                  </div>
-                </div>
-                <Link href="/register">
-                  <Button className="w-full" variant="accent">
-                    Start Searching Now
-                  </Button>
-                </Link>
-              </div>
+              <QuickMatchForm />
             </div>
 
-            {/* Right Hero Column (Visual Elements) */}
+            {/* Right Hero Column (Visual Elements with Official Logo) */}
             <div className="mt-16 sm:mt-24 lg:mt-0 lg:col-span-6 flex justify-center">
               <div className="relative w-full max-w-md aspect-square bg-gradient-to-tr from-primary/10 to-accent/10 rounded-full flex items-center justify-center p-8 border border-primary/10">
                 <div className="absolute inset-4 rounded-full border border-dashed border-primary/20 animate-spin-slow" />
-                <div className="bg-card border border-border/50 p-6 rounded-2xl shadow-xl flex flex-col items-center max-w-xs text-center z-10 hover:scale-102 transition-transform duration-300">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white mb-4">
-                    <Heart className="h-6 w-6 fill-white" />
+                <div className="bg-card/90 backdrop-blur-md border border-border/60 p-6 rounded-3xl shadow-2xl flex flex-col items-center max-w-xs text-center z-10 hover:scale-102 transition-transform duration-300">
+                  <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-rose-500/30 bg-card shadow-lg shadow-rose-500/20 mb-4 p-1">
+                    <Image
+                      src="/InstantMatrimony-Logo.jpeg"
+                      alt="InstantMatrimony Official Logo"
+                      width={80}
+                      height={80}
+                      className="object-cover w-full h-full rounded-xl"
+                      priority
+                    />
                   </div>
-                  <h3 className="text-lg font-bold">100% Verified</h3>
+                  <h3 className="text-lg font-bold text-foreground">100% Verified Profiles</h3>
                   <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                     Every member profile undergoes strict database checks & manual document verification.
                   </p>
-                  <div className="mt-4 flex items-center space-x-1.5 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>Safe & Secure</span>
+                  <div className="mt-4 flex items-center space-x-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Safe & Secure Matchmaking</span>
                   </div>
                 </div>
               </div>

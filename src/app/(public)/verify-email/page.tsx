@@ -153,6 +153,9 @@ function VerifyEmailForm() {
             <CardDescription className="text-slate-400">
               We sent a 6-digit verification code to <span className="text-slate-200 font-semibold">{email}</span>
             </CardDescription>
+            <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-900/40 text-[11px] text-rose-300/90 text-center">
+              Please check your inbox and spam/junk folder. Codes typically arrive within a few seconds.
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (

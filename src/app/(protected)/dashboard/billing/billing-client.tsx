@@ -174,19 +174,25 @@ export function BillingClient({ plans, activeMembership, invoices, payments = []
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan: any) => {
             const isCurrent = activeMembership?.planId === plan.id;
+            const isPlanPending = payments.some((p: any) => p.planId === plan.id && p.status === "PENDING");
             return (
               <motion.div
                 key={plan.id}
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className={`border h-full flex flex-col justify-between overflow-hidden bg-slate-900/30 backdrop-blur-md ${isCurrent ? 'border-rose-500 bg-rose-950/5' : 'border-slate-800'}`}>
+                <Card className={`border h-full flex flex-col justify-between overflow-hidden bg-slate-900/30 backdrop-blur-md ${isCurrent ? 'border-rose-500 bg-rose-950/5' : isPlanPending ? 'border-amber-500/60 bg-amber-950/10' : 'border-slate-800'}`}>
                   <CardHeader className="p-6">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-semibold uppercase tracking-wider text-rose-400">{plan.name}</span>
                       {isCurrent && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
                           CURRENT PLAN
+                        </span>
+                      )}
+                      {isPlanPending && !isCurrent && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          PENDING
                         </span>
                       )}
                     </div>
@@ -221,10 +227,16 @@ export function BillingClient({ plans, activeMembership, invoices, payments = []
                   <CardFooter className="p-6 bg-slate-950/20 border-t border-slate-800/40">
                     <Button
                       onClick={() => handleCheckout(plan.id, plan.price)}
-                      disabled={loadingPlan !== null || isCurrent}
-                      className={`w-full font-semibold transition-all ${isCurrent ? 'bg-slate-800 hover:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white'}`}
+                      disabled={loadingPlan !== null || isCurrent || isPlanPending}
+                      className={`w-full font-semibold transition-all ${
+                        isCurrent
+                          ? 'bg-slate-800 hover:bg-slate-800 text-slate-500 cursor-not-allowed'
+                          : isPlanPending
+                          ? 'bg-amber-900/40 text-amber-300 border border-amber-700/50 hover:bg-amber-900/40 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white'
+                      }`}
                     >
-                      {loadingPlan === plan.id ? "Initializing..." : isCurrent ? "Active Tier" : "Upgrade Plan"}
+                      {loadingPlan === plan.id ? "Initializing..." : isCurrent ? "Active Tier" : isPlanPending ? "Verification Pending" : "Upgrade Plan"}
                     </Button>
                   </CardFooter>
                 </Card>

@@ -133,7 +133,18 @@ export default async function ProtectedLayout({
       {/* Footer */}
       <footer className="border-t border-border bg-card/50 py-6 mt-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-          <p>© 2026 InstantMatrimony. All rights reserved. Premium matchmaking services.</p>
+          <div className="flex items-center space-x-2.5">
+            <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md border border-rose-500/30 bg-card">
+              <Image
+                src="/InstantMatrimony-Logo.jpeg"
+                alt="InstantMatrimony Logo"
+                width={24}
+                height={24}
+                className="object-cover w-full h-full"
+              />
+            </div>
+            <span>© {new Date().getFullYear()} InstantMatrimony. All rights reserved.</span>
+          </div>
           <div className="flex space-x-4">
             <Link href="/about" className="hover:text-foreground">About</Link>
             <Link href="/faq" className="hover:text-foreground">FAQ</Link>

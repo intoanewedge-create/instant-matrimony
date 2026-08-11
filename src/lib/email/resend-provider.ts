@@ -7,12 +7,15 @@ export class ResendEmailProvider implements EmailProvider {
     const apiKey = process.env.RESEND_API_KEY || emailConfig.resend.apiKey;
     if (!apiKey) {
       logger.info({ to, subject }, "[ResendEmailProvider (Mock)] API Key is missing. Simulating delivery.");
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[Email Simulation] To: ${to} | Subject: ${subject}`);
+      }
       return;
     }
 
+    // Default to onboarding@resend.dev if EMAIL_FROM is not explicitly defined or verified
     const fromAddress =
       process.env.EMAIL_FROM ||
-      emailConfig.from ||
       "InstantMatrimony <onboarding@resend.dev>";
 
     try {
@@ -27,6 +30,21 @@ export class ResendEmailProvider implements EmailProvider {
 
       if (error) {
         logger.error({ to, error }, "Resend API returned error response");
+        // Retry with default onboarding address if domain error occurred
+        if (fromAddress !== "InstantMatrimony <onboarding@resend.dev>") {
+          try {
+            await resend.emails.send({
+              from: "InstantMatrimony <onboarding@resend.dev>",
+              to: [to],
+              subject,
+              html: body,
+            });
+            logger.info({ to, subject }, "Email sent successfully via Resend onboarding fallback");
+            return;
+          } catch (fallbackErr: any) {
+            logger.error({ to, error: fallbackErr?.message }, "Fallback Resend sending failed");
+          }
+        }
         logger.info(
           { to, subject, preview: body.replace(/<[^>]*>?/gm, "").substring(0, 150) + "..." },
           "[Resend Fallback Mock] Email logged locally after provider sandbox/restriction."

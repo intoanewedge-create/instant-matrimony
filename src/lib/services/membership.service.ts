@@ -3,6 +3,7 @@ import { Result } from "../result";
 import { IMembershipRepository } from "../repositories/interfaces/membership.repository";
 import { eventDispatcher } from "../events/event-dispatcher";
 import { DOMAIN_EVENTS } from "@/constants";
+import { prisma } from "../prisma";
 
 export class MembershipService extends BaseService {
   constructor(private membershipRepository: IMembershipRepository) {
@@ -178,12 +179,71 @@ export class MembershipService extends BaseService {
       const plan = await this.membershipRepository.findPlanById(planId);
       if (!plan) return this.returnFailure("Membership plan not found", "PLAN_NOT_FOUND");
 
+      // 1. Check for pending payment on this plan (Scenario A & D)
+      const existingPending = await prisma.payment.findFirst({
+        where: {
+          userId,
+          planId,
+          status: "PENDING",
+        },
+      });
+
+      if (existingPending) {
+        return this.returnFailure(
+          `Your payment for ${plan.name} is currently under verification. Please wait for validation before making another payment.`,
+          "PAYMENT_PENDING_VERIFICATION"
+        );
+      }
+
+      // 2. Check for active membership on this plan (Scenario B & Renewal)
+      const activeMembership = await prisma.membership.findFirst({
+        where: {
+          userId,
+          status: "ACTIVE",
+          endDate: { gte: new Date() },
+        },
+        include: { plan: true },
+      });
+
+      if (activeMembership) {
+        if (activeMembership.planId === planId) {
+          return this.returnFailure(
+            "This membership is already active. Please wait until your current membership expires before renewing.",
+            "MEMBERSHIP_ALREADY_ACTIVE"
+          );
+        }
+        if (activeMembership.plan && activeMembership.plan.price > plan.price) {
+          return this.returnFailure(
+            "You already have an active VIP membership with higher tier access.",
+            "ACTIVE_HIGHER_TIER"
+          );
+        }
+      }
+
+      // 3. Check for duplicate UTR / Transaction ID across other users
+      if (utrNumber && utrNumber.trim()) {
+        const duplicateUtr = await prisma.payment.findFirst({
+          where: {
+            utrNumber: utrNumber.trim(),
+            status: { in: ["PENDING", "PAID"] },
+            NOT: { userId },
+          },
+        });
+
+        if (duplicateUtr) {
+          return this.returnFailure(
+            "This transaction reference has already been submitted for verification.",
+            "DUPLICATE_TRANSACTION_ID"
+          );
+        }
+      }
+
       const payment = await (this.membershipRepository as any).createManualPayment({
         userId,
         planId,
         amount: plan.price,
-        paymentMethod,
-        utrNumber,
+        paymentMethod: paymentMethod || "MANUAL_UPI",
+        utrNumber: utrNumber?.trim() || `TXN-${Date.now().toString(36).toUpperCase()}`,
         receiptUrl,
         bankName,
         accountHolder,
@@ -194,12 +254,12 @@ export class MembershipService extends BaseService {
         userId,
         planId,
         amount: plan.price,
-        utrNumber,
+        utrNumber: payment.utrNumber,
       });
 
       return this.returnSuccess(payment);
     } catch (e: any) {
-      return this.returnFailure(e.message, "PAYMENT_SUBMIT_ERROR");
+      return this.returnFailure(e.message || "Failed to submit payment verification request", "PAYMENT_SUBMIT_ERROR");
     }
   }
 
