@@ -12,9 +12,11 @@ import { formatCurrency } from "@/lib/utils/format";
 export function MembershipClient({
   plans,
   user,
+  paymentNumber = "9000906292",
 }: {
   plans: any[];
   user: any;
+  paymentNumber?: string;
 }) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<any>(plans && plans.length > 0 ? plans[0] : null);
@@ -39,7 +41,8 @@ export function MembershipClient({
   }, [plans]);
 
   const handleCopyNumber = () => {
-    navigator.clipboard.writeText("8885678080");
+    const rawDigits = paymentNumber.replace(/[^0-9+]/g, "");
+    navigator.clipboard.writeText(rawDigits || paymentNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -195,7 +198,7 @@ export function MembershipClient({
                       </div>
                       <div>
                         <h4 className="text-xs text-slate-400 font-medium">Payment / UPI Number</h4>
-                        <p className="text-xl font-extrabold text-white tracking-wider">8885678080</p>
+                        <p className="text-xl font-extrabold text-white tracking-wider">{paymentNumber}</p>
                       </div>
                     </div>
                     <Button
@@ -213,7 +216,7 @@ export function MembershipClient({
                   <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-xs text-slate-300 space-y-1 leading-relaxed">
                     <p className="font-semibold text-slate-200">Payment Instructions:</p>
                     <p className="text-slate-400 text-[11px]">
-                      Send <strong className="text-rose-400">{formatCurrency(selectedPlan?.price)}</strong> using any UPI app (Google Pay, PhonePe, Paytm, BHIM) to the payment number <strong className="text-white">8885678080</strong>.
+                      Send <strong className="text-rose-400">{formatCurrency(selectedPlan?.price)}</strong> using any UPI app (Google Pay, PhonePe, Paytm, BHIM) to the payment number <strong className="text-white">{paymentNumber}</strong>.
                     </p>
                     <p className="text-slate-400 text-[11px]">
                       After sending the payment, click the button below to submit your payment verification request.

@@ -5,7 +5,15 @@ import Link from "next/link";
 import { Menu, X, Heart, ShieldCheck, Sparkles, HelpCircle, PhoneCall, Home, Info, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function MobileNav({
+  isLoggedIn,
+  dashboardHref = "/dashboard",
+  dashboardLabel = "Go to Dashboard",
+}: {
+  isLoggedIn: boolean;
+  dashboardHref?: string;
+  dashboardLabel?: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -82,8 +90,8 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <div className="pt-4 border-t border-border/50 flex flex-col gap-2">
             {isLoggedIn ? (
-              <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-                <Button className="w-full font-semibold">Go to Dashboard</Button>
+              <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
+                <Button className="w-full font-semibold">{dashboardLabel}</Button>
               </Link>
             ) : (
               <div className="grid grid-cols-2 gap-3">

@@ -13,7 +13,7 @@ test.describe("Manual Payment Processing", () => {
     await planCards.first().click();
 
     // Verify payment number is displayed in the payment section
-    await expect(page.locator("#payment-section").getByText("8885678080").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("#payment-section").getByText("9000906292").first()).toBeVisible({ timeout: 10000 });
 
     // Submit payment
     await page.click('button:has-text("Submit Payment for Verification")');

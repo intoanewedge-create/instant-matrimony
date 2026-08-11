@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -47,13 +48,24 @@ export default async function AdminLayout({
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 shrink-0 p-6 flex flex-col justify-between">
         <div className="space-y-6">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-rose-500">
-              Admin Workspace
-            </span>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
-              InstantMatrimony
-            </h2>
+          <div className="flex items-center space-x-3">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-rose-500/30 bg-slate-800 shadow-md">
+              <Image
+                src="/InstantMatrimony-Logo.jpeg"
+                alt="InstantMatrimony Logo"
+                width={40}
+                height={40}
+                className="object-cover w-full h-full"
+              />
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-500">
+                Admin Workspace
+              </span>
+              <h2 className="text-base font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+                InstantMatrimony
+              </h2>
+            </div>
           </div>
 
           <nav className="space-y-1">

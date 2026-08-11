@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { Heart, Search, MessageSquare, User, Settings, Sparkles, LogOut, Shield } from "lucide-react";
@@ -23,6 +24,7 @@ export default async function ProtectedLayout({
 
   const isPremium = !!membershipRes;
   const planName = membershipRes?.plan?.name || "Free basic";
+  const isAdmin = (session.user as any)?.role && (session.user as any).role !== "USER";
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-sans transition-colors duration-200">
@@ -31,9 +33,15 @@ export default async function ProtectedLayout({
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center space-x-2 select-none group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform duration-200">
-              <Heart className="h-4.5 w-4.5 fill-white text-white animate-pulse" />
+          <Link href="/dashboard" className="flex items-center space-x-2.5 select-none group">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card border border-rose-500/20 shadow-md shadow-rose-500/10 group-hover:scale-105 transition-transform duration-200">
+              <Image
+                src="/InstantMatrimony-Logo.jpeg"
+                alt="InstantMatrimony Logo"
+                width={36}
+                height={36}
+                className="object-cover w-full h-full"
+              />
             </div>
             <span className="text-lg font-bold tracking-tight text-foreground">
               Instant<span className="text-primary font-extrabold">Matrimony</span>
@@ -64,6 +72,15 @@ export default async function ProtectedLayout({
 
           {/* User Account Controls */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Admin Panel Quick Access */}
+            {isAdmin && (
+              <Link href="/admin">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold select-none border border-rose-500/40 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all cursor-pointer">
+                  <Shield className="w-3.5 h-3.5" /> Admin Panel
+                </span>
+              </Link>
+            )}
+
             {/* Theme Switcher */}
             <ThemeToggle />
 

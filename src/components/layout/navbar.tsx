@@ -1,12 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/lib/auth";
 import { Button } from "../ui/button";
-import { Heart } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 
 export async function Navbar() {
   const session = await auth();
   const isLoggedIn = !!session?.user;
+  const isAdmin = isLoggedIn && (session?.user as any)?.role && (session.user as any).role !== "USER";
+  const dashboardHref = isAdmin ? "/admin" : "/dashboard";
+  const dashboardLabel = isAdmin ? "Admin Panel" : "Go to Dashboard";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
@@ -14,10 +17,17 @@ export async function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center space-x-2 select-none group"
+          className="flex items-center space-x-2.5 select-none group"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform duration-200">
-            <Heart className="h-5 w-5 fill-white text-white animate-pulse" />
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-card border border-border/60 shadow-md shadow-primary/10 group-hover:scale-105 transition-transform duration-200">
+            <Image
+              src="/InstantMatrimony-Logo.jpeg"
+              alt="InstantMatrimony Logo"
+              width={40}
+              height={40}
+              className="object-cover w-full h-full"
+              priority
+            />
           </div>
           <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Instant<span className="text-foreground">Matrimony</span>
@@ -79,8 +89,8 @@ export async function Navbar() {
         {/* Action Button & Mobile Nav */}
         <div className="flex items-center space-x-3 sm:space-x-4">
           {isLoggedIn ? (
-            <Link href="/dashboard" className="hidden sm:inline-block">
-              <Button size="sm">Go to Dashboard</Button>
+            <Link href={dashboardHref} className="hidden sm:inline-block">
+              <Button size="sm">{dashboardLabel}</Button>
             </Link>
           ) : (
             <>
@@ -98,7 +108,11 @@ export async function Navbar() {
             </>
           )}
 
-          <MobileNav isLoggedIn={isLoggedIn} />
+          <MobileNav
+            isLoggedIn={isLoggedIn}
+            dashboardHref={dashboardHref}
+            dashboardLabel={dashboardLabel}
+          />
         </div>
       </div>
     </header>

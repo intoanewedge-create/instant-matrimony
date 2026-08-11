@@ -16,6 +16,7 @@ export interface SystemBrandingSettings {
   fontFamily: string;
   contactNumber: string;
   whatsappNumber: string;
+  paymentNumber: string;
   emailAddress: string;
   officeAddress: string;
   googleMapsUrl: string;
@@ -40,9 +41,9 @@ export interface SystemBrandingSettings {
 
 export const DEFAULT_BRANDING_SETTINGS: SystemBrandingSettings = {
   websiteName: "InstantMatrimony",
-  companyName: "InstantMatrimony Tech Solutions Pvt Ltd",
-  logo: "/logo.png",
-  darkLogo: "/logo-dark.png",
+  companyName: "చైతన్య",
+  logo: "/InstantMatrimony-Logo.jpeg",
+  darkLogo: "/InstantMatrimony-Logo.jpeg",
   favicon: "/favicon.ico",
   primaryColor: "#e11d48", // Rose-600
   secondaryColor: "#4f46e5", // Indigo-600
@@ -51,10 +52,11 @@ export const DEFAULT_BRANDING_SETTINGS: SystemBrandingSettings = {
   dangerColor: "#dc2626", // Red-600
   borderRadius: "0.5rem",
   fontFamily: "Inter, sans-serif",
-  contactNumber: "+91 8885678080",
-  whatsappNumber: "+91 8885678080",
+  contactNumber: "8885678080",
+  whatsappNumber: "8885678080",
+  paymentNumber: "9000906292",
   emailAddress: "support@instantmatrimony.com",
-  officeAddress: "Financial District, Gachibowli, Hyderabad, TS, India",
+  officeAddress: "గుంటూరు district, ఆంధ్ర ప్రదేశ్",
   googleMapsUrl: "https://maps.google.com",
   facebookUrl: "https://facebook.com",
   instagramUrl: "https://instagram.com",
@@ -64,7 +66,7 @@ export const DEFAULT_BRANDING_SETTINGS: SystemBrandingSettings = {
   seoTitle: "InstantMatrimony - Find Your Perfect Life Partner",
   seoDescription: "The premier enterprise matrimony platform connecting souls worldwide with privacy and speed.",
   metaKeywords: "matrimony, marriage, match, bride, groom, matchmaking, instant matrimony",
-  ogImage: "/og-image.png",
+  ogImage: "/InstantMatrimony-Logo.jpeg",
   footerContent: "Empowering families and individuals to find trusted matches securely.",
   copyrightText: "© 2026 InstantMatrimony Tech. All rights reserved.",
   timeZone: "Asia/Kolkata",
@@ -99,6 +101,7 @@ export class WebsiteSettingsService {
         fontFamily: settingsMap.fontFamily || DEFAULT_BRANDING_SETTINGS.fontFamily,
         contactNumber: settingsMap.contactNumber || DEFAULT_BRANDING_SETTINGS.contactNumber,
         whatsappNumber: settingsMap.whatsappNumber || DEFAULT_BRANDING_SETTINGS.whatsappNumber,
+        paymentNumber: settingsMap.paymentNumber || DEFAULT_BRANDING_SETTINGS.paymentNumber,
         emailAddress: settingsMap.emailAddress || DEFAULT_BRANDING_SETTINGS.emailAddress,
         officeAddress: settingsMap.officeAddress || DEFAULT_BRANDING_SETTINGS.officeAddress,
         googleMapsUrl: settingsMap.googleMapsUrl || DEFAULT_BRANDING_SETTINGS.googleMapsUrl,

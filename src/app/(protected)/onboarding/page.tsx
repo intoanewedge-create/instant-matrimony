@@ -8,6 +8,12 @@ export default async function OnboardingPage() {
   if (!session?.user) {
     redirect("/login");
   }
+
+  const userRole = (session.user as any).role;
+  if (userRole && userRole !== "USER") {
+    redirect("/admin");
+  }
+
   const userId = (session.user as any).id;
 
   const result = await container.services.profileService.getProfileByUserId(userId);

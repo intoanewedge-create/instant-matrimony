@@ -19,7 +19,7 @@ export default async function ProfileDetailPage({
     where: { userId: selfUserId },
     select: { status: true },
   });
-  const isAdmin = (session.user as any).role === "ADMIN";
+  const isAdmin = (session.user as any).role && (session.user as any).role !== "USER";
   if (!isAdmin && (!selfProfile || selfProfile.status !== "APPROVED")) {
     redirect("/dashboard");
   }
@@ -42,7 +42,7 @@ export default async function ProfileDetailPage({
     },
   });
 
-  if (!targetProfile || targetProfile.status !== "APPROVED") {
+  if (!targetProfile || (!isAdmin && targetProfile.status !== "APPROVED")) {
     redirect("/dashboard");
   }
 

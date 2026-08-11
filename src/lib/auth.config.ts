@@ -70,10 +70,11 @@ export const authConfig = {
         pathname === "/forgot-password" ||
         pathname === "/reset-password";
 
-      // If route is an auth route (login/register) and user is already logged in, redirect to dashboard
+      // If route is an auth route (login/register) and user is already logged in, redirect based on role
       if (isGuestAuthRoute) {
         if (isLoggedIn) {
-          return Response.redirect(new URL("/dashboard", nextUrl));
+          const role = (auth?.user as any)?.role;
+          return Response.redirect(new URL(role && role !== "USER" ? "/admin" : "/dashboard", nextUrl));
         }
         return true;
       }

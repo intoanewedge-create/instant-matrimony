@@ -16,6 +16,6 @@ test.describe("Membership Plans Interface", () => {
     await expect(page.locator("h1")).toContainText(/Matchmaking Membership/i, { timeout: 30000 });
     
     // Check that payment details are visible in payment section
-    await expect(page.locator("#payment-section").getByText("8885678080").first()).toBeVisible({ timeout: 30000 });
+    await expect(page.locator("#payment-section").getByText("9000906292").first()).toBeVisible({ timeout: 30000 });
   });
 });

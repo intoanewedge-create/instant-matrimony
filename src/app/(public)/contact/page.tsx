@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Mail, Phone, Clock } from "lucide-react";
 import { container } from "@/lib/container";
 import { CmsPageRenderer } from "@/components/cms-page-renderer";
+import { websiteSettingsService, DEFAULT_BRANDING_SETTINGS } from "@/lib/services/website-settings.service";
 
 export default async function Contact() {
   let cmsData = null;
@@ -26,6 +27,9 @@ export default async function Contact() {
       />
     );
   }
+
+  const settingsRes = await websiteSettingsService.getSettings().catch(() => null);
+  const settings = (settingsRes && settingsRes.success && settingsRes.data) ? settingsRes.data : DEFAULT_BRANDING_SETTINGS;
 
   return (
     <div className="flex flex-col w-full py-16 sm:py-24">
@@ -52,9 +56,9 @@ export default async function Contact() {
               <div className="flex items-start space-x-3.5 text-sm">
                 <Phone className="h-5 w-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-semibold">Helpline Number</p>
-                  <p className="text-muted-foreground mt-1">+91 8885678080</p>
-                  <p className="text-muted-foreground">(Available 24x7)</p>
+                  <p className="font-semibold">Phone / WhatsApp</p>
+                  <p className="text-muted-foreground mt-1">{settings.contactNumber}</p>
+                  <p className="text-muted-foreground text-xs">(WhatsApp Support Available)</p>
                 </div>
               </div>
 
@@ -62,19 +66,19 @@ export default async function Contact() {
                 <Mail className="h-5 w-5 text-primary mt-0.5" />
                 <div>
                   <p className="font-semibold">Support Email</p>
-                  <p className="text-muted-foreground mt-1">support@instantmatrimony.com</p>
-                  <p className="text-muted-foreground">escalations@instantmatrimony.com</p>
+                  <p className="text-muted-foreground mt-1">{settings.emailAddress}</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3.5 text-sm">
                 <MapPin className="h-5 w-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-semibold">Corporate Office</p>
-                  <p className="text-muted-foreground mt-1">
-                    InstantMatrimony Tech Labs<br />
-                    80 Feet Road, Koramangala<br />
-                    Bangalore, KA 560034
+                  <p className="font-semibold">Business / Contact Details</p>
+                  <p className="text-foreground font-medium mt-1">
+                    {settings.companyName}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {settings.officeAddress}
                   </p>
                 </div>
               </div>

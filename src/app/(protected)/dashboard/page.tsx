@@ -16,6 +16,11 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const userRole = (session.user as any).role;
+  if (userRole && userRole !== "USER") {
+    redirect("/admin");
+  }
+
   const aggregateRes =
     await container.services.dashboardAggregateService.getDashboardData(userId);
 
