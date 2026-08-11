@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 function LoginForm() {
@@ -81,6 +82,10 @@ function LoginForm() {
           res.error.includes("CallbackRoute") ||
           (res as any).code === "EMAIL_UNVERIFIED";
 
+        const isUnavailable =
+          res.error.includes("ACCOUNT_UNAVAILABLE") ||
+          (res as any).code === "ACCOUNT_UNAVAILABLE";
+
         if (isUnverified) {
           setError(
             <span>
@@ -93,14 +98,16 @@ function LoginForm() {
               </Link>
             </span>,
           );
+        } else if (isUnavailable) {
+          setError("Your account is currently unavailable. Please contact support.");
         } else {
-          setError("Invalid email or password.");
+          setError("Invalid email or password. Please check your credentials and try again.");
         }
       } else {
-        window.location.href = "/dashboard";
+        window.location.href = res?.url || "/dashboard";
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -115,7 +122,19 @@ function LoginForm() {
         className="w-full max-w-md"
       >
         <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-rose-950/20">
-          <CardHeader className="space-y-1 text-center">
+          <CardHeader className="space-y-3 text-center">
+            <div className="flex justify-center">
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-800/80 p-0.5 shadow-lg shadow-rose-500/10">
+                <Image
+                  src="/InstantMatrimony-Logo.jpeg"
+                  alt="InstantMatrimony Logo"
+                  width={56}
+                  height={56}
+                  className="h-full w-full object-cover rounded-xl"
+                  priority
+                />
+              </div>
+            </div>
             <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 bg-clip-text text-transparent">
               Welcome Back
             </CardTitle>

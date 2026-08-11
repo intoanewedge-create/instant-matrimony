@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 function ResetPasswordForm() {
@@ -73,7 +74,19 @@ function ResetPasswordForm() {
         className="w-full max-w-md"
       >
         <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-rose-950/20">
-          <CardHeader className="space-y-1 text-center">
+          <CardHeader className="space-y-3 text-center">
+            <div className="flex justify-center">
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-800/80 p-0.5 shadow-lg shadow-rose-500/10">
+                <Image
+                  src="/InstantMatrimony-Logo.jpeg"
+                  alt="InstantMatrimony Logo"
+                  width={56}
+                  height={56}
+                  className="h-full w-full object-cover rounded-xl"
+                  priority
+                />
+              </div>
+            </div>
             <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 bg-clip-text text-transparent">
               Reset Password
             </CardTitle>

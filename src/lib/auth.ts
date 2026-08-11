@@ -39,9 +39,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsedCredentials.success) return null;
 
         const { email, password, rememberMe } = parsedCredentials.data;
+        const cleanEmail = email.trim().toLowerCase();
 
-        const user = await prisma.user.findUnique({
-          where: { email },
+        const user = await prisma.user.findFirst({
+          where: {
+            email: { equals: cleanEmail, mode: "insensitive" },
+          },
         });
 
         if (!user || !user.password) return null;
@@ -49,6 +52,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordsMatch) return null;
+
+        // Check for suspended, blocked, or deactivated accounts
+        if (
+          user.accountStatus === "SUSPENDED" ||
+          user.accountStatus === "BLOCKED" ||
+          user.isActive === false ||
+          user.deletedAt !== null
+        ) {
+          throw new Error("ACCOUNT_UNAVAILABLE");
+        }
 
         // Restrict unverified email accounts
         if (!user.isEmailVerified) {

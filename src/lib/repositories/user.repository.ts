@@ -7,14 +7,28 @@ export class PrismaUserRepository extends BaseRepository<User> implements IUserR
   protected modelDelegate = prisma.user;
 
   async findByEmail(email: string): Promise<User | null> {
+    const cleanEmail = email?.trim().toLowerCase();
+    if (!cleanEmail) return null;
     return prisma.user.findFirst({
-      where: { email, deletedAt: null },
+      where: { email: { equals: cleanEmail, mode: "insensitive" }, deletedAt: null },
     });
   }
 
   async findByPhone(phone: string): Promise<User | null> {
+    const cleanPhone = phone?.trim();
+    if (!cleanPhone) return null;
+    const phoneVariants = [cleanPhone];
+    if (cleanPhone.startsWith("+91")) {
+      phoneVariants.push(cleanPhone.slice(3).trim());
+    } else if (cleanPhone.length === 10) {
+      phoneVariants.push(`+91${cleanPhone}`);
+    }
+
     return prisma.user.findFirst({
-      where: { phone, deletedAt: null },
+      where: {
+        phone: { in: phoneVariants },
+        deletedAt: null,
+      },
     });
   }
 

@@ -22,15 +22,27 @@ export class AuthService extends BaseService {
 
   async register(data: { email: string; password?: string; name: string; phone?: string }): Promise<Result<any>> {
     try {
-      const existingEmail = await this.userRepository.findByEmail(data.email);
-      if (existingEmail) {
-        return this.returnFailure("An account with this email already exists.", "DUPLICATE_EMAIL");
+      const normalizedEmail = data.email?.trim().toLowerCase();
+      if (!normalizedEmail) {
+        return this.returnFailure("A valid email address is required.", "INVALID_EMAIL");
       }
 
-      if (data.phone) {
-        const existingPhone = await this.userRepository.findByPhone(data.phone);
+      const existingEmail = await this.userRepository.findByEmail(normalizedEmail);
+      if (existingEmail) {
+        return this.returnFailure(
+          "An account with this email already exists. Please use a different email or log in to your existing account.",
+          "DUPLICATE_EMAIL"
+        );
+      }
+
+      const normalizedPhone = data.phone?.trim() ? data.phone.trim() : null;
+      if (normalizedPhone) {
+        const existingPhone = await this.userRepository.findByPhone(normalizedPhone);
         if (existingPhone) {
-          return this.returnFailure("An account with this phone number already exists.", "DUPLICATE_PHONE");
+          return this.returnFailure(
+            "An account with this phone number already exists. Please use a different phone number or log in to your existing account.",
+            "DUPLICATE_PHONE"
+          );
         }
       }
 
@@ -44,10 +56,10 @@ export class AuthService extends BaseService {
       const user = await this.executeTransaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {
-            email: data.email,
+            email: normalizedEmail,
             password: hashedPassword,
-            name: data.name,
-            phone: data.phone,
+            name: data.name?.trim() || "User",
+            phone: normalizedPhone,
             role: "USER",
             isEmailVerified: false,
             isPhoneVerified: false,
@@ -65,7 +77,7 @@ export class AuthService extends BaseService {
         // Store VerificationToken with SHA-256 tokenHash
         await tx.verificationToken.create({
           data: {
-            identifier: data.email,
+            identifier: normalizedEmail,
             token: verificationToken,
             tokenHash: tokenHash,
             expires: expiresAt,
@@ -76,16 +88,39 @@ export class AuthService extends BaseService {
       });
 
       // Trigger 6-digit OTP generation and get the code
-      const otpRes = await this.otpService.sendVerificationOtp(data.email, "EMAIL_VERIFICATION", "email");
+      const otpRes = await this.otpService.sendVerificationOtp(normalizedEmail, "EMAIL_VERIFICATION", "email");
       const otpCode = (otpRes as any).data?.code;
 
       // Send branded verification email containing link and 6-digit code
-      emailService.sendVerificationEmail(data.email, verificationToken, otpCode)
+      emailService.sendVerificationEmail(normalizedEmail, verificationToken, otpCode)
         .catch(err => logger.error({ err: err.message }, "Failed to send verification email"));
 
       return this.returnSuccess({ ...user, verificationToken });
     } catch (e: any) {
-      return this.returnFailure(e.message, "REGISTRATION_ERROR");
+      logger.error({ err: e.message, code: e.code }, "Registration error occurred");
+      if (
+        e.code === "P2002" ||
+        e.message?.includes("Unique constraint failed") ||
+        e.message?.includes("(phone)") ||
+        e.message?.includes("(email)")
+      ) {
+        if (e.meta?.target?.includes("phone") || e.message?.includes("phone")) {
+          return this.returnFailure(
+            "An account with this phone number already exists. Please use a different phone number or log in to your existing account.",
+            "DUPLICATE_PHONE"
+          );
+        }
+        if (e.meta?.target?.includes("email") || e.message?.includes("email")) {
+          return this.returnFailure(
+            "An account with this email already exists. Please use a different email or log in to your existing account.",
+            "DUPLICATE_EMAIL"
+          );
+        }
+      }
+      return this.returnFailure(
+        "Registration failed. Please check your details and try again.",
+        "REGISTRATION_ERROR"
+      );
     }
   }
 

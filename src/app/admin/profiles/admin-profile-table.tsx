@@ -20,21 +20,34 @@ import {
   RotateCcw,
   Eye,
   X,
+  Search,
+  AlertTriangle,
 } from "lucide-react";
 
 export function AdminProfileTable({
   profiles,
   currentFilter,
+  initialSearch = "",
 }: {
   profiles: any[];
   currentFilter: string;
+  initialSearch?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (currentFilter && currentFilter !== "ALL") params.set("status", currentFilter);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    router.push(`/admin/profiles?${params.toString()}`);
+  };
 
   const handleApprove = (profileId: string) => {
     setErrorMsg(null);
@@ -98,21 +111,44 @@ export function AdminProfileTable({
 
   return (
     <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-800 pb-4">
-        <h2 className="text-lg font-semibold text-slate-100">
-          Showing Profiles ({currentFilter})
-        </h2>
-        {errorMsg && (
-          <span className="text-xs text-red-400 font-medium bg-red-950/40 px-3 py-1 rounded-md border border-red-900">
-            {errorMsg}
-          </span>
-        )}
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-100">
+            {currentFilter === "ALL" ? "All Platform Profiles" : `${currentFilter} Profiles`}
+          </h2>
+          <p className="text-xs text-slate-400">
+            Showing {profiles.length} member profiles.
+          </p>
+        </div>
+
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 max-w-sm w-full">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+            <Input
+              placeholder="Search by name, email, phone, city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-slate-950/60 border-slate-800 text-xs text-white"
+            />
+          </div>
+          <Button type="submit" size="sm" variant="secondary" className="h-9">
+            Search
+          </Button>
+        </form>
       </CardHeader>
+
+      {errorMsg && (
+        <div className="mx-6 mt-4 p-3 bg-red-950/30 border border-red-900/50 text-red-400 text-xs rounded-lg flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
       <CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-950/80 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+        <table className="w-full text-left text-sm text-slate-300">
+          <thead className="bg-slate-950/50 text-xs uppercase font-medium text-slate-400 border-b border-slate-800/80">
             <tr>
-              <th className="px-6 py-3">Member</th>
+              <th className="px-6 py-3">Member Details</th>
               <th className="px-6 py-3">Demographics</th>
               <th className="px-6 py-3">Location</th>
               <th className="px-6 py-3">Photos</th>
@@ -123,8 +159,8 @@ export function AdminProfileTable({
           <tbody className="divide-y divide-slate-800/60">
             {profiles.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                  No profiles found matching the current filter.
+                <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                  No profiles found matching the current search or status criteria.
                 </td>
               </tr>
             ) : (
@@ -158,11 +194,18 @@ export function AdminProfileTable({
                           ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                           : p.status === "REJECTED"
                           ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                          : p.status === "DRAFT"
+                          ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
                           : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                       }`}
                     >
                       {p.status}
                     </span>
+                    {p.status === "REJECTED" && p.rejectionReason && (
+                      <p className="text-[11px] text-red-400/80 mt-1 max-w-[200px] truncate" title={p.rejectionReason}>
+                        Reason: {p.rejectionReason}
+                      </p>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -258,6 +301,7 @@ export function AdminProfileTable({
                 variant="ghost"
                 onClick={() => setRejectModalOpen(false)}
                 size="sm"
+                className="text-slate-400 hover:text-white"
               >
                 Cancel
               </Button>
@@ -267,7 +311,8 @@ export function AdminProfileTable({
                 size="sm"
                 className="bg-red-600 hover:bg-red-500 text-white"
               >
-                {isPending ? <Spinner className="w-4 h-4 mr-1" /> : null} Confirm Rejection
+                {isPending ? <Spinner className="w-4 h-4 mr-2" /> : null}
+                Confirm Rejection
               </Button>
             </div>
           </div>
