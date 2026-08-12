@@ -1,8 +1,10 @@
 import { env } from "./env";
 
 export const emailConfig = {
-  provider: (process.env.EMAIL_PROVIDER as "mock" | "smtp" | "resend") || "mock",
-  from: process.env.EMAIL_FROM || "no-reply@instantmatrimony.com",
+  provider:
+    (process.env.EMAIL_PROVIDER as "mock" | "smtp" | "resend") ||
+    (process.env.RESEND_API_KEY ? "resend" : "mock"),
+  from: process.env.EMAIL_FROM || "InstantMatrimony <noreply@instantmatrimony.com>",
   smtp: {
     host: env.SMTP_HOST || "localhost",
     port: parseInt(env.SMTP_PORT || "587", 10),

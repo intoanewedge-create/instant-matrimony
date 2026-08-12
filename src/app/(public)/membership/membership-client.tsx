@@ -285,6 +285,39 @@ export function MembershipClient({
 
       {/* Payment Section */}
       <div id="payment-section" className="max-w-2xl mx-auto pt-8">
+        {!user && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-rose-950/40 via-purple-950/30 to-slate-900 border border-rose-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-500/20 text-rose-400 rounded-xl">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">Sign in to activate your membership</h3>
+                <p className="text-xs text-slate-300">
+                  Please log in or register to connect your verification payment to your account.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                size="sm"
+                onClick={() => router.push(`/login?callbackUrl=${encodeURIComponent("/membership")}`)}
+                className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-4 py-2"
+              >
+                Sign In
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push(`/register?callbackUrl=${encodeURIComponent("/membership")}`)}
+                className="border-slate-700 text-slate-300 hover:text-white text-xs px-3 py-2"
+              >
+                Register
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Card className="border border-slate-800 bg-slate-900/80 backdrop-blur-xl shadow-2xl">
           <CardHeader className="border-b border-slate-800 pb-4">
             <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
@@ -436,46 +469,58 @@ export function MembershipClient({
                   <div className="space-y-1.5">
                     <Label className="text-xs text-slate-300 flex items-center justify-between">
                       <span>Payment Screenshot (Primary Proof)</span>
-                      <span className="text-[10px] text-slate-500">Max 5MB</span>
+                      <span className="text-[10px] text-slate-500">Max 5MB (PNG, JPG, WEBP)</span>
                     </Label>
 
                     <input
                       type="file"
                       ref={fileInputRef}
                       onChange={handleFileChange}
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
                       className="hidden"
                       id="screenshot-file-upload"
                       disabled={loading || isSelectedPlanActive || isSelectedPlanPending}
                     />
 
                     {screenshotBase64 ? (
-                      <div className="p-3 rounded-xl border border-rose-500/30 bg-slate-950 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 truncate">
-                          <ImageIcon className="w-4 h-4 text-rose-400 shrink-0" />
-                          <span className="text-xs text-slate-200 truncate">{screenshotFileName || "Screenshot Attached"}</span>
+                      <div className="p-3.5 rounded-xl border border-rose-500/40 bg-slate-950/80 flex items-center justify-between gap-3 shadow-md">
+                        <div className="flex items-center gap-3 truncate">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={screenshotBase64}
+                            alt="Screenshot Preview"
+                            className="h-12 w-12 object-cover rounded-lg border border-slate-700 shrink-0"
+                          />
+                          <div className="truncate">
+                            <p className="text-xs font-semibold text-white truncate">{screenshotFileName || "Screenshot Attached"}</p>
+                            <p className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                              <Check className="w-3 h-3" /> Image attached & verified
+                            </p>
+                          </div>
                         </div>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={handleRemoveScreenshot}
-                          className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
+                          className="text-slate-400 hover:text-red-400 hover:bg-slate-900 h-8 px-2"
                           title="Remove screenshot"
                         >
                           <X className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     ) : (
                       <label
                         htmlFor="screenshot-file-upload"
-                        className={`flex flex-col items-center justify-center p-4 border border-dashed rounded-xl cursor-pointer transition-colors ${
+                        className={`flex flex-col items-center justify-center p-5 border border-dashed rounded-xl cursor-pointer transition-colors ${
                           isSelectedPlanActive || isSelectedPlanPending
                             ? "border-slate-800 bg-slate-950/20 opacity-50 cursor-not-allowed"
-                            : "border-slate-800 hover:border-rose-500/50 bg-slate-950/40 hover:bg-slate-950"
+                            : "border-slate-700 hover:border-rose-500/60 bg-slate-950/50 hover:bg-slate-950"
                         }`}
                       >
-                        <UploadCloud className="w-6 h-6 text-slate-400 mb-1" />
-                        <span className="text-xs text-slate-300 font-medium">Click to upload screenshot</span>
-                        <span className="text-[10px] text-slate-500 mt-0.5">PNG, JPG, or WEBP receipt proof</span>
+                        <UploadCloud className="w-7 h-7 text-rose-400 mb-1.5" />
+                        <span className="text-xs text-slate-200 font-medium">Click or tap to upload payment screenshot</span>
+                        <span className="text-[10px] text-slate-400 mt-1">PNG, JPG, or WEBP receipt proof</span>
                       </label>
                     )}
                   </div>

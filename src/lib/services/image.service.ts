@@ -32,8 +32,8 @@ export class ImageService extends BaseService {
       if (!metadata.width || !metadata.height) {
         return this.returnFailure("Invalid image dimensions", "INVALID_DIMENSIONS");
       }
-      if (metadata.width < 300 || metadata.height < 300) {
-        return this.returnFailure("Image must be at least 300x300 pixels", "IMAGE_TOO_SMALL");
+      if (metadata.width < 100 || metadata.height < 100) {
+        return this.returnFailure("Image must be at least 100x100 pixels", "IMAGE_TOO_SMALL");
       }
     } catch {
       return this.returnFailure("Failed to read image metadata", "INVALID_IMAGE_FILE");

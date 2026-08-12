@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeStyleInjector } from "@/components/theme-style-injector";
 import { PwaRegister } from "@/components/pwa-register";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -54,9 +55,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
-          <ThemeStyleInjector />
-          {children}
-          <PwaRegister />
+          <ToastProvider>
+            <ThemeStyleInjector />
+            {children}
+            <PwaRegister />
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -276,6 +276,12 @@ export function ProfileClient({
       const res = await uploadPhoto(formData);
       if (res.success) {
         setPhotoSuccess("Photo uploaded successfully!");
+        if (res.photo) {
+          setProfile((prev) => ({
+            ...prev,
+            photos: [...(prev.photos || []), res.photo as ProfilePhoto],
+          }));
+        }
         router.refresh();
       } else {
         setPhotoError(res.error || "Failed to upload photo");

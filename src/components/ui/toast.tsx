@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +24,16 @@ const ToastContext = React.createContext<ToastContextValue | undefined>(undefine
 
 export const useToast = () => {
   const context = React.useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used inside ToastProvider");
+  if (!context) {
+    return {
+      toast: (item: Omit<ToastItem, "id">) => {
+        if (typeof window !== "undefined") {
+          console.warn("Toast notification:", item.title, item.description);
+        }
+      },
+      dismiss: () => {},
+    };
+  }
   return context;
 };
 

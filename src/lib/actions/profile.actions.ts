@@ -201,3 +201,18 @@ export async function resubmitProfileAction() {
   revalidatePath("/onboarding");
   return { success: true, profile: res.data };
 }
+
+export async function deleteProfileAction(profileId: string, reason?: string) {
+  const permCheck = await verifyActionPermission("MANAGE_MODERATION");
+  if (!permCheck.success) {
+    return returnFailure("Unauthorized access", "FORBIDDEN");
+  }
+  const adminUserId = permCheck.data!.userId;
+
+  const res = await container.services.profileService.deleteProfileByAdmin(adminUserId, profileId, reason);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/admin/profiles");
+  revalidatePath("/dashboard");
+  return { success: true, profile: res.data, error: undefined };
+}

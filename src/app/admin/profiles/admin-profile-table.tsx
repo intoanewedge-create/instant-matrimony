@@ -8,6 +8,7 @@ import {
   rejectProfileAction,
   suspendProfileAction,
   restoreProfileAction,
+  deleteProfileAction,
 } from "@/lib/actions/profile.actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -22,6 +23,8 @@ import {
   X,
   Search,
   AlertTriangle,
+  Trash2,
+  ShieldAlert,
 } from "lucide-react";
 
 export function AdminProfileTable({
@@ -39,6 +42,9 @@ export function AdminProfileTable({
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingProfile, setDeletingProfile] = useState<any | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -105,6 +111,28 @@ export function AdminProfileTable({
         router.refresh();
       } else {
         setErrorMsg(res.error || "Failed to restore profile");
+      }
+    });
+  };
+
+  const handleOpenDeleteModal = (profile: any) => {
+    setDeletingProfile(profile);
+    setDeleteReason("");
+    setErrorMsg(null);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingProfile) return;
+    setErrorMsg(null);
+    startTransition(async () => {
+      const res = await deleteProfileAction(deletingProfile.id, deleteReason.trim() || undefined);
+      if (res.success) {
+        setDeleteModalOpen(false);
+        setDeletingProfile(null);
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to delete profile");
       }
     });
   };
@@ -196,6 +224,8 @@ export function AdminProfileTable({
                           ? "bg-red-500/10 text-red-400 border border-red-500/20"
                           : p.status === "DRAFT"
                           ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                          : p.status === "DELETED"
+                          ? "bg-zinc-800 text-zinc-400 border border-zinc-700"
                           : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                       }`}
                     >
@@ -216,7 +246,7 @@ export function AdminProfileTable({
                         <Eye className="w-4 h-4 mr-1" /> View
                       </Link>
 
-                      {p.status !== "APPROVED" && p.status !== "SUSPENDED" && (
+                      {p.status !== "APPROVED" && p.status !== "SUSPENDED" && p.status !== "DELETED" && (
                         <Button
                           size="sm"
                           disabled={isPending}
@@ -227,7 +257,7 @@ export function AdminProfileTable({
                         </Button>
                       )}
 
-                      {p.status !== "REJECTED" && p.status !== "SUSPENDED" && (
+                      {p.status !== "REJECTED" && p.status !== "SUSPENDED" && p.status !== "DELETED" && (
                         <Button
                           size="sm"
                           disabled={isPending}
@@ -239,7 +269,7 @@ export function AdminProfileTable({
                         </Button>
                       )}
 
-                      {p.status !== "SUSPENDED" ? (
+                      {p.status !== "SUSPENDED" && p.status !== "DELETED" ? (
                         <Button
                           size="sm"
                           disabled={isPending}
@@ -249,7 +279,7 @@ export function AdminProfileTable({
                         >
                           <AlertOctagon className="w-3.5 h-3.5 mr-1" /> Suspend
                         </Button>
-                      ) : (
+                      ) : p.status === "SUSPENDED" ? (
                         <Button
                           size="sm"
                           disabled={isPending}
@@ -258,6 +288,19 @@ export function AdminProfileTable({
                           className="h-8 border-purple-800 text-purple-300 hover:bg-purple-950/50"
                         >
                           <RotateCcw className="w-3.5 h-3.5 mr-1" /> Restore
+                        </Button>
+                      ) : null}
+
+                      {p.status !== "DELETED" && (
+                        <Button
+                          size="sm"
+                          disabled={isPending}
+                          variant="ghost"
+                          onClick={() => handleOpenDeleteModal(p)}
+                          title="Soft-delete profile & account"
+                          className="h-8 text-slate-400 hover:text-red-400 hover:bg-red-950/30 p-2"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
                     </div>
@@ -313,6 +356,68 @@ export function AdminProfileTable({
               >
                 {isPending ? <Spinner className="w-4 h-4 mr-2" /> : null}
                 Confirm Rejection
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Profile Confirmation Modal */}
+      {deleteModalOpen && deletingProfile && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-red-950/60 text-red-400 border border-red-900/50">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-100">Soft-Delete Profile</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Admin Security Action</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Target Member:</span>
+                <span className="font-semibold text-slate-200">{deletingProfile.user?.name || "Unnamed"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Email:</span>
+                <span className="font-mono text-slate-300">{deletingProfile.user?.email || "No email"}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-red-400/90 leading-relaxed bg-red-950/20 p-3 rounded-lg border border-red-900/30">
+              ⚠️ <strong>Warning:</strong> Soft-deleting will mark this profile status as DELETED, deactivate the user login account, record an audit event, and immediately exclude them from all discovery, search, and recommendation feeds.
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-300">Deletion Reason / Audit Note</label>
+              <Input
+                placeholder="e.g. Inappropriate content / User request / Test account cleanup"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                className="border-slate-800 bg-slate-950/60 text-white text-xs"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <Button
+                variant="ghost"
+                onClick={() => { setDeleteModalOpen(false); setDeletingProfile(null); }}
+                size="sm"
+                className="text-slate-400 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={isPending}
+                onClick={handleConfirmDelete}
+                size="sm"
+                className="bg-red-600 hover:bg-red-500 text-white"
+              >
+                {isPending ? <Spinner className="w-4 h-4 mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Confirm Soft Delete
               </Button>
             </div>
           </div>

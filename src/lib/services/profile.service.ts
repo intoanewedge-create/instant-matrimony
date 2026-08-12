@@ -362,4 +362,48 @@ export class ProfileService extends BaseService {
       return this.returnFailure(e.message, "PROFILE_RESUBMIT_ERROR");
     }
   }
+
+  async deleteProfileByAdmin(adminUserId: string, profileId: string, reason?: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findById(profileId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+
+      const now = new Date();
+
+      const result = await this.executeTransaction(async (tx) => {
+        const updatedProfile = await tx.profile.update({
+          where: { id: profileId },
+          data: {
+            status: "DELETED",
+            deletedAt: now,
+            rejectionReason: reason ? `[DELETED BY ADMIN] ${reason}` : "[DELETED BY ADMIN]",
+          },
+        });
+
+        await tx.user.update({
+          where: { id: profile.userId },
+          data: {
+            isActive: false,
+            accountStatus: "SUSPENDED",
+            deletedAt: now,
+          },
+        });
+
+        return updatedProfile;
+      });
+
+      const { auditService } = await import("../container");
+      await auditService.log(
+        adminUserId,
+        "ADMIN_PROFILE_DELETED",
+        undefined,
+        undefined,
+        `Soft-deleted profile ${profileId} (User ${profile.userId}). Reason: ${reason || "Admin removal"}`
+      );
+
+      return this.returnSuccess(result);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PROFILE_DELETE_ERROR");
+    }
+  }
 }

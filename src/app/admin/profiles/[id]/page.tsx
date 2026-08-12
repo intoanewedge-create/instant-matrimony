@@ -51,6 +51,8 @@ export default async function AdminProfileDetailPage({
                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                   : profile.status === "REJECTED"
                   ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                  : profile.status === "DELETED"
+                  ? "bg-zinc-800 text-zinc-400 border border-zinc-700"
                   : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
               }`}
             >

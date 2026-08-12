@@ -97,24 +97,36 @@ export class EmailService {
         try {
           const resendModule = await import("resend" as any);
           const resend = new resendModule.Resend(apiKey);
-          await resend.emails.send({
+          const { data, error } = await resend.emails.send({
             from: fromAddress,
-            to,
+            to: [to],
             subject,
             html,
           });
+          if (error) {
+            logger.error(
+              { to, subject, error: error.message || error },
+              "Resend provider returned error response",
+            );
+            if (process.env.NODE_ENV !== "production") {
+              this.logMockEmail(to, subject, html);
+            }
+            return false;
+          }
           logger.info(
-            { to, subject, provider: "resend" },
+            { to, subject, id: data?.id, provider: "resend" },
             "Verification email sent successfully via Resend API",
           );
           return true;
         } catch (e: any) {
           logger.error(
             { to, subject, error: e.message },
-            "Resend provider error. Falling back to Mock logger.",
+            "Resend provider error while sending email",
           );
-          this.logMockEmail(to, subject, html);
-          return true;
+          if (process.env.NODE_ENV !== "production") {
+            this.logMockEmail(to, subject, html);
+          }
+          return false;
         }
       } else {
         // Mock Provider for development/testing

@@ -7,29 +7,32 @@ import { Sparkles, ArrowRight } from "lucide-react";
 
 export function QuickMatchForm() {
   const router = useRouter();
-  const [gender, setGender] = useState<"Male" | "Female">("Male");
-  const [lookingFor, setLookingFor] = useState<"Male" | "Female">("Female");
+  const [gender, setGender] = useState<"Man" | "Woman">("Man");
+  const [lookingFor, setLookingFor] = useState<"Man" | "Woman">("Woman");
+  const [navigating, setNavigating] = useState(false);
 
-  const handleGenderChange = (newGender: "Male" | "Female") => {
+  const handleGenderChange = (newGender: "Man" | "Woman") => {
     setGender(newGender);
-    if (newGender === "Male") {
-      setLookingFor("Female");
+    if (newGender === "Man") {
+      setLookingFor("Woman");
     } else {
-      setLookingFor("Male");
+      setLookingFor("Man");
     }
   };
 
-  const handleLookingForChange = (newLookingFor: "Male" | "Female") => {
+  const handleLookingForChange = (newLookingFor: "Man" | "Woman") => {
     setLookingFor(newLookingFor);
-    if (newLookingFor === "Female") {
-      setGender("Male");
+    if (newLookingFor === "Woman") {
+      setGender("Man");
     } else {
-      setGender("Female");
+      setGender("Woman");
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (navigating) return;
+    setNavigating(true);
     router.push(`/register?gender=${encodeURIComponent(gender)}&lookingFor=${encodeURIComponent(lookingFor)}`);
   };
 
@@ -43,11 +46,11 @@ export function QuickMatchForm() {
           <select
             id="user-gender-select"
             value={gender}
-            onChange={(e) => handleGenderChange(e.target.value as "Male" | "Female")}
+            onChange={(e) => handleGenderChange(e.target.value as "Man" | "Woman")}
             className="w-full bg-secondary border border-border/60 rounded-lg p-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-all"
           >
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+            <option value="Man">Man</option>
+            <option value="Woman">Woman</option>
           </select>
         </div>
         <div>
@@ -57,17 +60,21 @@ export function QuickMatchForm() {
           <select
             id="looking-for-gender-select"
             value={lookingFor}
-            onChange={(e) => handleLookingForChange(e.target.value as "Male" | "Female")}
+            onChange={(e) => handleLookingForChange(e.target.value as "Man" | "Woman")}
             className="w-full bg-secondary border border-border/60 rounded-lg p-2.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-all"
           >
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
+            <option value="Woman">Woman</option>
+            <option value="Man">Man</option>
           </select>
         </div>
       </div>
 
-      <Button type="submit" className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold py-5 text-sm rounded-xl shadow-md gap-2">
-        <Sparkles className="w-4 h-4" /> Start Searching Now <ArrowRight className="w-4 h-4" />
+      <Button
+        type="submit"
+        disabled={navigating}
+        className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold py-5 text-sm rounded-xl shadow-md gap-2 transition-all cursor-pointer"
+      >
+        <Sparkles className="w-4 h-4" /> {navigating ? "Continuing..." : "Get Started"} <ArrowRight className="w-4 h-4" />
       </Button>
     </form>
   );

@@ -1,93 +1,85 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { HelpCircle } from "lucide-react";
-import { getPageBySlugAction } from "@/lib/actions/cms.actions";
+import { prisma } from "@/lib/prisma";
+import { FaqClient } from "./faq-client";
 import { CmsPageRenderer } from "@/components/cms-page-renderer";
 
-export default function FAQ() {
-  const [cmsPage, setCmsPage] = useState<any | null>(null);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    getPageBySlugAction("faq").then((res) => {
-      if (res.success && res.data && res.data.status === "PUBLISHED") {
-        setCmsPage(res.data);
-      }
+const DEFAULT_FAQS = [
+  {
+    question: "How does profile verification work on InstantMatrimony?",
+    answer: "Every user completes phone/email OTP verification and can submit a government-issued photo ID (Aadhaar, PAN, or Passport). Once submitted, our moderation team verifies the details before applying the 'Verified' badge.",
+    category: "Verification",
+  },
+  {
+    question: "Can I hide my profile photos or contact details?",
+    answer: "Yes! Under Account Settings, you can configure your photo privacy to 'Visible to all', 'Visible only to accepted matches', or 'Request permission'. Contact details are locked and only revealed to users with an active premium plan when you accept their connection request.",
+    category: "Privacy",
+  },
+  {
+    question: "What benefits do premium membership plans offer?",
+    answer: "Premium plans (Silver, Gold, Platinum, Diamond) allow you to view verified phone numbers, initiate direct chat messages, highlight your profile in search listings, and access relationship advisor assistance.",
+    category: "Memberships",
+  },
+  {
+    question: "How do I upgrade to a premium membership?",
+    answer: "Go to the Membership page, select the plan that fits your requirements (Silver, Gold, Platinum, or Diamond), and click Upgrade. You can pay securely using UPI, QR Code, Card, or Net Banking. Once verified, your membership features are activated.",
+    category: "Payments",
+  },
+  {
+    question: "What is your refund policy?",
+    answer: "We offer refunds if requested within 48 hours of purchase, provided you have not unlocked profile contact numbers or initiated messages. Please email support@instantmatrimony.com for billing support.",
+    category: "Payments",
+  },
+  {
+    question: "How can I block or report abusive profiles?",
+    answer: "Every profile page has simple 'Block' and 'Report' buttons. Blocking hides your profile immediately. Reporting sends an alert to our admin moderation queue, and action is taken within 12 hours.",
+    category: "Safety",
+  },
+];
+
+export default async function FAQPage() {
+  // 1. Check for CMS Page override
+  try {
+    const cmsPage = await prisma.cmsPage.findUnique({
+      where: { slug: "faq" },
     });
-  }, []);
 
-  if (cmsPage) {
-    return (
-      <CmsPageRenderer
-        title={cmsPage.title}
-        content={cmsPage.content}
-        seoTitle={cmsPage.seoTitle}
-      />
-    );
+    if (cmsPage && cmsPage.status === "PUBLISHED" && cmsPage.content?.trim()) {
+      return (
+        <CmsPageRenderer
+          title={cmsPage.title}
+          content={cmsPage.content}
+          seoTitle={cmsPage.seoTitle}
+        />
+      );
+    }
+  } catch (e) {
+    // Graceful fallback to FAQs table
   }
 
-  const faqData = [
-    {
-      q: "How does profile verification work on InstantMatrimony?",
-      a: "Every user is required to complete mobile OTP verification and submit a government-issued photo ID (like Aadhaar, PAN card, or Passport). Once submitted, our operations team manually reviews the document before applying the 'Verified' badge to the profile."
-    },
-    {
-      q: "Can I hide my profile photos or contact details?",
-      a: "Yes! Your privacy is our priority. Under Account Settings, you can configure your photo settings to 'Visible to all', 'Visible only to accepted matches', or 'Request permission'. Similarly, contact details are locked and only revealed to users who have a valid premium plan and whose connection request you've accepted."
-    },
-    {
-      q: "What benefits do premium membership plans offer?",
-      a: "Premium plans (Silver, Gold, Platinum, Diamond) allow you to view verified contact numbers, initiate direct chat messages, highlight your profile in search listings, and access dedicated relationship advisors who help search matches manually."
-    },
-    {
-      q: "How do I upgrade to a premium membership?",
-      a: "Go to the Membership page, select the plan that fits your requirements (Silver, Gold, Platinum, or Diamond), and click Upgrade. You can make a secure payment using Razorpay, Stripe, or Net Banking. Your plan features are activated instantly."
-    },
-    {
-      q: "What is your refund policy?",
-      a: "We offer refunds if requested within 48 hours of purchase, provided you have not viewed any profile contact details or sent message prompts. Please review our legal document terms or email support@instantmatrimony.com for assistance."
-    },
-    {
-      q: "How can I block or report abusive profiles?",
-      a: "Every profile page has simple 'Block User' and 'Report Abuse' buttons. Blocking will hide your profile from that user. Reporting a profile sends an alert to our admin moderation queue, and we take action (including account suspensions) within 12 hours."
+  // 2. Fetch FAQs from database
+  let faqs: any[] = [];
+  try {
+    const dbFaqs = await prisma.fAQ.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+    });
+
+    if (dbFaqs && dbFaqs.length > 0) {
+      faqs = dbFaqs.map((f) => ({
+        id: f.id,
+        question: f.question,
+        answer: f.answer,
+        category: f.category || "General",
+      }));
     }
-  ];
+  } catch (e) {
+    // If DB query fails, fall back to defaults
+  }
 
-  return (
-    <div className="flex flex-col w-full py-16 sm:py-24">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        
-        {/* Title */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-4 text-primary">
-            <HelpCircle className="h-10 w-10" />
-          </div>
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-foreground">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-base sm:text-lg text-muted-foreground mt-4 leading-relaxed">
-            Need help? Explore responses to common queries relating to verification, privacy controls, and memberships.
-          </p>
-        </div>
+  if (faqs.length === 0) {
+    faqs = DEFAULT_FAQS;
+  }
 
-        {/* Collapsible Accordion */}
-        <div className="bg-card border border-border/40 p-6 sm:p-8 rounded-2xl shadow-sm">
-          <Accordion type="single" collapsible={true}>
-            {faqData.map((item, idx) => (
-              <AccordionItem key={idx} value={`faq-${idx}`}>
-                <AccordionTrigger value={`faq-${idx}`}>
-                  {item.q}
-                </AccordionTrigger>
-                <AccordionContent value={`faq-${idx}`}>
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-
-      </div>
-    </div>
-  );
+  return <FaqClient faqs={faqs} />;
 }

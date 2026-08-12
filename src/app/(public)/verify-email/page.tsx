@@ -113,13 +113,17 @@ function VerifyEmailForm() {
       });
 
       if (!res.success) {
-        setError(res.error || "Resending OTP failed");
+        setError(res.error || "We couldn't send the verification email right now. Please try again later.");
       } else {
-        setSuccessMsg("A new verification code has been sent to your email.");
+        const [userPart, domainPart] = email.split("@");
+        const maskedEmail = userPart && domainPart && userPart.length > 0
+          ? `${userPart[0]}***@${domainPart}`
+          : email;
+        setSuccessMsg(`Verification email sent to ${maskedEmail}. Please check your inbox and spam folder.`);
         setCountdown(60); // 60 seconds rate limit resend countdown
       }
     } catch {
-      setError("Failed to resend code");
+      setError("We couldn't send the verification email right now. Please try again later.");
     } finally {
       setResending(false);
     }

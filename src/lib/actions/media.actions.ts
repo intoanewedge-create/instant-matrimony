@@ -51,8 +51,9 @@ export async function uploadPhoto(formData: FormData) {
     const { processedBuffer, checksum, width, height, mimeType } = processRes.data;
 
     const duplicates = await container.repositories.imageMetadataRepository.findByChecksum(checksum);
-    if (duplicates.length > 0) {
-      return { success: false, error: "This image has already been uploaded." };
+    const activeDuplicate = duplicates.find(d => existingPhotos.some(p => p.id === d.photoId));
+    if (activeDuplicate) {
+      return { success: false, error: "This image is already in your photo gallery." };
     }
 
     const uploadRes = await container.services.storageService.uploadFile(
@@ -92,8 +93,18 @@ export async function uploadPhoto(formData: FormData) {
       profileId: profile.id,
     });
 
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
-    return { success: true, photoId: photo.id };
+    return {
+      success: true,
+      photoId: photo.id,
+      photo: {
+        id: photo.id,
+        url: photo.url,
+        isMain: photo.isMain,
+      },
+    };
   } catch (e: any) {
     return { success: false, error: e.message };
   }
@@ -181,6 +192,8 @@ export async function replacePhoto(photoId: string, formData: FormData) {
       });
     }
 
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
     return { success: true };
   } catch (e: any) {
@@ -218,6 +231,8 @@ export async function deletePhoto(photoId: string) {
       profileId: profile.id,
     });
 
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
     return { success: true };
   } catch (e: any) {
@@ -255,6 +270,8 @@ export async function setPrimaryPhoto(photoId: string) {
       profileId: profile.id,
     });
 
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
     return { success: true };
   } catch (e: any) {
