@@ -27,19 +27,12 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
 
-      // 1. Installer Route Protection
-      if (pathname === "/installer") {
-        try {
-          const statusRes = await fetch(new URL("/api/installer/status", nextUrl.origin));
-          if (statusRes.ok) {
-            const data = await statusRes.json();
-            if (data.isInstalled) {
-              return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
-            }
-          }
-        } catch {
-          return Response.redirect(new URL(isLoggedIn ? "/dashboard" : "/login", nextUrl));
-        }
+      // 0. Static files, images, and public asset bypass
+      if (
+        pathname.includes(".") ||
+        pathname.startsWith("/_next") ||
+        pathname.startsWith("/uploads")
+      ) {
         return true;
       }
 
