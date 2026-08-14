@@ -158,19 +158,19 @@ export function DashboardClient({
       {/* Onboarding Tour Modal */}
       <AnimatePresence>
         {tourStep > 0 && (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative"
+              className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl relative"
               role="dialog"
               aria-modal="true"
               aria-labelledby="tour-title"
             >
               <button
                 onClick={() => setTourStep(0)}
-                className="absolute right-4 top-4 text-slate-400 hover:text-white"
+                className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
                 aria-label="Close Tour"
               >
                 <X className="w-5 h-5" />
@@ -178,31 +178,32 @@ export function DashboardClient({
 
               {tourStep === 1 && (
                 <div className="space-y-4">
-                  <div className="p-3 bg-rose-500/10 text-rose-500 w-fit rounded-lg">
+                  <div className="p-3 bg-rose-50 text-rose-600 w-fit rounded-lg">
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <h2
                     id="tour-title"
-                    className="text-xl font-bold text-slate-100"
+                    className="text-xl font-bold text-slate-900"
                   >
                     Welcome to InstantMatrimony Tour!
                   </h2>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-slate-600 text-sm leading-relaxed">
                     Let's walk you through the key matching controls of your
-                    high-performance workspace in just 3 quick steps.
+                    matrimonial dashboard in just 3 quick steps.
                   </p>
                   <div className="flex justify-end gap-2 pt-2">
                     <Button
                       variant="ghost"
                       onClick={() => setTourStep(0)}
                       size="sm"
+                      className="text-slate-600 hover:text-slate-900"
                     >
                       Skip
                     </Button>
                     <Button
                       onClick={() => setTourStep(2)}
                       size="sm"
-                      className="bg-rose-600 hover:bg-rose-500 text-white"
+                      className="bg-rose-600 hover:bg-rose-700 text-white"
                     >
                       Next Step
                     </Button>
@@ -212,17 +213,17 @@ export function DashboardClient({
 
               {tourStep === 2 && (
                 <div className="space-y-4">
-                  <div className="p-3 bg-pink-500/10 text-pink-500 w-fit rounded-lg">
+                  <div className="p-3 bg-pink-50 text-pink-600 w-fit rounded-lg">
                     <Heart className="w-6 h-6" />
                   </div>
                   <h2
                     id="tour-title"
-                    className="text-xl font-bold text-slate-100"
+                    className="text-xl font-bold text-slate-900"
                   >
                     Intelligent Match Suggestions
                   </h2>
-                  <p className="text-slate-400 text-sm">
-                    In the center panel, our AI pipeline scores compatibility
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    In the center panel, our matching algorithm scores compatibility
                     and lists your top suggestions. Connect instantly!
                   </p>
                   <div className="flex justify-between items-center pt-2">
@@ -230,13 +231,14 @@ export function DashboardClient({
                       variant="ghost"
                       onClick={() => setTourStep(1)}
                       size="sm"
+                      className="text-slate-600 hover:text-slate-900"
                     >
                       Back
                     </Button>
                     <Button
                       onClick={() => setTourStep(3)}
                       size="sm"
-                      className="bg-rose-600 hover:bg-rose-500 text-white"
+                      className="bg-rose-600 hover:bg-rose-700 text-white"
                     >
                       Next Step
                     </Button>
@@ -246,31 +248,32 @@ export function DashboardClient({
 
               {tourStep === 3 && (
                 <div className="space-y-4">
-                  <div className="p-3 bg-yellow-500/10 text-yellow-500 w-fit rounded-lg">
+                  <div className="p-3 bg-amber-50 text-amber-600 w-fit rounded-lg">
                     <Zap className="w-6 h-6" />
                   </div>
                   <h2
                     id="tour-title"
-                    className="text-xl font-bold text-slate-100"
+                    className="text-xl font-bold text-slate-900"
                   >
                     Unlock Full Access
                   </h2>
-                  <p className="text-slate-400 text-sm">
-                    Upgrade your membership to access contact numbers, direct
-                    messages, and verification badges.
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Upgrade your membership to access verified contact numbers, direct
+                    messages, and priority visibility.
                   </p>
                   <div className="flex justify-between items-center pt-2">
                     <Button
                       variant="ghost"
                       onClick={() => setTourStep(2)}
                       size="sm"
+                      className="text-slate-600 hover:text-slate-900"
                     >
                       Back
                     </Button>
                     <Button
                       onClick={() => setTourStep(0)}
                       size="sm"
-                      className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-500 hover:to-pink-500"
+                      className="bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:from-rose-700 hover:to-pink-700 shadow-md shadow-rose-500/20"
                     >
                       Finish Tour
                     </Button>
@@ -287,20 +290,20 @@ export function DashboardClient({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-amber-950/20"
+          className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 shrink-0">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-700 shrink-0">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-amber-300">Profile Under Admin Review</h3>
-              <p className="text-xs text-amber-200/80">
+              <h3 className="font-bold text-amber-900">Profile Under Admin Review</h3>
+              <p className="text-xs text-amber-700">
                 Your profile details have been submitted and are currently being reviewed by our moderation team. Platform browsing and matching will activate once approved.
               </p>
             </div>
           </div>
-          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 shrink-0">
+          <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 border border-amber-300 text-amber-800 shrink-0">
             PENDING APPROVAL
           </span>
         </motion.div>
@@ -310,21 +313,21 @@ export function DashboardClient({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-xl bg-red-950/50 border border-red-800/70 text-red-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg shadow-red-950/30"
+          className="p-5 rounded-xl bg-red-50 border border-red-200 text-red-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm"
         >
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-red-400 font-bold">
+            <div className="flex items-center gap-2 text-red-700 font-bold">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>Profile Requires Edits & Resubmission</span>
             </div>
-            <p className="text-xs text-red-200/90">
-              <strong className="text-red-300">Rejection Reason:</strong> {profile?.rejectionReason || "Please update your profile information and photos according to platform guidelines."}
+            <p className="text-xs text-red-800">
+              <strong className="text-red-900">Rejection Reason:</strong> {profile?.rejectionReason || "Please update your profile information and photos according to platform guidelines."}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
             <Link
               href="/onboarding"
-              className="inline-flex items-center justify-center rounded-md text-xs font-semibold px-3 py-1.5 border border-red-700 text-red-200 hover:bg-red-900/50 transition-colors"
+              className="inline-flex items-center justify-center rounded-md text-xs font-semibold px-3 py-1.5 border border-red-300 bg-white text-red-700 hover:bg-red-50 transition-colors shadow-sm"
             >
               Edit Profile
             </Link>
@@ -336,7 +339,7 @@ export function DashboardClient({
                   router.refresh();
                 }
               }}
-              className="bg-rose-600 hover:bg-rose-500 text-white"
+              className="bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
             >
               Resubmit Profile
             </Button>
@@ -348,12 +351,12 @@ export function DashboardClient({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-xl bg-red-950/60 border border-red-900 text-red-300 flex items-center gap-3 shadow-lg"
+          className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 flex items-center gap-3 shadow-sm"
         >
-          <AlertCircle className="w-6 h-6 text-red-500 shrink-0" />
+          <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
           <div>
-            <h3 className="font-bold text-red-400">Account Suspended</h3>
-            <p className="text-xs text-red-300/80">
+            <h3 className="font-bold text-red-900">Account Suspended</h3>
+            <p className="text-xs text-red-700">
               Your profile has been suspended by system administration. Matchmaking features are disabled. Please contact support.
             </p>
           </div>
@@ -364,21 +367,21 @@ export function DashboardClient({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-900/40 via-pink-900/20 to-slate-900 border border-rose-800/20 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-500/10 via-pink-500/5 to-rose-50 border border-rose-200 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm"
       >
         <div className="relative z-10 space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <Sparkles className="w-3.5 h-3.5" /> Premium Matchmaking
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+            <Sparkles className="w-3.5 h-3.5" /> Premium Telugu Matrimony
           </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
             Namaste,{" "}
-            <span className="bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
               {profile.name || "User"}
             </span>
           </h1>
-          <p className="text-slate-400 max-w-xl">
+          <p className="text-slate-600 max-w-xl text-sm leading-relaxed">
             Welcome to your premium dashboard. Complete your profile, explore
-            suggestions, and connect with prospective matches.
+            verified Telugu matches, and connect with prospective life partners.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -391,12 +394,12 @@ export function DashboardClient({
             variant="outline"
             size="sm"
             aria-label="Start interactive onboarding tour"
-            className="border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 font-semibold gap-1.5"
+            className="border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold gap-1.5 shadow-sm"
           >
-            <HelpCircle className="w-4 h-4 text-rose-400" /> Start Tour
+            <HelpCircle className="w-4 h-4 text-rose-600" /> Start Tour
           </Button>
         </div>
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-r from-rose-500/10 to-transparent blur-2xl pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-r from-rose-200/20 to-transparent blur-2xl pointer-events-none" />
       </motion.div>
 
       <motion.div
@@ -418,42 +421,42 @@ export function DashboardClient({
                 label: "Received Interests",
                 value: received.length,
                 icon: Heart,
-                color: "text-rose-500 bg-rose-500/10",
+                color: "text-rose-600 bg-rose-50",
                 href: "/interests",
               },
               {
                 label: "Sent Interests",
                 value: sentInterests.length,
                 icon: UserPlus,
-                color: "text-blue-500 bg-blue-500/10",
+                color: "text-blue-600 bg-blue-50",
                 href: "/interests",
               },
               {
                 label: "Active Chats",
                 value: conversations.length,
                 icon: MessageSquare,
-                color: "text-pink-500 bg-pink-500/10",
+                color: "text-pink-600 bg-pink-50",
                 href: "/messages",
               },
               {
                 label: "Profile Status",
                 value: profile.status,
                 icon: UserCheck,
-                color: "text-green-500 bg-green-500/10",
+                color: "text-emerald-600 bg-emerald-50",
                 href: "/profile",
               },
             ].map((stat, idx) => (
               <motion.div key={idx} variants={cardVariants}>
                 <Link href={stat.href}>
-                  <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md hover:border-rose-500/50 transition-all cursor-pointer">
+                  <Card className="border border-slate-200 bg-white hover:border-rose-300 hover:shadow-md transition-all cursor-pointer shadow-sm">
                     <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
-                      <div className={`p-2.5 rounded-lg ${stat.color}`}>
+                      <div className={`p-2.5 rounded-xl ${stat.color}`}>
                         <stat.icon className="w-5 h-5" aria-hidden="true" />
                       </div>
-                      <span className="text-xs text-slate-400 font-medium">
+                      <span className="text-xs text-slate-500 font-medium">
                         {stat.label}
                       </span>
-                      <span className="text-xl font-bold" aria-live="polite">
+                      <span className="text-xl font-bold text-slate-900" aria-live="polite">
                         {stat.value}
                       </span>
                     </CardContent>
@@ -469,28 +472,28 @@ export function DashboardClient({
             role="region"
             aria-label="Suggested Matches Section"
           >
-            <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="border border-slate-200 bg-white shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <CardTitle className="text-xl font-bold">
+                  <CardTitle className="text-xl font-bold text-slate-900">
                     Suggested Matches
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-slate-500">
                     Handpicked profiles compatible with your preferences
                   </CardDescription>
                 </div>
                 <Link
                   href="/search"
-                  className="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center"
+                  className="text-rose-600 hover:text-rose-700 text-xs font-semibold flex items-center"
                   aria-label="Explore all compatible matches"
                 >
                   Explore All <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-4">
                 {suggestions.length === 0 ? (
                   <div className="py-8 text-center space-y-3">
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-slate-500 text-sm">
                       No suggestions found. Try adjusting preferences.
                     </p>
                   </div>
@@ -510,22 +513,22 @@ export function DashboardClient({
                         <div
                           key={suggId}
                           role="listitem"
-                          className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40 hover:bg-slate-950/80 transition-all gap-4"
+                          className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-slate-200/80 rounded-xl bg-slate-50/50 hover:bg-rose-50/30 transition-all gap-4 shadow-sm"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-500">
+                            <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center font-bold text-rose-600 text-base shadow-sm">
                               {suggName.charAt(0) || "U"}
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-200">
+                              <h4 className="font-bold text-slate-900">
                                 <Link
                                   href={`/profile/${suggUserId}`}
-                                  className="hover:text-rose-400 transition-colors"
+                                  className="hover:text-rose-600 transition-colors"
                                 >
                                   {suggName}
                                 </Link>
                               </h4>
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-slate-500">
                                 {suggAge} yrs • {suggCity},{" "}
                                 {suggState}
                               </p>
@@ -533,7 +536,7 @@ export function DashboardClient({
                           </div>
                           <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                              <span className="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                                 {matchScore}% Match
                               </span>
                             </div>
@@ -546,7 +549,7 @@ export function DashboardClient({
                               onClick={() => handleSendInterest(suggUserId)}
                               size="sm"
                               aria-busy={processingId === suggUserId}
-                              className="bg-rose-600 hover:bg-rose-500 text-white font-medium min-w-[80px]"
+                              className="bg-rose-600 hover:bg-rose-700 text-white font-medium min-w-[80px] shadow-sm"
                             >
                               {s?.interestSent ? "Sent" : "Connect"}
                             </Button>
@@ -580,18 +583,18 @@ export function DashboardClient({
             role="region"
             aria-label="Received Interest Requests"
           >
-            <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold">
+            <Card className="border border-slate-200 bg-white shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-xl font-bold text-slate-900">
                   Received Interest Requests
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-500">
                   Members interested in connecting with you
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-4">
                 {received.length === 0 ? (
-                  <p className="text-slate-400 text-sm text-center py-6">
+                  <p className="text-slate-500 text-sm text-center py-6">
                     No new interest requests received.
                   </p>
                 ) : (
@@ -607,22 +610,22 @@ export function DashboardClient({
                         <div
                           key={intId}
                           role="listitem"
-                          className="flex items-center justify-between p-4 border border-slate-800 rounded-xl bg-slate-950/40"
+                          className="flex items-center justify-between p-4 border border-slate-200/80 rounded-xl bg-slate-50/50 hover:bg-rose-50/30 transition-all shadow-sm"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-rose-400">
+                            <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center font-bold text-rose-600">
                               {senderName.charAt(0) || "S"}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-slate-200">
+                              <h4 className="font-semibold text-slate-900">
                                 <Link
                                   href={`/profile/${senderId}`}
-                                  className="hover:text-rose-400 transition-colors"
+                                  className="hover:text-rose-600 transition-colors"
                                 >
                                   {senderName}
                                 </Link>
                               </h4>
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-slate-500">
                                 {senderReligion} • {senderLanguage}
                               </p>
                             </div>
@@ -632,7 +635,7 @@ export function DashboardClient({
                               size="sm"
                               variant="outline"
                               disabled={processingId === intId}
-                              className="border-slate-800 hover:bg-slate-800 text-slate-300"
+                              className="border-slate-300 hover:bg-slate-100 text-slate-700 shadow-sm"
                             >
                               Ignore
                             </Button>
@@ -640,7 +643,7 @@ export function DashboardClient({
                               size="sm"
                               disabled={processingId === intId}
                               onClick={() => handleAcceptInterest(intId)}
-                              className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white"
+                              className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white shadow-sm"
                             >
                               Accept
                             </Button>
@@ -663,25 +666,25 @@ export function DashboardClient({
             role="region"
             aria-label="Profile Strength details"
           >
-            <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
+            <Card className="border border-slate-200 bg-white shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold">
+                <CardTitle className="text-lg font-bold text-slate-900">
                   Profile Strength
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Completion Percent</span>
-                  <span className="text-rose-400 font-bold">
+                  <span className="text-slate-500">Completion Percent</span>
+                  <span className="text-rose-600 font-bold">
                     {profile?.completionPercent || 0}%
                   </span>
                 </div>
                 <Progress
                   value={profile?.completionPercent || 0}
-                  className="h-2 bg-slate-800"
+                  className="h-2 bg-slate-100"
                   aria-label="Profile completeness progression"
                 />
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 leading-relaxed">
                   Profiles with 100% completion receive 5x more interests. Add
                   education, income details and upload photos.
                 </p>
@@ -695,32 +698,32 @@ export function DashboardClient({
             role="region"
             aria-label="Membership Status Details"
           >
-            <Card className="border border-rose-900/20 bg-gradient-to-b from-rose-950/20 to-slate-900/40 backdrop-blur-md">
+            <Card className="border border-rose-200 bg-gradient-to-b from-rose-50/40 to-white shadow-sm">
               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg font-bold">
+                  <CardTitle className="text-lg font-bold text-slate-900">
                     Membership Status
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-slate-500">
                     Your subscription tier and benefits
                   </CardDescription>
                 </div>
                 <Zap
-                  className="w-5 h-5 text-rose-500 animate-pulse"
+                  className="w-5 h-5 text-rose-600 animate-pulse"
                   aria-hidden="true"
                 />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-sm">Plan Tier</span>
-                  <span className="text-sm font-bold text-rose-400 uppercase">
+                  <span className="text-slate-500 text-sm">Plan Tier</span>
+                  <span className="text-sm font-bold text-rose-600 uppercase">
                     {membership?.plan?.name || "Free Trial"}
                   </span>
                 </div>
                 {membership ? (
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Days Remaining</span>
-                    <span className="font-semibold text-slate-200">
+                    <span className="text-slate-500">Days Remaining</span>
+                    <span className="font-semibold text-slate-900">
                       {membership?.endDate && !isNaN(new Date(membership.endDate).getTime())
                         ? Math.max(0, Math.ceil((new Date(membership.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
                         : 0}{" "}
@@ -731,7 +734,7 @@ export function DashboardClient({
                   <Link href="/dashboard/billing" className="block w-full mt-2">
                     <Button
                       size="sm"
-                      className="w-full bg-rose-600 hover:bg-rose-500 text-white"
+                      className="w-full bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
                     >
                       Upgrade to Premium
                     </Button>
@@ -747,13 +750,13 @@ export function DashboardClient({
             role="region"
             aria-label="Quick Navigation Controls"
           >
-            <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold">
+            <Card className="border border-slate-200 bg-white shadow-sm">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <CardTitle className="text-lg font-bold text-slate-900">
                   Quick Actions
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-2">
+              <CardContent className="grid grid-cols-2 gap-2 pt-3">
                 {[
                   { name: "Search Matches", icon: Compass, href: "/search" },
                   { name: "Chat Box", icon: MessageSquare, href: "/messages" },
@@ -767,14 +770,14 @@ export function DashboardClient({
                   <Link
                     key={idx}
                     href={action.href}
-                    className="border border-slate-800 hover:bg-slate-800 rounded-lg flex flex-col items-center p-4 h-auto gap-2 justify-center transition-all bg-transparent focus-visible:ring-2 focus-visible:ring-rose-500"
+                    className="border border-slate-200 hover:border-rose-300 hover:bg-rose-50/50 rounded-xl flex flex-col items-center p-4 h-auto gap-2 justify-center transition-all bg-white shadow-xs focus-visible:ring-2 focus-visible:ring-rose-500 group"
                     aria-label={`Navigate to ${action.name}`}
                   >
                     <action.icon
-                      className="w-5 h-5 text-rose-500"
+                      className="w-5 h-5 text-rose-600 group-hover:scale-110 transition-transform"
                       aria-hidden="true"
                     />
-                    <span className="text-xs text-slate-300 font-medium">
+                    <span className="text-xs text-slate-700 font-medium text-center">
                       {action.name}
                     </span>
                   </Link>
@@ -789,14 +792,14 @@ export function DashboardClient({
             role="region"
             aria-label="System Notifications Panel"
           >
-            <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card className="border border-slate-200 bg-white shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg font-bold">
+                  <CardTitle className="text-lg font-bold text-slate-900">
                     Notifications
                   </CardTitle>
                   {unreadCount > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600/20 text-rose-300 border border-rose-600/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                       {unreadCount} new
                     </span>
                   )}
@@ -805,18 +808,18 @@ export function DashboardClient({
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllNotifRead}
-                      className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium"
+                      className="text-[11px] text-rose-600 hover:text-rose-700 flex items-center gap-1 font-medium"
                       aria-label="Mark all notifications as read"
                     >
                       <CheckCheck className="w-3.5 h-3.5" /> Mark all
                     </button>
                   )}
-                  <Bell className="w-4 h-4 text-rose-500" aria-hidden="true" />
+                  <Bell className="w-4 h-4 text-rose-600" aria-hidden="true" />
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 pt-3">
                 {notifications.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-2">
+                  <p className="text-xs text-slate-500 text-center py-2">
                     No new notifications.
                   </p>
                 ) : (
@@ -828,10 +831,10 @@ export function DashboardClient({
                           key={n.id}
                           onClick={() => isUnread && handleMarkNotifRead(n.id)}
                           role="listitem"
-                          className={`w-full text-left text-xs space-y-1 rounded-lg p-2 transition-colors ${
+                          className={`w-full text-left text-xs space-y-1 rounded-lg p-2.5 transition-colors ${
                             isUnread
-                              ? "bg-rose-950/10 hover:bg-rose-950/20 border border-rose-500/20"
-                              : "hover:bg-slate-800/40 border border-transparent"
+                              ? "bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200"
+                              : "hover:bg-slate-50 border border-transparent"
                           }`}
                         >
                           <div className="flex justify-between items-start gap-2">
@@ -839,25 +842,25 @@ export function DashboardClient({
                               <span
                                 className={`mt-1 inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
                                   isUnread
-                                    ? "bg-rose-500 animate-pulse"
-                                    : "bg-slate-700"
+                                    ? "bg-rose-600 animate-pulse"
+                                    : "bg-slate-300"
                                 }`}
                               />
                               <span
                                 className={`font-semibold truncate ${
-                                  isUnread ? "text-slate-100" : "text-slate-400"
+                                  isUnread ? "text-slate-900 font-bold" : "text-slate-600"
                                 }`}
                               >
                                 {n.title}
                               </span>
                             </div>
-                            <span className="text-[10px] text-slate-500 flex items-center gap-0.5 shrink-0">
+                            <span className="text-[10px] text-slate-400 flex items-center gap-0.5 shrink-0">
                               <Clock className="w-3 h-3" aria-hidden="true" />{" "}
                               {formatDate(n.createdAt)}
                             </span>
                           </div>
                           <p
-                            className={`pl-3.5 ${isUnread ? "text-slate-300" : "text-slate-500"}`}
+                            className={`pl-3.5 ${isUnread ? "text-slate-700" : "text-slate-500"}`}
                           >
                             {n.message}
                           </p>

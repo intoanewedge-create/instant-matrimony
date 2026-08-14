@@ -17,12 +17,12 @@ const DEFAULT_FAQS = [
   },
   {
     question: "What benefits do premium membership plans offer?",
-    answer: "Premium plans (Silver, Gold, Platinum, Diamond) allow you to view verified phone numbers, initiate direct chat messages, highlight your profile in search listings, and access relationship advisor assistance.",
+    answer: "Our Standard Plan (₹1,000 / 30 Days) includes 5 contact unlocks upon accepted interest and chat with eligible interest connections. Our VIP Concierge Plan (₹5,00,000 / Valid Till Marriage) provides dedicated Relationship Manager assistance, priority listings, and comprehensive matrimonial matchmaking.",
     category: "Memberships",
   },
   {
     question: "How do I upgrade to a premium membership?",
-    answer: "Go to the Membership page, select the plan that fits your requirements (Silver, Gold, Platinum, or Diamond), and click Upgrade. You can pay securely using UPI, QR Code, Card, or Net Banking. Once verified, your membership features are activated.",
+    answer: "Go to the Membership page, select between our Standard Plan (₹1,000) or VIP Concierge Plan (₹5,00,000), and submit payment via UPI or Bank Transfer. Once verified, your membership features are activated immediately.",
     category: "Payments",
   },
   {
@@ -39,22 +39,23 @@ const DEFAULT_FAQS = [
 
 export default async function FAQPage() {
   // 1. Check for CMS Page override
+  let cmsPage: any = null;
   try {
-    const cmsPage = await prisma.cmsPage.findUnique({
+    cmsPage = await prisma.cmsPage.findUnique({
       where: { slug: "faq" },
     });
-
-    if (cmsPage && cmsPage.status === "PUBLISHED" && cmsPage.content?.trim()) {
-      return (
-        <CmsPageRenderer
-          title={cmsPage.title}
-          content={cmsPage.content}
-          seoTitle={cmsPage.seoTitle}
-        />
-      );
-    }
   } catch (e) {
     // Graceful fallback to FAQs table
+  }
+
+  if (cmsPage && cmsPage.status === "PUBLISHED" && cmsPage.content?.trim()) {
+    return (
+      <CmsPageRenderer
+        title={cmsPage.title}
+        content={cmsPage.content}
+        seoTitle={cmsPage.seoTitle}
+      />
+    );
   }
 
   // 2. Fetch FAQs from database

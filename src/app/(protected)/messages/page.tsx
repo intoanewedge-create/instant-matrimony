@@ -22,7 +22,7 @@ export default async function MessagesPage() {
   const conversations = convosResult.success ? convosResult.data : [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900">
       <ChatListClient conversations={conversations} />
     </div>
   );

@@ -16,6 +16,7 @@
     "test:enterprise": "npx tsx src/lib/tests/enterprise.test.ts",
     "test:production": "npx tsx src/lib/tests/production.test.ts",
     "test:phase5": "npx tsx src/lib/tests/phase5.test.ts",
+    "test:audit": "npx tsx src/lib/tests/e2e-business-audit.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

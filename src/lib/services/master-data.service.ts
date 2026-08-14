@@ -106,9 +106,21 @@ export class MasterDataService extends BaseService {
     }
   }
 
+  async getDistricts(stateId?: string): Promise<Result<any[]>> {
+    try {
+      const items = await (prisma as any).masterDistrict.findMany({
+        where: stateId ? { stateId } : undefined,
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      });
+      return this.returnSuccess(items);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "DISTRICTS_FETCH_ERROR");
+    }
+  }
+
   async getCities(districtId?: string): Promise<Result<any[]>> {
     try {
-      const items = await prisma.masterCity.findMany({
+      const items = await (prisma as any).masterCity.findMany({
         where: districtId ? { districtId } : undefined,
         orderBy: [{ order: "asc" }, { name: "asc" }],
       });
@@ -120,3 +132,4 @@ export class MasterDataService extends BaseService {
 }
 
 export const masterDataService = new MasterDataService();
+

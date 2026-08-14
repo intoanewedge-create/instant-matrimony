@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900">
       <DashboardClient
         profile={data.profile}
         membership={data.membership}

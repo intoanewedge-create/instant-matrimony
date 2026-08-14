@@ -23,15 +23,50 @@ export const authConfig = {
     },
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as any).role;
+        token.id = user.id;
+
+        const remember = (user as any).rememberMe === true;
+        token.rememberMe = remember;
+
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const maxAge = remember
+          ? 30 * 24 * 60 * 60 // 30 days
+          : 24 * 60 * 60; // 1 day
+
+        (token as any).exp = nowSeconds + maxAge;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user && token) {
+        (session.user as any).role = token.role;
+        (session.user as any).id = token.id;
+      }
+
+      if (token && (token as any).exp) {
+        session.expires = new Date(
+          ((token as any).exp as number) * 1000,
+        ).toISOString() as any;
+      }
+
+      return session;
+    },
+
     async authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
 
-      // 0. Static files, images, and public asset bypass
+      // 0. Static files, images, API routes, and public asset bypass
       if (
         pathname.includes(".") ||
         pathname.startsWith("/_next") ||
-        pathname.startsWith("/uploads")
+        pathname.startsWith("/uploads") ||
+        pathname.startsWith("/api")
       ) {
         return true;
       }
@@ -67,7 +102,7 @@ export const authConfig = {
       if (isGuestAuthRoute) {
         if (isLoggedIn) {
           const role = (auth?.user as any)?.role;
-          return Response.redirect(new URL(role && role !== "USER" ? "/admin" : "/dashboard", nextUrl));
+          return Response.redirect(new URL(role === "ADMIN" ? "/admin" : "/dashboard", nextUrl));
         }
         return true;
       }
@@ -83,7 +118,7 @@ export const authConfig = {
           return Response.redirect(new URL("/login", nextUrl));
         }
         const role = (auth?.user as any)?.role;
-        if (role === "USER") {
+        if (role !== "ADMIN") {
           return Response.redirect(new URL("/error/403", nextUrl));
         }
         return true;
@@ -99,5 +134,3 @@ export const authConfig = {
   },
   providers: [], // Configured in main auth.ts
 } satisfies NextAuthConfig;
-
-

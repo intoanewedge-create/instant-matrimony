@@ -30,7 +30,7 @@ const sections = [
   },
   {
     title: "6. Membership & Payments",
-    body: "Premium membership plans (Silver, Gold, Platinum and Diamond) are billed upfront and grant access to features as described on the Membership page. Prices and features may change with prior notice.",
+    body: "InstantMatrimony offers our Standard (₹1,000 / 30 Days / 5 Contact Unlocks) and VIP Concierge (₹5,00,000 / Valid Till Marriage) plans. Plans are billed upfront and grant access to features as described on the Membership page. Prices and features are governed by our official platform terms.",
   },
   {
     title: "7. Refunds & Cancellation",

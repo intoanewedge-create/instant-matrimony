@@ -158,13 +158,14 @@ export class ProfileService extends BaseService {
         return this.returnSuccess(profile);
       }
 
-      // Step 7: Partner Preferences
-      if (step === 7) {
-        return this.updatePartnerPreference(userId, stepData);
+      // If partner preference data was provided (e.g. Step 8 or Step 7)
+      const hasPrefFields = ALLOWED_PREF_FIELDS.some((f) => stepData[f] !== undefined);
+      if (hasPrefFields && (step === 7 || step === 8)) {
+        await this.updatePartnerPreference(userId, stepData);
       }
 
       let status = profile.status;
-      if (step === 8 && stepData.submitForReview) {
+      if (stepData.submitForReview || (step === 10 && stepData.submitForReview !== false)) {
         status = "PENDING";
       }
 
@@ -187,7 +188,7 @@ export class ProfileService extends BaseService {
         status,
       });
 
-      if (step === 8 && stepData.submitForReview) {
+      if (stepData.submitForReview || (step === 10 && stepData.submitForReview !== false)) {
         await eventDispatcher.publish(DOMAIN_EVENTS.PROFILE_SUBMITTED, {
           userId,
           profileId: profile.id,
@@ -404,6 +405,65 @@ export class ProfileService extends BaseService {
       return this.returnSuccess(result);
     } catch (e: any) {
       return this.returnFailure(e.message, "PROFILE_DELETE_ERROR");
+    }
+  }
+
+  async getProfilePrivacy(userId: string): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findByUserId(userId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+
+      const privacy = await prisma.profilePrivacy.findUnique({
+        where: { profileId: profile.id },
+      });
+
+      return this.returnSuccess(
+        privacy || {
+          blurPhotos: false,
+          hidePhone: false,
+          hideIncome: false,
+          hideFamilyDetails: false,
+          hideLastSeen: false,
+          hideOnlineStatus: false,
+        }
+      );
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PRIVACY_GET_ERROR");
+    }
+  }
+
+  async updateProfilePrivacy(userId: string, data: any): Promise<Result<any>> {
+    try {
+      const profile = await this.profileRepository.findByUserId(userId);
+      if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+
+      const privacyData: any = {};
+      const fields = [
+        "blurPhotos",
+        "hidePhone",
+        "hideIncome",
+        "hideFamilyDetails",
+        "hideLastSeen",
+        "hideOnlineStatus",
+      ];
+      for (const f of fields) {
+        if (typeof data[f] === "boolean") {
+          privacyData[f] = data[f];
+        }
+      }
+
+      const privacy = await prisma.profilePrivacy.upsert({
+        where: { profileId: profile.id },
+        update: privacyData,
+        create: {
+          ...privacyData,
+          profileId: profile.id,
+        },
+      });
+
+      return this.returnSuccess(privacy);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "PRIVACY_UPDATE_ERROR");
     }
   }
 }

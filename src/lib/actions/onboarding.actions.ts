@@ -2,7 +2,18 @@
 
 import { auth } from "../auth";
 import { container } from "../container";
-import { step1Schema, step2Schema, step3Schema, step4Schema, step5Schema, step6Schema, step7Schema, step8Schema } from "../validators/profile.validator";
+import {
+  step1Schema,
+  step2Schema,
+  step3Schema,
+  step4Schema,
+  step5Schema,
+  step6Schema,
+  step7Schema,
+  step8Schema,
+  step9Schema,
+  step10Schema,
+} from "../validators/profile.validator";
 import { revalidatePath } from "next/cache";
 
 const schemas: Record<number, any> = {
@@ -14,6 +25,8 @@ const schemas: Record<number, any> = {
   6: step6Schema,
   7: step7Schema,
   8: step8Schema,
+  9: step9Schema,
+  10: step10Schema,
 };
 
 export async function saveStepAction(step: number, stepData: any) {

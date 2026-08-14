@@ -5,8 +5,11 @@ import { AdminDashboardClient } from "./admin-dashboard-client";
 
 export default async function AdminDashboardPage() {
   const session = await auth();
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
-    redirect("/dashboard");
+  if (!session?.user) {
+    redirect("/login");
+  }
+  if ((session.user as any).role !== "ADMIN") {
+    redirect("/error/403");
   }
 
   const startOfToday = new Date();
@@ -192,8 +195,8 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Executive Admin Dashboard</h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Executive Admin Dashboard</h1>
+        <p className="text-xs text-slate-500 mt-1">
           Realtime operational metrics, financial analytics, approval queues, and system alerts.
         </p>
       </div>

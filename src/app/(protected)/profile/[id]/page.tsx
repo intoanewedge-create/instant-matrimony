@@ -89,7 +89,7 @@ export default async function ProfileDetailPage({
   const serializedReceivedInterest = receivedInterest ? JSON.parse(JSON.stringify(receivedInterest)) : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 pb-12">
       <ProfileDetailClient
         profile={serializedProfile}
         initialSentInterest={serializedSentInterest}

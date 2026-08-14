@@ -40,8 +40,8 @@ export default async function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Payment Verification Queue</h1>
-        <p className="text-xs text-slate-400 mt-1">Review UTR references, verify receipts, and activate memberships.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Payment Verification Queue</h1>
+        <p className="text-xs text-slate-500 mt-1">Review UTR references, verify receipts, and activate memberships.</p>
       </div>
 
       <AdminPaymentsClient initialPayments={JSON.parse(JSON.stringify(enrichedPayments))} />

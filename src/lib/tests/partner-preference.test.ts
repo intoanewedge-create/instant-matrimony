@@ -1,5 +1,5 @@
 import { container } from "../container";
-import { step7Schema } from "../validators/profile.validator";
+import { step8Schema } from "../validators/profile.validator";
 import assert from "assert";
 
 async function testPartnerPreferenceFlow() {
@@ -8,7 +8,7 @@ async function testPartnerPreferenceFlow() {
   console.log("=================================================");
 
   // 1. Validator Tests
-  console.log("\n[1. Validator Tests (step7Schema)]");
+  console.log("\n[1. Validator Tests (step8Schema)]");
   const validData = {
     minAge: 25,
     maxAge: 28,
@@ -21,7 +21,7 @@ async function testPartnerPreferenceFlow() {
     country: "India",
   };
 
-  const parseResult1 = step7Schema.safeParse(validData);
+  const parseResult1 = step8Schema.safeParse(validData);
   assert.ok(parseResult1.success, "Valid partner preference payload should succeed");
   console.log("✓ Valid data passed schema validation:", parseResult1.data);
 
@@ -33,7 +33,7 @@ async function testPartnerPreferenceFlow() {
     maxHeight: null,
     religion: "Hindu",
   };
-  const parseResult2 = step7Schema.safeParse(stringNumData);
+  const parseResult2 = step8Schema.safeParse(stringNumData);
   assert.ok(parseResult2.success, "String numbers and empty strings should parse cleanly");
   assert.strictEqual(parseResult2.data.minAge, 24);
   assert.strictEqual(parseResult2.data.maxAge, 30);
@@ -66,17 +66,17 @@ async function testPartnerPreferenceFlow() {
   assert.ok(regRes.success, "Test user registration must succeed");
   const userId = regRes.data.id;
 
-  // Save wizard step 7 directly through profileService
-  console.log("\n[3. Testing saveWizardStep(step=7)]");
-  const saveStep7Res = await profileService.saveWizardStep(userId, 7, {
+  // Save wizard step 8 directly through profileService
+  console.log("\n[3. Testing saveWizardStep(step=8)]");
+  const saveStep8Res = await profileService.saveWizardStep(userId, 8, {
     minAge: 25,
     maxAge: 28,
     minHeight: 160,
     maxHeight: 190,
     religion: "Hindu",
   });
-  assert.ok(saveStep7Res.success, `saveWizardStep(7) should succeed: ${saveStep7Res.error}`);
-  console.log("✓ saveWizardStep(7) succeeded without throwing Unknown argument minAge!");
+  assert.ok(saveStep8Res.success, `saveWizardStep(8) should succeed: ${saveStep8Res.error}`);
+  console.log("✓ saveWizardStep(8) succeeded without throwing Unknown argument minAge!");
 
   // Update via updatePartnerPreference directly
   console.log("\n[4. Testing updatePartnerPreference directly]");

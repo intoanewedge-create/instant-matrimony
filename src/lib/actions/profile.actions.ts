@@ -216,3 +216,31 @@ export async function deleteProfileAction(profileId: string, reason?: string) {
   revalidatePath("/dashboard");
   return { success: true, profile: res.data, error: undefined };
 }
+
+export async function getProfilePrivacyAction() {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = (session.user as any).id;
+
+  const res = await container.services.profileService.getProfilePrivacy(userId);
+  if (!res.success) return { success: false, error: res.error };
+  return { success: true, privacy: res.data };
+}
+
+export async function updateProfilePrivacyAction(data: any) {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = (session.user as any).id;
+
+  const res = await container.services.profileService.updateProfilePrivacy(userId, data);
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath("/profile");
+  revalidatePath("/settings");
+  return { success: true, privacy: res.data };
+}
+

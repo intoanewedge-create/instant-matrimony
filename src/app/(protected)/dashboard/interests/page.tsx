@@ -63,15 +63,15 @@ export default async function InterestsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 text-slate-200">
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 text-slate-900">
       
       {/* Title */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent flex items-center gap-2">
-          <Heart className="w-8 h-8 text-rose-500 fill-rose-500/20" />
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
+          <Heart className="w-8 h-8 text-rose-600 fill-rose-100" />
           My Connections & Interests
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-slate-500 text-sm mt-1">
           Review incoming matching interests or monitor validation status on connections you sent.
         </p>
       </div>
@@ -80,7 +80,7 @@ export default async function InterestsPage() {
         
         {/* Left Column: Received Interests */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold border-l-2 border-rose-500 pl-2 text-slate-200">
+          <h2 className="text-lg font-bold border-l-4 border-rose-500 pl-2.5 text-slate-900">
             Received Interests ({receivedInterests.length})
           </h2>
 
@@ -99,10 +99,10 @@ export default async function InterestsPage() {
                   : "N/A";
 
                 return (
-                  <Card key={interest.id} className="border border-slate-800 bg-slate-900/30 overflow-hidden">
+                  <Card key={interest.id} className="border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                     <CardContent className="p-4 flex gap-4 items-center">
                       {/* Photo Thumbnail */}
-                      <div className="w-16 h-16 rounded-xl bg-slate-950 overflow-hidden shrink-0 border border-slate-800">
+                      <div className="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                         {primaryPhoto ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -111,7 +111,7 @@ export default async function InterestsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-700 bg-slate-900">
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-100">
                             <User className="w-6 h-6" />
                           </div>
                         )}
@@ -120,29 +120,29 @@ export default async function InterestsPage() {
                       {/* Summary details */}
                       <div className="flex-grow min-w-0">
                         {senderProfile ? (
-                          <Link href={`/profile/${senderProfile.userId}`} className="font-bold text-slate-100 hover:text-rose-400 transition-colors text-sm truncate block">
+                          <Link href={`/profile/${senderProfile.userId}`} className="font-bold text-slate-900 hover:text-rose-600 transition-colors text-sm truncate block">
                             {senderUser.name || "Matrimony Member"}
                           </Link>
                         ) : (
-                          <span className="font-bold text-slate-400 text-sm block">
+                          <span className="font-bold text-slate-500 text-sm block">
                             {senderUser.name || "Matrimony Member"}
                           </span>
                         )}
-                        <p className="text-xs text-slate-400 mt-0.5 truncate">
+                        <p className="text-xs text-slate-500 mt-0.5 truncate">
                           {senderProfile ? (
                             `${age} yrs • ${senderProfile.religion} • ${senderProfile.city}`
                           ) : (
                             "No Profile Setup"
                           )}
                         </p>
-                        <span className={`inline-flex items-center gap-1 mt-1 text-[9px] px-2 py-0.5 rounded-full font-semibold border ${
+                        <span className={`inline-flex items-center gap-1 mt-1 text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${
                           interest.status === "PENDING"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
                             : interest.status === "ACCEPTED"
-                            ? "bg-green-500/10 text-green-400 border-green-500/20"
-                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border-slate-200"
                         }`}>
-                          <Clock className="w-2.5 h-2.5" /> Status: {interest.status}
+                          <Clock className="w-3 h-3" /> Status: {interest.status}
                         </span>
                       </div>
 
@@ -151,13 +151,13 @@ export default async function InterestsPage() {
                         <div className="flex gap-1.5 shrink-0">
                           <form action={handleAccept}>
                             <input type="hidden" name="interestId" value={interest.id} />
-                            <Button type="submit" size="icon" className="h-8 w-8 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg">
+                            <Button type="submit" size="icon" className="h-8 w-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm">
                               <Check className="w-4 h-4" />
                             </Button>
                           </form>
                           <form action={handleDecline}>
                             <input type="hidden" name="interestId" value={interest.id} />
-                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 text-red-400 hover:bg-red-950/20 rounded-lg">
+                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-red-50 rounded-lg">
                               <X className="w-4 h-4" />
                             </Button>
                           </form>
@@ -169,7 +169,7 @@ export default async function InterestsPage() {
               })}
             </div>
           ) : (
-            <Card className="border border-slate-800 bg-slate-900/10 p-8 text-center text-xs text-slate-500">
+            <Card className="border border-slate-200 bg-white p-8 text-center text-xs text-slate-500 shadow-sm">
               No interests received yet.
             </Card>
           )}
@@ -177,7 +177,7 @@ export default async function InterestsPage() {
 
         {/* Right Column: Sent Interests */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold border-l-2 border-rose-500 pl-2 text-slate-200">
+          <h2 className="text-lg font-bold border-l-4 border-rose-500 pl-2.5 text-slate-900">
             Sent Interests ({sentInterests.length})
           </h2>
 
@@ -196,11 +196,11 @@ export default async function InterestsPage() {
                   : "N/A";
 
                 return (
-                  <Card key={interest.id} className="border border-slate-800 bg-slate-900/30 overflow-hidden">
+                  <Card key={interest.id} className="border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                     <CardContent className="p-4 flex gap-4 items-center justify-between">
                       <div className="flex gap-4 items-center min-w-0">
                         {/* Photo Thumbnail */}
-                        <div className="w-16 h-16 rounded-xl bg-slate-950 overflow-hidden shrink-0 border border-slate-800">
+                        <div className="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                           {primaryPhoto ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -209,7 +209,7 @@ export default async function InterestsPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-700 bg-slate-900">
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-100">
                               <User className="w-6 h-6" />
                             </div>
                           )}
@@ -218,27 +218,27 @@ export default async function InterestsPage() {
                         {/* Summary details */}
                         <div className="min-w-0">
                           {receiverProfile ? (
-                            <Link href={`/profile/${receiverProfile.userId}`} className="font-bold text-slate-100 hover:text-rose-400 transition-colors text-sm truncate block">
+                            <Link href={`/profile/${receiverProfile.userId}`} className="font-bold text-slate-900 hover:text-rose-600 transition-colors text-sm truncate block">
                               {receiverUser.name || "Matrimony Member"}
                             </Link>
                           ) : (
-                            <span className="font-bold text-slate-400 text-sm block">
+                            <span className="font-bold text-slate-500 text-sm block">
                               {receiverUser.name || "Matrimony Member"}
                             </span>
                           )}
-                          <p className="text-xs text-slate-400 mt-0.5 truncate">
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">
                             {receiverProfile ? (
                               `${age} yrs • ${receiverProfile.religion} • ${receiverProfile.city}`
                             ) : (
                               "No Profile Setup"
                             )}
                           </p>
-                          <span className={`inline-flex items-center gap-1 mt-1 text-[9px] px-2 py-0.5 rounded-full font-semibold border ${
+                          <span className={`inline-flex items-center gap-1 mt-1 text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${
                             interest.status === "PENDING"
-                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
                               : interest.status === "ACCEPTED"
-                              ? "bg-green-500/10 text-green-400 border-green-500/20"
-                              : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
                           }`}>
                             Status: {interest.status}
                           </span>
@@ -247,7 +247,7 @@ export default async function InterestsPage() {
 
                       {receiverProfile && (
                         <Link href={`/profile/${receiverProfile.userId}`}>
-                          <Button size="icon" variant="ghost" className="text-slate-400 hover:text-white rounded-lg">
+                          <Button size="icon" variant="ghost" className="text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg">
                             <ArrowRight className="w-4 h-4" />
                           </Button>
                         </Link>
@@ -258,7 +258,7 @@ export default async function InterestsPage() {
               })}
             </div>
           ) : (
-            <Card className="border border-slate-800 bg-slate-900/10 p-8 text-center text-xs text-slate-500">
+            <Card className="border border-slate-200 bg-white p-8 text-center text-xs text-slate-500 shadow-sm">
               You haven&apos;t sent any connect requests yet.
             </Card>
           )}

@@ -35,7 +35,7 @@ export default async function MembershipPage() {
   const paymentNumber = settings.paymentNumber || "9000906292";
 
   return (
-    <div className="flex flex-col w-full py-12 bg-slate-950 text-white min-h-screen">
+    <div className="flex flex-col w-full py-12 bg-gradient-to-b from-rose-50/40 via-slate-50 to-white text-slate-900 min-h-screen">
       <div className="container mx-auto px-4 max-w-7xl">
         <MembershipClient
           plans={JSON.parse(JSON.stringify(plans))}

@@ -59,7 +59,7 @@ export default async function InterestsPage() {
   const serializedSent = JSON.parse(JSON.stringify(sentInterests));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white py-8">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 py-8">
       <InterestsClient
         receivedInterests={serializedReceived}
         sentInterests={serializedSent}

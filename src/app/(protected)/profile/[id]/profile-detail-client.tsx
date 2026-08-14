@@ -2,12 +2,35 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MessageSquare, MapPin, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Lock, CheckCircle, Phone, Mail, Unlock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Heart,
+  MessageSquare,
+  MapPin,
+  Sparkles,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  CheckCircle,
+  Phone,
+  Mail,
+  Unlock,
+  Shield,
+  Briefcase,
+  Users,
+  Compass,
+  FileText,
+  Calendar,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { getAiMatchExplanationAction } from "@/lib/actions/profile.actions";
-import { sendInterestAction, acceptInterestAction, declineInterestAction } from "@/lib/actions/interest.actions";
+import {
+  sendInterestAction,
+  acceptInterestAction,
+  declineInterestAction,
+} from "@/lib/actions/interest.actions";
 import { sendMessageAction } from "@/lib/actions/chat.actions";
 import { unlockContactAction } from "@/lib/actions/contact-unlock.actions";
 
@@ -27,7 +50,7 @@ export function ProfileDetailClient({
   isAdmin?: boolean;
 }) {
   const router = useRouter();
-  
+
   // Slide photo index
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const photos = profile.photos || [];
@@ -49,7 +72,10 @@ export function ProfileDetailClient({
         setUnlockedState(true);
         router.refresh();
       } else {
-        alert(res.error || "Could not unlock contact. Active membership and accepted interest are required.");
+        alert(
+          res.error ||
+            "Could not unlock contact. Active membership and verified profile status required."
+        );
       }
     } catch {
       alert("Failed to process contact unlock.");
@@ -59,7 +85,9 @@ export function ProfileDetailClient({
   };
 
   // Chat message initiation dialog state
-  const [chatMessage, setChatMessage] = useState("Hello! I reviewed your profile and felt we share excellent compatibility. I would love to connect!");
+  const [chatMessage, setChatMessage] = useState(
+    "Hello! I reviewed your profile and felt we share excellent matrimonial compatibility. I would love to connect!"
+  );
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
 
@@ -158,80 +186,100 @@ export function ProfileDetailClient({
 
   // Age helper
   const age = profile.dateOfBirth
-    ? new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()
+    ? Math.floor(
+        (new Date().getTime() - new Date(profile.dateOfBirth).getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000)
+      )
     : "N/A";
 
+  const isMutual =
+    (sentInterest?.status === "ACCEPTED") ||
+    (receivedInterest?.status === "ACCEPTED");
+
+  const shouldBlur =
+    profile.privacy?.blurPhotos && !isUnlocked && !isAdmin && !isMutual;
+
+  const hideIncome = profile.privacy?.hideIncome && !isUnlocked && !isAdmin;
+  const hideFamily = profile.privacy?.hideFamilyDetails && !isUnlocked && !isAdmin;
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
-      
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 text-slate-900">
       {/* Back Button */}
-      <button 
-        onClick={() => router.back()} 
-        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer font-medium"
       >
         <ChevronLeft className="w-4 h-4" /> Back to matches
       </button>
 
       {/* Main split profile card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Left Column: Photos & Primary Action buttons */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden relative shadow-xl aspect-[3/4]">
-            {(() => {
-              const shouldBlur = profile.privacy?.blurPhotos && !isUnlocked && !isAdmin;
-              return photos.length > 0 ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photos[activePhotoIndex]?.url}
-                    alt={`Profile picture of ${profile.user?.name}`}
-                    className={`h-full w-full object-cover transition-all ${shouldBlur ? "blur-xl scale-110" : ""}`}
-                  />
-                  {shouldBlur && (
-                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-6 text-center">
-                      <div className="p-4 bg-slate-900/90 rounded-xl border border-slate-800 text-slate-200 flex flex-col items-center gap-2 max-w-xs shadow-2xl">
-                        <Lock className="w-8 h-8 text-rose-500" />
-                        <h4 className="font-bold text-sm">Photos Blurred by Member</h4>
-                        <p className="text-xs text-slate-400">
-                          This member has set their photos to private. Photos become permanently visible after an interest is accepted and contact unlocked.
-                        </p>
-                      </div>
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden relative shadow-sm aspect-[3/4]">
+            {photos.length > 0 ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photos[activePhotoIndex]?.url}
+                  alt={`Profile picture of ${profile.user?.name || "Member"}`}
+                  className={`h-full w-full object-cover transition-all ${
+                    shouldBlur ? "blur-xl scale-110" : ""
+                  }`}
+                />
+                {shouldBlur && (
+                  <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6 text-center">
+                    <div className="p-4 bg-white/95 rounded-xl border border-slate-200 text-slate-800 flex flex-col items-center gap-2 max-w-xs shadow-2xl">
+                      <Lock className="w-8 h-8 text-rose-600" />
+                      <h4 className="font-bold text-sm text-slate-900">Photos Blurred by Member</h4>
+                      <p className="text-xs text-slate-500">
+                        This member has set their photos to private. Photos unlock automatically after interest acceptance or contact unlock.
+                      </p>
                     </div>
-                  )}
-                  {photos.length > 1 && !shouldBlur && (
-                    <>
-                      <button
-                        onClick={() => setActivePhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1))}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
-                      >
-                        <ChevronLeft className="w-5 h-5 text-white" />
-                      </button>
-                      <button
-                        onClick={() => setActivePhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0))}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-slate-950/60 flex items-center justify-center hover:bg-slate-900 transition-colors"
-                      >
-                        <ChevronRight className="w-5 h-5 text-white" />
-                      </button>
-                      {/* Index Indicator dot grid */}
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                        {photos.map((_: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className={`h-1.5 w-1.5 rounded-full transition-all ${idx === activePhotoIndex ? "bg-rose-500 w-3" : "bg-slate-400"}`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="h-full w-full bg-slate-900 flex items-center justify-center flex-col text-slate-500 gap-2">
-                  <Lock className="w-12 h-12" />
-                  <span className="text-xs">Photos restricted or empty</span>
-                </div>
-              );
-            })()}
+                  </div>
+                )}
+                {photos.length > 1 && !shouldBlur && (
+                  <>
+                    <button
+                      onClick={() =>
+                        setActivePhotoIndex((prev) =>
+                          prev > 0 ? prev - 1 : photos.length - 1
+                        )
+                      }
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center hover:bg-white text-slate-800 shadow-md transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        setActivePhotoIndex((prev) =>
+                          prev < photos.length - 1 ? prev + 1 : 0
+                        )
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center hover:bg-white text-slate-800 shadow-md transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    {/* Index Indicator dot grid */}
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                      {photos.map((_: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`h-1.5 rounded-full transition-all ${
+                            idx === activePhotoIndex ? "bg-rose-600 w-3" : "bg-slate-300 w-1.5"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="h-full w-full bg-slate-100 flex items-center justify-center flex-col text-slate-400 gap-2">
+                <Lock className="w-12 h-12" />
+                <span className="text-xs font-medium">No photos uploaded</span>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}
@@ -242,7 +290,7 @@ export function ProfileDetailClient({
                 <Button
                   onClick={handleAcceptInterest}
                   disabled={interestLoading}
-                  className="flex-grow bg-emerald-600 hover:bg-emerald-500 font-semibold"
+                  className="flex-grow bg-emerald-600 hover:bg-emerald-700 font-semibold text-xs text-white shadow-sm"
                 >
                   Accept Interest
                 </Button>
@@ -250,28 +298,28 @@ export function ProfileDetailClient({
                   onClick={handleDeclineInterest}
                   disabled={interestLoading}
                   variant="outline"
-                  className="flex-grow border-red-900/30 text-red-400 hover:bg-red-950/20"
+                  className="flex-grow border-red-200 text-red-700 hover:bg-red-50 text-xs"
                 >
                   Decline
                 </Button>
               </div>
             ) : receivedInterest && receivedInterest.status === "ACCEPTED" ? (
-              <Button disabled className="w-full bg-slate-800 text-slate-500">
-                Mutual Connection Approved
+              <Button disabled className="w-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                Mutual Connection Accepted
               </Button>
             ) : sentInterest ? (
-              <Button disabled className="w-full bg-rose-950/20 border border-rose-900/30 text-rose-400">
-                <Heart className="w-4 h-4 mr-2 fill-rose-400" />
+              <Button disabled className="w-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                <Heart className="w-4 h-4 mr-2 fill-rose-600" />
                 Interest Sent ({sentInterest.status})
               </Button>
             ) : (
               <Button
                 onClick={handleSendInterest}
                 disabled={interestLoading}
-                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold py-6 text-sm rounded-xl shadow-lg shadow-rose-600/10"
+                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold py-5 text-xs rounded-xl shadow-md shadow-rose-500/20"
               >
-                <Heart className="w-5 h-5 mr-2" />
-                {interestLoading ? "Sending request..." : "Connect Now"}
+                <Heart className="w-4 h-4 mr-2" />
+                {interestLoading ? "Sending request..." : "Send Interest"}
               </Button>
             )}
 
@@ -285,40 +333,45 @@ export function ProfileDetailClient({
                 }
               }}
               variant="outline"
-              className="w-full border-slate-800 hover:bg-slate-900 hover:text-white text-slate-300 py-6 text-sm rounded-xl gap-2"
+              className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-700 py-5 text-xs rounded-xl gap-2 font-medium bg-white shadow-xs"
             >
-              <MessageSquare className="w-5 h-5 text-rose-500" />
-              {conversationId ? "Go to Chat" : "Send Premium Message"}
+              <MessageSquare className="w-4 h-4 text-rose-600" />
+              {conversationId ? "Go to Chat" : "Direct Message"}
             </Button>
 
             {/* Contact Unlock Card */}
-            <Card className="border border-slate-800 bg-slate-950/60 p-4 space-y-3">
-              <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-rose-500" /> Verified Contact Information
+            <Card className="border border-slate-200 bg-white p-4 space-y-3 shadow-sm">
+              <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Phone className="w-4 h-4 text-rose-600" /> Verified Contact Information
               </h4>
               {unlockedState ? (
-                <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-xl space-y-1.5 text-xs text-emerald-300">
-                  <div className="flex items-center gap-2 font-mono font-bold">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5 text-xs text-emerald-900">
+                  <div className="flex items-center gap-2 font-mono font-bold text-emerald-800">
                     <Phone className="w-3.5 h-3.5" /> {profile.user?.phone || "Not Provided"}
                   </div>
-                  <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px]">
-                    <Mail className="w-3.5 h-3.5 text-slate-500" /> {profile.user?.email}
+                  <div className="flex items-center gap-2 text-slate-600 font-mono text-[11px]">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" /> {profile.user?.email}
                   </div>
-                  <span className="inline-block text-[10px] text-emerald-400 font-semibold pt-1">
+                  <span className="inline-block text-[10px] text-emerald-700 font-semibold pt-1">
                     ✓ Contact permanently unlocked
                   </span>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-[11px] text-slate-400">
-                    Unlock to view direct phone number and family contact details.
+                  <p className="text-[11px] text-slate-500">
+                    Unlock contact details using your monthly membership quota.
                   </p>
                   <Button
                     onClick={handleUnlockContact}
                     disabled={unlockLoading}
-                    className="w-full bg-slate-900 hover:bg-slate-850 text-rose-400 border border-rose-500/30 text-xs font-semibold"
+                    className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold shadow-xs"
                   >
-                    {unlockLoading ? <Spinner className="w-4 h-4 mr-1" /> : <Unlock className="w-4 h-4 mr-1 text-rose-500" />} Unlock Contact
+                    {unlockLoading ? (
+                      <Spinner className="w-4 h-4 mr-1" />
+                    ) : (
+                      <Unlock className="w-4 h-4 mr-1 text-rose-600" />
+                    )}{" "}
+                    Unlock Contact Details
                   </Button>
                 </div>
               )}
@@ -328,73 +381,88 @@ export function ProfileDetailClient({
 
         {/* Right Column: Bio details, AI Matchmaker insights, and full attributes */}
         <div className="lg:col-span-2 space-y-8">
-          
           {/* Main header block */}
-          <div className="flex justify-between items-start gap-4 border-b border-slate-900 pb-6">
+          <div className="flex justify-between items-start gap-4 border-b border-slate-200 pb-6">
             <div>
-              <h2 className="text-2xl font-extrabold text-slate-100 flex items-center gap-2">
+              <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
                 {profile.user?.name || "Matrimony Member"}
                 {profile.status === "APPROVED" && (
-                  <CheckCircle className="w-5 h-5 text-emerald-400 fill-emerald-400/10 shrink-0" aria-label="Verified Member" />
+                  <CheckCircle
+                    className="w-5 h-5 text-emerald-600 fill-emerald-100 shrink-0"
+                    aria-label="Verified Member"
+                  />
                 )}
               </h2>
-              <p className="text-slate-400 text-sm mt-1 flex items-center gap-1">
-                <MapPin className="w-4 h-4 text-rose-500" /> {profile.city}, {profile.state}, {profile.country}
+              <p className="text-slate-500 text-xs mt-1 flex items-center gap-1 font-medium">
+                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                {profile.city ? `${profile.city}, ${profile.district ? `${profile.district}, ` : ""}${profile.state || ""}, ${profile.country || "India"}` : "Location not specified"}
               </p>
             </div>
 
-            {/* Compatibility Wheel */}
+            {/* Compatibility Badge */}
             {loadingAi ? (
-              <div className="h-16 w-16 rounded-full border-2 border-slate-800 border-t-rose-500 animate-spin" />
+              <div className="h-14 w-14 rounded-full border-2 border-slate-200 border-t-rose-600 animate-spin" />
             ) : compatibility ? (
-              <div className="flex items-center gap-3">
-                <div className="relative h-16 w-16 flex items-center justify-center rounded-full bg-slate-900 border border-slate-800">
-                  <span className="text-base font-extrabold text-rose-400">{compatibility.score}%</span>
-                  <div className="absolute inset-0 rounded-full border-2 border-rose-500/20" />
-                  <div className="absolute inset-0 rounded-full border-2 border-rose-500 border-t-transparent border-r-transparent animate-pulse" />
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-14 w-14 flex items-center justify-center rounded-full bg-rose-50 border border-rose-200 shadow-xs">
+                  <span className="text-sm font-extrabold text-rose-700">
+                    {compatibility.score}%
+                  </span>
+                  <div className="absolute inset-0 rounded-full border-2 border-rose-300/40" />
+                  <div className="absolute inset-0 rounded-full border-2 border-rose-600 border-t-transparent border-r-transparent animate-pulse" />
                 </div>
-                <span className="text-xs font-semibold text-slate-400">Match score</span>
+                <div className="text-[11px] font-semibold text-slate-600">
+                  <span>Match Affinity</span>
+                </div>
               </div>
             ) : null}
           </div>
 
           {/* AI Matchmaker explanation insight panel */}
-          <Card className="border border-rose-950/30 bg-rose-950/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 text-rose-500/10"><Sparkles className="w-20 h-20" /></div>
-            <CardContent className="p-6 space-y-3">
-              <h3 className="text-sm font-bold text-rose-400 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-                AI Matchmaker Insights
+          <Card className="border border-rose-200 bg-rose-50/40 relative overflow-hidden shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-rose-500/10 pointer-events-none">
+              <Sparkles className="w-20 h-20" />
+            </div>
+            <CardContent className="p-5 space-y-2.5">
+              <h3 className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+                AI Matchmaker Compatibility Analysis
               </h3>
 
               {loadingAi ? (
-                <p className="text-slate-400 text-xs animate-pulse">Calculating semantic match affinity and parsing preferences...</p>
+                <p className="text-slate-500 text-xs animate-pulse">
+                  Analyzing cultural affinity, horoscope criteria, and lifestyle match...
+                </p>
               ) : aiError ? (
-                <div className="text-xs text-red-400 flex items-center gap-1">
+                <div className="text-xs text-red-600 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   <span>{aiError}</span>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-slate-300 leading-relaxed italic">{aiExplanation}</p>
-                  
-                  {/* Upgrade block if user is not premium */}
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-700 leading-relaxed italic">
+                    {aiExplanation}
+                  </p>
+
                   {!isPremium && (
-                    <div className="pt-2">
+                    <div className="pt-1">
                       <Button
                         size="sm"
                         onClick={() => router.push("/dashboard/billing")}
-                        className="bg-rose-600 hover:bg-rose-500 text-xs font-bold px-4 py-1.5 h-auto rounded-lg"
+                        className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-xs font-bold px-3 py-1 h-auto rounded-lg text-white shadow-xs"
                       >
-                        Upgrade to Premium
+                        Upgrade to View Deep Insights
                       </Button>
                     </div>
                   )}
 
                   {compatibility?.matchedFields?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-2">
+                    <div className="flex flex-wrap gap-1 pt-1">
                       {compatibility.matchedFields.map((field: string) => (
-                        <span key={field} className="text-[10px] bg-green-950/40 text-green-400 border border-green-900/50 px-2 py-0.5 rounded-full">
+                        <span
+                          key={field}
+                          className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-medium"
+                        >
                           ✓ Match: {field}
                         </span>
                       ))}
@@ -407,94 +475,188 @@ export function ProfileDetailClient({
 
           {/* About Bio */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">About Me</h3>
-            <p className="text-slate-300 leading-relaxed italic">
-              &ldquo;{profile.bio || "This user has not written a biographical description yet."}&ldquo;
+            <h3 className="text-xs font-bold uppercase tracking-wider text-rose-600">About Me</h3>
+            <p className="text-slate-700 text-xs leading-relaxed italic p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              &ldquo;{profile.bio || "This user has not written a biographical overview yet."}&rdquo;
             </p>
           </div>
 
-          <hr className="border-slate-900" />
-
-          {/* Detailed Attributes Grids */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-            {/* Basic details */}
-            <div className="space-y-4">
-              <h4 className="font-bold text-rose-400/90 border-l-2 border-rose-500 pl-2">Basic & Personal Info</h4>
-              <ul className="space-y-3 text-xs">
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Gender</span>
-                  <span className="text-slate-300 font-medium">{profile.gender}</span>
+          {/* Matrimonial Biodata Detailed Attributes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            {/* 1. Basic & Personal Details */}
+            <div className="space-y-3 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <h4 className="font-bold text-slate-900 border-l-2 border-rose-600 pl-2">
+                Basic & Personal Details
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Gender:</span>
+                  <span className="text-slate-800 font-medium">{profile.gender === "FEMALE" ? "Bride (Female)" : "Groom (Male)"}</span>
                 </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Age</span>
-                  <span className="text-slate-300 font-medium">{age} yrs</span>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Age:</span>
+                  <span className="text-slate-800 font-medium">{age} yrs</span>
                 </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Height</span>
-                  <span className="text-slate-300 font-medium">{profile.height} cm</span>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Height:</span>
+                  <span className="text-slate-800 font-medium">{profile.height ? `${profile.height} cm` : "Not specified"}</span>
                 </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Marital Status</span>
-                  <span className="text-slate-300 font-medium">{profile.maritalStatus}</span>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Weight:</span>
+                  <span className="text-slate-800 font-medium">{profile.weight ? `${profile.weight} kg` : "Not specified"}</span>
                 </li>
-              </ul>
-            </div>
-
-            {/* Religious & Location info */}
-            <div className="space-y-4">
-              <h4 className="font-bold text-rose-400/90 border-l-2 border-rose-500 pl-2">Community & Origin</h4>
-              <ul className="space-y-3 text-xs">
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Religion</span>
-                  <span className="text-slate-300 font-medium">{profile.religion}</span>
-                </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Caste / Subcaste</span>
-                  <span className="text-slate-300 font-medium">{profile.caste || "N/A"}</span>
-                </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Mother Tongue</span>
-                  <span className="text-slate-300 font-medium">{profile.motherTongue}</span>
-                </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">State / Country</span>
-                  <span className="text-slate-300 font-medium">{profile.state}, {profile.country}</span>
+                <li className="flex justify-between pb-1">
+                  <span className="text-slate-500">Marital Status:</span>
+                  <span className="text-slate-800 font-medium">{profile.maritalStatus || "Never Married"}</span>
                 </li>
               </ul>
             </div>
 
-            {/* Education & Profession */}
-            <div className="space-y-4">
-              <h4 className="font-bold text-rose-400/90 border-l-2 border-rose-500 pl-2">Education & Profession</h4>
-              <ul className="space-y-3 text-xs">
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Education</span>
-                  <span className="text-slate-300 font-medium">{profile.education || "N/A"}</span>
+            {/* 2. Cultural & Horoscope Background */}
+            <div className="space-y-3 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <h4 className="font-bold text-slate-900 border-l-2 border-rose-600 pl-2">
+                Religion, Caste & Horoscope
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Religion:</span>
+                  <span className="text-slate-800 font-medium">{profile.religion || "Not specified"}</span>
                 </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Occupation</span>
-                  <span className="text-slate-300 font-medium">{profile.occupation || "N/A"}</span>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Caste:</span>
+                  <span className="text-slate-800 font-medium">{profile.caste || "Open / All"}</span>
                 </li>
-                <li className="flex justify-between border-b border-slate-900 pb-1.5">
-                  <span className="text-slate-500">Annual Income</span>
-                  <span className="text-slate-300 font-semibold text-rose-400">₹{profile.income} Lakhs / Year</span>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Sub-Caste:</span>
+                  <span className="text-slate-800 font-medium">{profile.subCaste || "N/A"}</span>
+                </li>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Gothram:</span>
+                  <span className="text-slate-800 font-medium">{profile.gothram || "Not specified"}</span>
+                </li>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Mother Tongue:</span>
+                  <span className="text-slate-800 font-medium">{profile.motherTongue || "Telugu"}</span>
+                </li>
+                <li className="flex justify-between pb-1">
+                  <span className="text-slate-500">Horoscope / Rashi:</span>
+                  <span className="text-slate-800 font-medium">{profile.horoscope || "Not specified"}</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* 3. Education & Profession */}
+            <div className="space-y-3 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <h4 className="font-bold text-slate-900 border-l-2 border-rose-600 pl-2">
+                Education & Career
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Highest Education:</span>
+                  <span className="text-slate-800 font-medium">{profile.education || "Not specified"}</span>
+                </li>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Occupation:</span>
+                  <span className="text-slate-800 font-medium">{profile.occupation || "Not specified"}</span>
+                </li>
+                <li className="flex justify-between pb-1">
+                  <span className="text-slate-500">Annual Income:</span>
+                  {hideIncome ? (
+                    <span className="text-slate-400 italic">Confidential</span>
+                  ) : (
+                    <span className="text-rose-600 font-bold">
+                      {profile.income ? `₹${profile.income} Lakhs / Year` : "Not disclosed"}
+                    </span>
+                  )}
+                </li>
+              </ul>
+            </div>
+
+            {/* 4. Family & Lifestyle */}
+            <div className="space-y-3 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <h4 className="font-bold text-slate-900 border-l-2 border-rose-600 pl-2">
+                Family & Lifestyle Habits
+              </h4>
+              <ul className="space-y-2">
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Family Values:</span>
+                  <span className="text-slate-800 font-medium">{profile.familyValues || "Moderate"}</span>
+                </li>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Dietary Habits:</span>
+                  <span className="text-slate-800 font-medium">{profile.foodPreference || "Vegetarian"}</span>
+                </li>
+                <li className="flex justify-between border-b border-slate-100 pb-1">
+                  <span className="text-slate-500">Smoking:</span>
+                  <span className="text-slate-800 font-medium">{profile.smoking === "NO" ? "Non-smoker" : profile.smoking || "No"}</span>
+                </li>
+                <li className="flex justify-between pb-1">
+                  <span className="text-slate-500">Drinking:</span>
+                  <span className="text-slate-800 font-medium">{profile.drinking === "NO" ? "Teetotaler" : profile.drinking || "No"}</span>
                 </li>
               </ul>
             </div>
           </div>
 
-        </div>
+          {/* Family Details Background (if provided and not hidden) */}
+          {profile.familyDetails && !hideFamily && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-rose-600">
+                Family Background & Native Heritage
+              </h3>
+              <p className="text-slate-700 text-xs leading-relaxed p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+                {profile.familyDetails}
+              </p>
+            </div>
+          )}
 
+          {/* Partner Match Preferences Summary Card */}
+          {profile.partnerPreference && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-rose-600">
+                Ideal Partner Criteria Desired by Member
+              </h3>
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Desired Age:</span>
+                  <span className="text-slate-800 font-medium">
+                    {profile.partnerPreference.minAge || 18} - {profile.partnerPreference.maxAge || 40} yrs
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Desired Height:</span>
+                  <span className="text-slate-800 font-medium">
+                    {profile.partnerPreference.minHeight || 140} - {profile.partnerPreference.maxHeight || 220} cm
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Marital Status:</span>
+                  <span className="text-slate-800 font-medium">
+                    {profile.partnerPreference.maritalStatus || "Never Married"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-[11px]">Religion:</span>
+                  <span className="text-slate-800 font-medium">
+                    {profile.partnerPreference.religion || "Any"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Chat message dialog box modal */}
+      {/* Chat message modal */}
       {showChatModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h3 className="text-lg font-bold">Initiate Connection message</h3>
-            <p className="text-slate-400 text-xs">Compose your connection request greeting below:</p>
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900">Send Personalized Message</h3>
+            <p className="text-slate-500 text-xs">
+              Direct communication is unlocked with active membership. Introduce yourself to start the conversation:
+            </p>
             <textarea
-              className="w-full h-24 p-3 border border-slate-800 bg-slate-950 rounded-xl text-xs text-slate-200 resize-none focus:border-rose-500"
+              className="w-full h-24 p-3 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 resize-none focus:bg-white focus:outline-none focus:border-rose-500"
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
             />
@@ -502,22 +664,21 @@ export function ProfileDetailClient({
               <Button
                 variant="ghost"
                 onClick={() => setShowChatModal(false)}
-                className="text-xs hover:bg-slate-800"
+                className="text-xs hover:bg-slate-100 text-slate-700"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleInitiateChat}
                 disabled={isSendingMessage}
-                className="bg-rose-600 hover:bg-rose-500 text-xs font-semibold px-4"
+                className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-xs font-semibold px-4 text-white shadow-md shadow-rose-500/20"
               >
-                {isSendingMessage ? "Sending..." : "Send & Connect"}
+                {isSendingMessage ? "Sending..." : "Send Message"}
               </Button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

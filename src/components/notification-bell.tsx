@@ -78,11 +78,11 @@ export function NotificationBell({
         size="icon"
         onClick={() => setOpen((v) => !v)}
         aria-label="Open notifications"
-        className="relative border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300"
+        className="relative border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm"
       >
-        <Bell className="w-4 h-4 text-rose-400" />
+        <Bell className="w-4 h-4 text-rose-600" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-[10px] font-bold text-white flex items-center justify-center border-2 border-slate-950">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-[10px] font-bold text-white flex items-center justify-center border-2 border-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -100,18 +100,18 @@ export function NotificationBell({
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="absolute right-0 mt-2 w-[360px] max-w-[calc(100vw-2rem)] bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+              className="absolute right-0 mt-2 w-[360px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
               role="dialog"
               aria-label="Notifications"
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-rose-400" />
-                  <h3 className="font-semibold text-slate-100 text-sm">
+                  <Sparkles className="w-4 h-4 text-rose-600" />
+                  <h3 className="font-semibold text-slate-900 text-sm">
                     Notifications
                   </h3>
                   {unread > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600/20 text-rose-300 border border-rose-600/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                       {unread} new
                     </span>
                   )}
@@ -119,15 +119,15 @@ export function NotificationBell({
                 <button
                   onClick={handleMarkAll}
                   disabled={pending || unread === 0}
-                  className="text-[11px] text-rose-400 hover:text-rose-300 disabled:opacity-40 flex items-center gap-1 font-medium"
+                  className="text-[11px] text-rose-600 hover:text-rose-700 disabled:opacity-40 flex items-center gap-1 font-medium"
                 >
                   <CheckCheck className="w-3.5 h-3.5" /> Mark all read
                 </button>
               </div>
 
-              <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-800">
+              <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100">
                 {items.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 text-xs">
+                  <div className="p-6 text-center text-slate-500 text-xs">
                     You're all caught up ✨
                   </div>
                 ) : (
@@ -139,27 +139,27 @@ export function NotificationBell({
                         onClick={() => isUnread && handleMarkOne(n.id)}
                         className={`w-full text-left px-4 py-3 transition-colors flex gap-3 group ${
                           isUnread
-                            ? "bg-rose-950/10 hover:bg-rose-950/20"
-                            : "hover:bg-slate-800/40"
+                            ? "bg-rose-50/60 hover:bg-rose-50/90"
+                            : "hover:bg-slate-50"
                         }`}
                       >
                         <div className="pt-1">
                           <span
                             className={`inline-block w-2 h-2 rounded-full ${
                               isUnread
-                                ? "bg-rose-500 animate-pulse"
-                                : "bg-slate-700"
+                                ? "bg-rose-600 animate-pulse"
+                                : "bg-slate-300"
                             }`}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <p
-                              className={`text-xs font-semibold truncate ${isUnread ? "text-slate-100" : "text-slate-400"}`}
+                              className={`text-xs font-semibold truncate ${isUnread ? "text-slate-900" : "text-slate-600"}`}
                             >
                               {n.title}
                             </p>
-                            <span className="text-[9px] text-slate-500 flex items-center gap-0.5 shrink-0">
+                            <span className="text-[9px] text-slate-400 flex items-center gap-0.5 shrink-0">
                               <Clock className="w-2.5 h-2.5" />
                               {new Date(n.createdAt).toLocaleDateString([], {
                                 month: "short",
@@ -168,7 +168,7 @@ export function NotificationBell({
                             </span>
                           </div>
                           <p
-                            className={`text-[11px] mt-0.5 line-clamp-2 ${isUnread ? "text-slate-300" : "text-slate-500"}`}
+                            className={`text-[11px] mt-0.5 line-clamp-2 ${isUnread ? "text-slate-700" : "text-slate-500"}`}
                           >
                             {n.message}
                           </p>

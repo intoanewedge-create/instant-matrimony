@@ -33,7 +33,7 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
   await container.services.messagingService.markAsRead(userId, contactId);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 flex flex-col">
       <ChatRoomClient
         userId={userId}
         contactId={contactId}

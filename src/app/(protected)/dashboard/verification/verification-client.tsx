@@ -206,12 +206,12 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
   };
 
   return (
-    <div className="space-y-8 select-none">
+    <div className="space-y-8 select-none text-slate-900">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
           Verification & Media Workspace
         </h1>
-        <p className="text-slate-400 mt-2">
+        <p className="text-slate-500 mt-2">
           Verify your identity to claim your verified badge and manage your profile photos.
         </p>
       </div>
@@ -223,9 +223,9 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-3 p-4 bg-red-950/40 border border-red-900/30 rounded-xl text-red-200 text-sm"
+            className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm shadow-sm"
           >
-            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <span>{errorMsg}</span>
           </motion.div>
         )}
@@ -235,9 +235,9 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-3 p-4 bg-emerald-950/40 border border-emerald-900/30 rounded-xl text-emerald-200 text-sm"
+            className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm shadow-sm"
           >
-            <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             <span>{successMsg}</span>
           </motion.div>
         )}
@@ -246,46 +246,46 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
       {/* Upload Progress Bar */}
       {uploadProgress !== null && (
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-semibold text-slate-300">
+          <div className="flex justify-between text-xs font-semibold text-slate-600">
             <span>Uploading & Processing Image...</span>
             <span>{uploadProgress}%</span>
           </div>
-          <Progress value={uploadProgress} className="h-1.5 bg-slate-800" />
+          <Progress value={uploadProgress} className="h-1.5 bg-slate-100" />
         </div>
       )}
 
       <Tabs defaultValue="photos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-slate-900 border border-slate-800 p-1 rounded-xl">
-          <TabsTrigger value="photos" className="rounded-lg text-slate-400 data-[state=active]:text-white data-[state=active]:bg-slate-800 font-semibold py-2">
+        <TabsList className="grid w-full grid-cols-2 bg-slate-100 border border-slate-200 p-1 rounded-xl">
+          <TabsTrigger value="photos" className="rounded-lg text-slate-600 data-[state=active]:text-slate-900 data-[state=active]:bg-white data-[state=active]:shadow-sm font-semibold py-2">
             Profile Photos ({photos.length}/6)
           </TabsTrigger>
-          <TabsTrigger value="verification" className="rounded-lg text-slate-400 data-[state=active]:text-white data-[state=active]:bg-slate-800 font-semibold py-2">
+          <TabsTrigger value="verification" className="rounded-lg text-slate-600 data-[state=active]:text-slate-900 data-[state=active]:bg-white data-[state=active]:shadow-sm font-semibold py-2">
             Identity Verification
           </TabsTrigger>
         </TabsList>
 
         {/* PHOTOS TAB */}
         <TabsContent value="photos" className="mt-6">
-          <Card className="border-slate-800 bg-slate-900/40 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-rose-500" /> Photo Management
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="pb-4 border-b border-slate-100">
+              <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+                <ImageIcon className="w-5 h-5 text-rose-600" /> Photo Management
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-slate-500">
                 Upload up to 6 high-quality, clear portrait photos. The first approved photo will automatically become your profile cover.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-6">
               {/* Photo grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {photos.map((photo) => (
                   <motion.div
                     key={photo.id}
                     layout
-                    className="relative group border border-slate-800 rounded-xl overflow-hidden bg-slate-950 aspect-[3/4] flex flex-col justify-between"
+                    className="relative group border border-slate-200 rounded-xl overflow-hidden bg-slate-50 aspect-[3/4] flex flex-col justify-between shadow-sm"
                   >
                     {/* Image display */}
-                    <div className="relative w-full flex-1 bg-slate-900 flex items-center justify-center">
+                    <div className="relative w-full flex-1 bg-slate-100 flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={photo.url}
@@ -295,7 +295,7 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
 
                       {/* Cover/Primary indicator badge */}
                       {photo.isMain && (
-                        <span className="absolute top-3 left-3 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-rose-500/20 shadow-lg select-none">
+                        <span className="absolute top-3 left-3 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-white/30 shadow-md select-none">
                           <Star className="w-3 h-3 fill-white" /> Cover Photo
                         </span>
                       )}
@@ -303,11 +303,11 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                       {/* Approval status overlay */}
                       <div className="absolute bottom-3 left-3 select-none">
                         {photo.isApproved ? (
-                          <span className="bg-emerald-600/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
                             Approved
                           </span>
                         ) : (
-                          <span className="bg-amber-600/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-500/20">
+                          <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
                             Pending Review
                           </span>
                         )}
@@ -315,14 +315,14 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                     </div>
 
                     {/* Actions Panel */}
-                    <div className="p-3 border-t border-slate-800/80 bg-slate-900/90 flex justify-between gap-2">
+                    <div className="p-3 border-t border-slate-200 bg-white flex justify-between gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={photo.isMain}
                         onClick={() => handleSetPrimary(photo.id)}
-                        className={`text-[10px] py-1 border-slate-800 ${
-                          photo.isMain ? "bg-slate-800 text-slate-500" : "hover:bg-slate-800 text-slate-300"
+                        className={`text-[10px] py-1 border-slate-200 shadow-xs ${
+                          photo.isMain ? "bg-slate-100 text-slate-400" : "hover:bg-slate-50 text-slate-700 font-semibold"
                         }`}
                       >
                         Set Cover
@@ -330,7 +330,7 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
 
                       <div className="flex gap-2">
                         {/* Replace in-place */}
-                        <label className="border border-slate-800 hover:bg-slate-800 rounded-lg p-1.5 flex items-center justify-center cursor-pointer transition-colors text-slate-400 hover:text-white">
+                        <label className="border border-slate-200 hover:bg-slate-50 rounded-lg p-1.5 flex items-center justify-center cursor-pointer transition-colors text-slate-600 hover:text-slate-900 shadow-xs">
                           <RefreshCw className="w-3.5 h-3.5" />
                           <input
                             type="file"
@@ -345,7 +345,7 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                           size="icon"
                           variant="ghost"
                           onClick={() => handlePhotoDelete(photo.id)}
-                          className="bg-red-950/40 text-red-400 hover:bg-red-900/60 p-1.5 rounded-lg border border-red-900/30 w-8 h-8 flex items-center justify-center"
+                          className="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg border border-red-200 w-8 h-8 flex items-center justify-center shadow-xs"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -356,11 +356,11 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
 
                 {/* Upload Placeholder Slot */}
                 {photos.length < 6 && (
-                  <label className="border-2 border-dashed border-slate-800 hover:border-rose-900/50 rounded-xl aspect-[3/4] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all hover:bg-rose-950/5 group">
-                    <div className="p-4 rounded-full bg-slate-900 group-hover:bg-rose-950/20 text-slate-400 group-hover:text-rose-400 transition-colors">
+                  <label className="border-2 border-dashed border-slate-300 hover:border-rose-400 rounded-xl aspect-[3/4] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all bg-slate-50/50 hover:bg-rose-50/30 group shadow-xs">
+                    <div className="p-4 rounded-full bg-white group-hover:bg-rose-100 text-slate-400 group-hover:text-rose-600 transition-colors shadow-sm">
                       <Plus className="w-6 h-6 animate-pulse" />
                     </div>
-                    <span className="text-sm font-semibold text-slate-200 mt-4">Upload Photo</span>
+                    <span className="text-sm font-bold text-slate-800 mt-4">Upload Photo</span>
                     <span className="text-xs text-slate-500 mt-1">JPEG, PNG, or WebP. Max 5MB.</span>
                     <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                   </label>
@@ -372,25 +372,25 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
 
         {/* IDENTITY VERIFICATION TAB */}
         <TabsContent value="verification" className="mt-6">
-          <Card className="border-slate-800 bg-slate-900/40 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-rose-500" /> Identity Verification
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="pb-4 border-b border-slate-100">
+              <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+                <ShieldCheck className="w-5 h-5 text-rose-600" /> Identity Verification
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-slate-500">
                 Confirm your identity with a government-issued document and verification selfie to receive your verified profile badge.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {/* Show current status banner */}
               {verification?.status === "APPROVED" && (
-                <div className="p-6 bg-emerald-950/30 border border-emerald-900/20 rounded-xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left select-none">
-                  <div className="p-3 bg-emerald-500/10 rounded-full text-emerald-400">
+                <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left select-none shadow-sm">
+                  <div className="p-3 bg-emerald-100 rounded-full text-emerald-700">
                     <ShieldCheck className="w-8 h-8" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-100 text-lg">Identity Verified Successfully</h4>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <h4 className="font-bold text-emerald-950 text-lg">Identity Verified Successfully</h4>
+                    <p className="text-sm text-emerald-700 mt-1">
                       Your government ID ({verification.documentType}) has been verified. A green checkmark badge is active on your public profile!
                     </p>
                   </div>
@@ -398,13 +398,13 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
               )}
 
               {verification?.status === "PENDING" && (
-                <div className="p-6 bg-amber-950/30 border border-amber-900/20 rounded-xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left select-none animate-pulse">
-                  <div className="p-3 bg-amber-500/10 rounded-full text-amber-400">
+                <div className="p-6 bg-amber-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left select-none shadow-sm">
+                  <div className="p-3 bg-amber-100 rounded-full text-amber-700">
                     <RefreshCw className="w-8 h-8 animate-spin" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-100 text-lg">Verification Under Review</h4>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <h4 className="font-bold text-amber-950 text-lg">Verification Under Review</h4>
+                    <p className="text-sm text-amber-700 mt-1">
                       Our moderation team is reviewing your ID and selfie. This process usually completes in less than 24 hours.
                     </p>
                   </div>
@@ -415,11 +415,11 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                 <div className="space-y-6">
                   {/* Warning message if rejected or reupload */}
                   {verification?.rejectionReason && (
-                    <div className="p-4 bg-red-950/40 border border-red-900/30 rounded-xl text-red-200 text-sm flex gap-3">
-                      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm flex gap-3 shadow-sm">
+                      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
                       <div>
                         <span className="font-bold block">Submission rejected:</span>
-                        <span className="text-xs text-slate-300 mt-1 block">{verification.rejectionReason}</span>
+                        <span className="text-xs text-red-700 mt-1 block">{verification.rejectionReason}</span>
                       </div>
                     </div>
                   )}
@@ -427,17 +427,17 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                   {/* Submission form */}
                   <form onSubmit={handleIdentitySubmit} className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-300">1. Select Document Type</label>
+                      <label className="text-sm font-bold text-slate-800">1. Select Document Type</label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {["AADHAAR", "PAN", "PASSPORT", "DRIVING_LICENCE"].map((t) => (
                           <button
                             key={t}
                             type="button"
                             onClick={() => setDocType(t)}
-                            className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
+                            className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all shadow-xs ${
                               docType === t
-                                ? "bg-rose-950/20 text-rose-400 border-rose-500"
-                                : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900"
+                                ? "bg-rose-50 text-rose-700 border-rose-400 ring-1 ring-rose-400"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                             }`}
                           >
                             {t.replace("_", " ")}
@@ -449,27 +449,27 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Document upload card */}
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-300">2. Upload Government ID Scan</label>
-                        <div className="border border-dashed border-slate-800 rounded-xl bg-slate-950 p-6 flex flex-col items-center justify-center text-center relative min-h-[160px] hover:border-slate-700 transition-colors">
+                        <label className="text-sm font-bold text-slate-800">2. Upload Government ID Scan</label>
+                        <div className="border border-dashed border-slate-300 rounded-xl bg-slate-50/50 p-6 flex flex-col items-center justify-center text-center relative min-h-[160px] hover:border-rose-400 hover:bg-rose-50/20 transition-all shadow-xs">
                           {docFile ? (
                             <div className="flex flex-col items-center space-y-2">
-                              <FileText className="w-10 h-10 text-rose-500" />
-                              <span className="text-xs font-semibold text-slate-300 max-w-[200px] truncate">
+                              <FileText className="w-10 h-10 text-rose-600" />
+                              <span className="text-xs font-semibold text-slate-800 max-w-[200px] truncate">
                                 {docFile.name}
                               </span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setDocFile(null)}
-                                className="text-[10px] text-slate-500 hover:text-white"
+                                className="text-[10px] text-slate-500 hover:text-slate-900"
                               >
                                 <X className="w-3.5 h-3.5 mr-1" /> Remove
                               </Button>
                             </div>
                           ) : (
                             <label className="flex flex-col items-center cursor-pointer">
-                              <Upload className="w-8 h-8 text-slate-500 mb-2" />
-                              <span className="text-xs font-semibold text-slate-300">Upload document photo</span>
+                              <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                              <span className="text-xs font-bold text-slate-700">Upload document photo</span>
                               <span className="text-[10px] text-slate-500 mt-1">PDF, JPG, or PNG (Max 5MB)</span>
                               <input
                                 type="file"
@@ -484,27 +484,27 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
 
                       {/* Selfie upload card */}
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-300">3. Upload Verification Selfie</label>
-                        <div className="border border-dashed border-slate-800 rounded-xl bg-slate-950 p-6 flex flex-col items-center justify-center text-center relative min-h-[160px] hover:border-slate-700 transition-colors">
+                        <label className="text-sm font-bold text-slate-800">3. Upload Verification Selfie</label>
+                        <div className="border border-dashed border-slate-300 rounded-xl bg-slate-50/50 p-6 flex flex-col items-center justify-center text-center relative min-h-[160px] hover:border-rose-400 hover:bg-rose-50/20 transition-all shadow-xs">
                           {selfieFile ? (
                             <div className="flex flex-col items-center space-y-2">
-                              <FileImage className="w-10 h-10 text-rose-500" />
-                              <span className="text-xs font-semibold text-slate-300 max-w-[200px] truncate">
+                              <FileImage className="w-10 h-10 text-rose-600" />
+                              <span className="text-xs font-semibold text-slate-800 max-w-[200px] truncate">
                                 {selfieFile.name}
                               </span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setSelfieFile(null)}
-                                className="text-[10px] text-slate-500 hover:text-white"
+                                className="text-[10px] text-slate-500 hover:text-slate-900"
                               >
                                 <X className="w-3.5 h-3.5 mr-1" /> Remove
                               </Button>
                             </div>
                           ) : (
                             <label className="flex flex-col items-center cursor-pointer">
-                              <Camera className="w-8 h-8 text-slate-500 mb-2" />
-                              <span className="text-xs font-semibold text-slate-300">Upload portrait selfie</span>
+                              <Camera className="w-8 h-8 text-slate-400 mb-2" />
+                              <span className="text-xs font-bold text-slate-700">Upload portrait selfie</span>
                               <span className="text-[10px] text-slate-500 mt-1">Make sure face is clearly visible</span>
                               <input
                                 type="file"
@@ -521,7 +521,7 @@ export function VerificationClient({ initialPhotos, initialVerification }: any) 
                     <Button
                       type="submit"
                       disabled={isSubmittingVerif || !docFile || !selfieFile}
-                      className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold py-3"
+                      className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold py-3 shadow-md shadow-rose-500/20"
                     >
                       {isSubmittingVerif ? "Submitting Verification..." : "Submit for Moderation"}
                     </Button>

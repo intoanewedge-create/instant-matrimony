@@ -24,7 +24,7 @@ export default async function OnboardingPage() {
   const profile = result.data;
 
   return (
-    <div className="flex-grow flex flex-col bg-slate-950 text-white">
+    <div className="flex-grow flex flex-col bg-gradient-to-b from-rose-50/40 via-slate-50 to-white text-slate-900 min-h-screen">
       <OnboardingWizard initialProfile={profile} />
     </div>
   );

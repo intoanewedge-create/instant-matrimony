@@ -63,10 +63,10 @@ export default async function AdminProfilesPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
             Profile Moderation & Approvals
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Review and moderate member profiles, identity details, and photos before allowing public search visibility.
           </p>
         </div>
@@ -75,73 +75,73 @@ export default async function AdminProfilesPage({
       {/* Metric Summary Filter Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Link href="/admin/profiles?status=ALL">
-          <Card className={`border ${statusFilter === "ALL" ? "border-rose-500 bg-rose-950/20 shadow-md shadow-rose-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-rose-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "ALL" ? "border-rose-500 bg-rose-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-rose-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">All Profiles</p>
-                <p className="text-xl font-bold text-slate-100">{allCount}</p>
+                <p className="text-[11px] text-slate-500 font-medium">All Profiles</p>
+                <p className="text-xl font-bold text-slate-900">{allCount}</p>
               </div>
-              <Users className="w-6 h-6 text-slate-500" />
+              <Users className="w-5 h-5 text-slate-400" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/admin/profiles?status=PENDING">
-          <Card className={`border ${statusFilter === "PENDING" ? "border-amber-500 bg-amber-950/20 shadow-md shadow-amber-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-amber-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "PENDING" ? "border-amber-500 bg-amber-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-amber-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">Pending Review</p>
-                <p className="text-xl font-bold text-amber-400">{pendingCount}</p>
+                <p className="text-[11px] text-amber-700 font-medium">Pending Review</p>
+                <p className="text-xl font-bold text-amber-800">{pendingCount}</p>
               </div>
-              <ShieldCheck className="w-6 h-6 text-amber-500/50" />
+              <ShieldCheck className="w-5 h-5 text-amber-500" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/admin/profiles?status=APPROVED">
-          <Card className={`border ${statusFilter === "APPROVED" ? "border-emerald-500 bg-emerald-950/20 shadow-md shadow-emerald-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-emerald-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "APPROVED" ? "border-emerald-500 bg-emerald-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-emerald-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">Approved</p>
-                <p className="text-xl font-bold text-emerald-400">{approvedCount}</p>
+                <p className="text-[11px] text-emerald-700 font-medium">Approved</p>
+                <p className="text-xl font-bold text-emerald-800">{approvedCount}</p>
               </div>
-              <ShieldCheck className="w-6 h-6 text-emerald-500/50" />
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/admin/profiles?status=REJECTED">
-          <Card className={`border ${statusFilter === "REJECTED" ? "border-red-500 bg-red-950/20 shadow-md shadow-red-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-red-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "REJECTED" ? "border-red-500 bg-red-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-red-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">Rejected</p>
-                <p className="text-xl font-bold text-red-400">{rejectedCount}</p>
+                <p className="text-[11px] text-red-700 font-medium">Rejected</p>
+                <p className="text-xl font-bold text-red-800">{rejectedCount}</p>
               </div>
-              <XCircle className="w-6 h-6 text-red-500/50" />
+              <XCircle className="w-5 h-5 text-red-500" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/admin/profiles?status=SUSPENDED">
-          <Card className={`border ${statusFilter === "SUSPENDED" ? "border-purple-500 bg-purple-950/20 shadow-md shadow-purple-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-purple-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "SUSPENDED" ? "border-purple-500 bg-purple-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-purple-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">Suspended</p>
-                <p className="text-xl font-bold text-purple-400">{suspendedCount}</p>
+                <p className="text-[11px] text-purple-700 font-medium">Suspended</p>
+                <p className="text-xl font-bold text-purple-800">{suspendedCount}</p>
               </div>
-              <AlertCircle className="w-6 h-6 text-purple-500/50" />
+              <AlertCircle className="w-5 h-5 text-purple-500" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/admin/profiles?status=DRAFT">
-          <Card className={`border ${statusFilter === "DRAFT" ? "border-sky-500 bg-sky-950/20 shadow-md shadow-sky-950/30" : "border-slate-800 bg-slate-900/60"} hover:border-sky-500 transition-all cursor-pointer`}>
+          <Card className={`border rounded-2xl ${statusFilter === "DRAFT" ? "border-sky-500 bg-sky-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-sky-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-slate-400 font-medium">In Draft</p>
-                <p className="text-xl font-bold text-sky-400">{draftCount}</p>
+                <p className="text-[11px] text-sky-700 font-medium">In Draft</p>
+                <p className="text-xl font-bold text-sky-800">{draftCount}</p>
               </div>
-              <FileEdit className="w-6 h-6 text-sky-500/50" />
+              <FileEdit className="w-5 h-5 text-sky-500" />
             </CardContent>
           </Card>
         </Link>

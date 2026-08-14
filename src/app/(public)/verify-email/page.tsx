@@ -130,17 +130,17 @@ function VerifyEmailForm() {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center bg-gradient-to-b from-slate-900 via-slate-950 to-black px-4 py-20">
+    <div className="flex-grow flex items-center justify-center bg-gradient-to-b from-rose-50/50 via-slate-50 to-white px-4 py-16 sm:py-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-rose-950/20">
-          <CardHeader className="space-y-3 text-center">
+        <Card className="border border-slate-200/80 bg-white shadow-xl shadow-slate-200/60 rounded-2xl">
+          <CardHeader className="space-y-3 text-center pb-4">
             <div className="flex justify-center">
-              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-rose-500/30 bg-slate-800/80 p-0.5 shadow-lg shadow-rose-500/10">
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-rose-200 bg-white p-0.5 shadow-md shadow-rose-500/10">
                 <Image
                   src="/InstantMatrimony-Logo.jpeg"
                   alt="InstantMatrimony Logo"
@@ -151,60 +151,60 @@ function VerifyEmailForm() {
                 />
               </div>
             </div>
-            <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               Verify Your Email
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              We sent a 6-digit verification code to <span className="text-slate-200 font-semibold">{email}</span>
+            <CardDescription className="text-slate-500 text-sm">
+              We sent a 6-digit verification code to <span className="text-slate-800 font-semibold">{email}</span>
             </CardDescription>
-            <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-900/40 text-[11px] text-rose-300/90 text-center">
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 text-center">
               Please check your inbox and spam/junk folder. Codes typically arrive within a few seconds.
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-2">
             {error && (
-              <div className="p-3 text-sm text-red-400 bg-red-950/30 border border-red-900/50 rounded-lg text-center">
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">
                 {error}
               </div>
             )}
             {successMsg && (
-              <div className="p-3 text-sm text-emerald-400 bg-emerald-950/30 border border-emerald-900/50 rounded-lg text-center">
+              <div className="p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
                 {successMsg}
               </div>
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code" className="text-slate-300">6-Digit Code</Label>
+                <Label htmlFor="code" className="text-slate-700 font-medium text-xs text-center block">Enter 6-Digit Code</Label>
                 <Input
                   id="code"
                   type="text"
                   maxLength={6}
                   placeholder="123456"
-                  className="border-slate-800 bg-slate-950/50 text-white placeholder-slate-500 focus:border-rose-500 focus:ring-rose-500 text-center text-2xl tracking-widest font-bold"
+                  className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 text-center text-2xl tracking-widest font-bold rounded-xl h-12"
                   {...register("code")}
                 />
                 {errors.code && (
-                  <p className="text-xs text-red-400 text-center">{errors.code.message as string}</p>
+                  <p className="text-xs text-red-500 text-center">{errors.code.message as string}</p>
                 )}
               </div>
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold transition-all shadow-lg shadow-rose-600/30"
+                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold transition-all shadow-md shadow-rose-600/20 rounded-xl h-11"
               >
                 {loading ? <Spinner className="w-5 h-5 mr-2" /> : null}
                 Verify Code
               </Button>
             </form>
-            <div className="flex flex-col items-center justify-between text-sm text-slate-400 space-y-2 mt-4">
+            <div className="flex flex-col items-center justify-between text-xs text-slate-500 space-y-2 pt-2 border-t border-slate-100">
               <button
                 onClick={onResend}
                 disabled={resending || countdown > 0}
-                className="text-rose-500 hover:underline disabled:text-slate-600 disabled:no-underline font-medium"
+                className="text-rose-600 hover:underline disabled:text-slate-400 disabled:no-underline font-medium cursor-pointer"
               >
                 {countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Verification Code"}
               </button>
-              <Link href="/register" className="text-slate-500 hover:underline">
+              <Link href="/register" className="text-slate-500 hover:text-slate-700 hover:underline">
                 Back to Register
               </Link>
             </div>
@@ -218,7 +218,7 @@ function VerifyEmailForm() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="flex-grow flex items-center justify-center bg-radial from-slate-900 via-slate-950 to-black px-4 py-20">
+      <div className="flex-grow flex items-center justify-center bg-slate-50 px-4 py-20">
         <Spinner className="w-8 h-8 text-rose-500" />
       </div>
     }>

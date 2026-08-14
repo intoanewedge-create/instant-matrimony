@@ -127,42 +127,42 @@ export function RecentActivityFeed({
       case "message":
         return {
           Icon: MessageSquare,
-          color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
+          color: "text-pink-600 bg-pink-50 border-pink-200",
         };
       case "interest_received":
         return {
           Icon: Heart,
-          color: "text-rose-400 bg-rose-500/10 border-rose-500/20",
+          color: "text-rose-600 bg-rose-50 border-rose-200",
         };
       case "interest_sent":
         return {
           Icon: UserCheck,
-          color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+          color: "text-emerald-600 bg-emerald-50 border-emerald-200",
         };
       case "notification":
         return {
           Icon: Bell,
-          color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+          color: "text-amber-600 bg-amber-50 border-amber-200",
         };
     }
   };
 
   return (
-    <Card className="border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="border border-slate-200 bg-white shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
         <div>
-          <CardTitle className="text-xl font-bold flex items-center gap-2">
-            <Activity className="w-5 h-5 text-rose-400" /> Recent Activity
+          <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+            <Activity className="w-5 h-5 text-rose-600" /> Recent Activity
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-slate-500">
             Everything happening across your matches, messages and alerts
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 pt-4">
         {top.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-500 text-sm">
               No activity yet — send an interest to get started!
             </p>
           </div>
@@ -182,8 +182,8 @@ export function RecentActivityFeed({
                   {...props}
                   className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
                     it.unread
-                      ? "border-rose-500/20 bg-rose-950/10 hover:bg-rose-950/20"
-                      : "border-slate-800 hover:bg-slate-950/40"
+                      ? "border-rose-200 bg-rose-50/50 hover:bg-rose-50/90 shadow-sm"
+                      : "border-slate-200/80 hover:bg-slate-50"
                   }`}
                 >
                   <div className={`shrink-0 p-2 rounded-lg border ${color}`}>
@@ -192,20 +192,20 @@ export function RecentActivityFeed({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <p
-                        className={`text-sm font-semibold truncate ${it.unread ? "text-slate-100" : "text-slate-300"}`}
+                        className={`text-sm font-semibold truncate ${it.unread ? "text-slate-900 font-bold" : "text-slate-700"}`}
                       >
                         {it.title}
                       </p>
-                      <span className="text-[10px] text-slate-500 flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
                         <Clock className="w-3 h-3" /> {timeAgo(it.timestamp)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <p className="text-xs text-slate-400 truncate">
+                      <p className="text-xs text-slate-500 truncate">
                         {it.subtitle}
                       </p>
                       {it.meta && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-600/20 text-rose-300 border border-rose-600/30 shrink-0">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 shrink-0">
                           {it.meta}
                         </span>
                       )}

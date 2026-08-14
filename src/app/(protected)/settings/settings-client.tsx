@@ -82,245 +82,243 @@ export function SettingsClient({ initialPreferences }: { initialPreferences: any
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8 text-slate-200">
-      
+    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8 text-slate-900">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
           Account Settings
         </h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-slate-500 text-sm mt-1">
           Manage alert notifications, security settings, and matching visibility limits.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        
         {/* Notification preferences card */}
-        <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-rose-500" /> Notification Channels
+        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+              <Bell className="w-5 h-5 text-rose-600" /> Notification Channels
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-slate-500">
               Customize how and when you receive matches, message requests, and security alerts.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            
             {notifSuccess && (
-              <div className="p-4 rounded-xl bg-green-950/30 border border-green-800/30 flex items-center gap-3 text-green-400 text-sm">
-                <Check className="w-5 h-5 shrink-0" />
-                <span>{notifSuccess}</span>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800 text-sm">
+                <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="font-medium">{notifSuccess}</span>
               </div>
             )}
             {notifError && (
-              <div className="p-4 rounded-xl bg-red-950/30 border border-red-800/30 flex items-center gap-3 text-red-400 text-sm">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>{notifError}</span>
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-800 text-sm">
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                <span className="font-medium">{notifError}</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Email Alerts column */}
               <div className="space-y-4">
-                <h3 className="font-bold text-sm text-rose-400 border-b border-slate-850 pb-2">Email Notifications</h3>
-                
+                <h3 className="font-bold text-sm text-rose-600 border-b border-slate-100 pb-2">Email Notifications</h3>
+
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Match Suggestions</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Match Suggestions</Label>
                     <p className="text-[10px] text-slate-500">Daily premium compatibilities delivered to your inbox</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.emailMatches}
                     onChange={() => handleToggle("emailMatches")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Connect Requests (Interests)</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Connect Requests (Interests)</Label>
                     <p className="text-[10px] text-slate-500">Alerts when someone expresses interest or accepts yours</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.emailInterests}
                     onChange={() => handleToggle("emailInterests")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Direct Messages</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Direct Messages</Label>
                     <p className="text-[10px] text-slate-500">Emails notifying you of unread message requests</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.emailMessages}
                     onChange={() => handleToggle("emailMessages")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Security Alerts</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Security Alerts</Label>
                     <p className="text-[10px] text-slate-500">Alerts on password changes, login sessions, and MFA status</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.emailSecurity}
                     onChange={() => handleToggle("emailSecurity")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
               </div>
 
               {/* Browser Push alerts column */}
               <div className="space-y-4">
-                <h3 className="font-bold text-sm text-rose-400 border-b border-slate-850 pb-2">Browser Alerts</h3>
+                <h3 className="font-bold text-sm text-rose-600 border-b border-slate-100 pb-2">Browser Alerts</h3>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Match Suggestions</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Match Suggestions</Label>
                     <p className="text-[10px] text-slate-500">Real-time push notifications of match findings</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.browserMatches}
                     onChange={() => handleToggle("browserMatches")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Connect Requests (Interests)</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Connect Requests (Interests)</Label>
                     <p className="text-[10px] text-slate-500">Push notices when matches connect with you</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.browserInterests}
                     onChange={() => handleToggle("browserInterests")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Direct Messages</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Direct Messages</Label>
                     <p className="text-[10px] text-slate-500">Instant browser sound/banner when you receive a message</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.browserMessages}
                     onChange={() => handleToggle("browserMessages")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold">Security Alerts</Label>
+                    <Label className="text-xs font-semibold text-slate-900">Security Alerts</Label>
                     <p className="text-[10px] text-slate-500">Real-time alerts for suspicious actions or device locks</p>
                   </div>
                   <input
                     type="checkbox"
                     checked={preferences.browserSecurity}
                     onChange={() => handleToggle("browserSecurity")}
-                    className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-rose-600 focus:ring-rose-500 accent-rose-600"
+                    className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 accent-rose-600 cursor-pointer"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-slate-850">
-              <Button onClick={handleSavePreferences} disabled={isPending} className="bg-rose-600 hover:bg-rose-500 font-semibold px-6">
+            <div className="flex justify-end pt-4 border-t border-slate-100">
+              <Button
+                onClick={handleSavePreferences}
+                disabled={isPending}
+                className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold px-6 shadow-md shadow-rose-500/20"
+              >
                 {isPending ? "Saving..." : "Save Preferences"}
               </Button>
             </div>
-
           </CardContent>
         </Card>
 
         {/* Change password card */}
-        <Card className="border border-slate-800 bg-slate-900/30 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <Lock className="w-5 h-5 text-rose-500" /> Security & Password
+        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
+              <Lock className="w-5 h-5 text-rose-600" /> Security & Password
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-slate-500">
               Update your account password to maintain security.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            
             <form onSubmit={handleChangePassword} className="space-y-4">
-              
               {passSuccess && (
-                <div className="p-4 rounded-xl bg-green-950/30 border border-green-800/30 flex items-center gap-3 text-green-400 text-sm">
-                  <Check className="w-5 h-5 shrink-0" />
-                  <span>{passSuccess}</span>
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800 text-sm">
+                  <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span className="font-medium">{passSuccess}</span>
                 </div>
               )}
               {passError && (
-                <div className="p-4 rounded-xl bg-red-950/30 border border-red-800/30 flex items-center gap-3 text-red-400 text-sm">
-                  <ShieldAlert className="w-5 h-5 shrink-0" />
-                  <span>{passError}</span>
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-800 text-sm">
+                  <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
+                  <span className="font-medium">{passError}</span>
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="old-pass">Current Password</Label>
+                  <Label htmlFor="old-pass" className="text-slate-700 font-semibold text-xs">Current Password</Label>
                   <Input
                     id="old-pass"
                     type="password"
                     required
                     value={passwordOld}
                     onChange={(e) => setPasswordOld(e.target.value)}
-                    className="border-slate-800 bg-slate-950/60"
+                    className="border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new-pass">New Password</Label>
+                  <Label htmlFor="new-pass" className="text-slate-700 font-semibold text-xs">New Password</Label>
                   <Input
                     id="new-pass"
                     type="password"
                     required
                     value={passwordNew}
                     onChange={(e) => setPasswordNew(e.target.value)}
-                    className="border-slate-800 bg-slate-950/60"
+                    className="border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-pass">Confirm Password</Label>
+                  <Label htmlFor="confirm-pass" className="text-slate-700 font-semibold text-xs">Confirm Password</Label>
                   <Input
                     id="confirm-pass"
                     type="password"
                     required
                     value={passwordConfirm}
                     onChange={(e) => setPasswordConfirm(e.target.value)}
-                    className="border-slate-800 bg-slate-950/60"
+                    className="border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500"
                   />
                 </div>
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button type="submit" disabled={isPending} className="bg-rose-600 hover:bg-rose-500 font-semibold px-6">
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold px-6 shadow-md shadow-rose-500/20"
+                >
                   {isPending ? "Updating..." : "Update Password"}
                 </Button>
               </div>
-
             </form>
-
           </CardContent>
         </Card>
-
       </div>
-
     </div>
   );
 }

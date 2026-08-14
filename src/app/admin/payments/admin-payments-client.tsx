@@ -87,53 +87,53 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
     <div className="space-y-6">
       {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border border-slate-800 bg-slate-900/60 p-4">
+        <Card className="border border-slate-200/90 bg-white p-4 shadow-sm rounded-2xl">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
               <Clock className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Pending Verification</p>
-              <h3 className="text-2xl font-bold text-white">{pendingCount}</h3>
+              <p className="text-xs text-slate-500">Pending Verification</p>
+              <h3 className="text-2xl font-bold text-slate-900">{pendingCount}</h3>
             </div>
           </div>
         </Card>
 
-        <Card className="border border-slate-800 bg-slate-900/60 p-4">
+        <Card className="border border-slate-200/90 bg-white p-4 shadow-sm rounded-2xl">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Approved Revenue</p>
-              <h3 className="text-2xl font-bold text-emerald-400">{formatCurrency(approvedTotal)}</h3>
+              <p className="text-xs text-slate-500">Approved Revenue</p>
+              <h3 className="text-2xl font-bold text-emerald-600">{formatCurrency(approvedTotal)}</h3>
             </div>
           </div>
         </Card>
 
-        <Card className="border border-slate-800 bg-slate-900/60 p-4">
+        <Card className="border border-slate-200/90 bg-white p-4 shadow-sm rounded-2xl">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+            <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">Total Transactions</p>
-              <h3 className="text-2xl font-bold text-white">{payments.length}</h3>
+              <p className="text-xs text-slate-500">Total Transactions</p>
+              <h3 className="text-2xl font-bold text-slate-900">{payments.length}</h3>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             type="text"
             placeholder="Search UTR, name, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-slate-950 border-slate-800 text-xs text-white"
+            className="pl-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400"
           />
         </div>
 
@@ -142,10 +142,10 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 statusFilter === st
-                  ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
-                  : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                  ? "bg-rose-600 text-white shadow-sm"
+                  : "bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900"
               }`}
             >
               {st}
@@ -155,10 +155,10 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
       </div>
 
       {/* Table */}
-      <Card className="border border-slate-800 bg-slate-900/60 overflow-hidden">
+      <Card className="border border-slate-200/90 bg-white overflow-hidden shadow-sm rounded-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-50/80 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 font-semibold">
               <tr>
                 <th className="p-4">User</th>
                 <th className="p-4">Plan & Amount</th>
@@ -168,39 +168,39 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">
+                  <td colSpan={6} className="p-8 text-center text-slate-400">
                     No payment records found.
                   </td>
                 </tr>
               ) : (
                 filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-950/40 transition-colors">
-                    <td className="p-4 font-semibold text-white">
+                  <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="p-4 font-semibold text-slate-900">
                       <div>{p.user?.name || "Member"}</div>
-                      <div className="text-[10px] text-slate-400 font-normal">{p.user?.email}</div>
+                      <div className="text-[10px] text-slate-500 font-normal">{p.user?.email}</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-bold text-rose-400">{formatCurrency(p.amount)}</div>
-                      <div className="text-[10px] text-slate-400">{p.plan?.name || "Standard Plan"}</div>
+                      <div className="font-bold text-rose-600">{formatCurrency(p.amount)}</div>
+                      <div className="text-[10px] text-slate-500">{p.plan?.name || "Standard Plan"}</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-mono text-white">{p.utrNumber || "Direct / Phone"}</div>
-                      <div className="text-[10px] text-slate-400">{p.paymentMethod || "MANUAL_UPI"}</div>
+                      <div className="font-mono text-slate-800 font-medium">{p.utrNumber || "Direct / Phone"}</div>
+                      <div className="text-[10px] text-slate-500">{p.paymentMethod || "MANUAL_UPI"}</div>
                     </td>
-                    <td className="p-4 text-slate-400">
+                    <td className="p-4 text-slate-500">
                       {formatDate(p.createdAt)}
                     </td>
                     <td className="p-4">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           p.status === "PAID"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : p.status === "PENDING"
-                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-red-50 text-red-700 border border-red-200"
                         }`}
                       >
                         {p.status === "PAID" ? "APPROVED" : p.status}
@@ -212,7 +212,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                           size="sm"
                           variant="outline"
                           onClick={() => setViewingReceipt(p.receiptUrl)}
-                          className="border-slate-800 text-slate-300 hover:bg-slate-800 text-[10px] h-7"
+                          className="border-slate-200 text-slate-600 hover:bg-slate-50 text-[10px] h-7 rounded-lg"
                         >
                           <Eye className="w-3 h-3 mr-1" /> Receipt
                         </Button>
@@ -224,7 +224,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                             size="sm"
                             disabled={loadingId === p.id}
                             onClick={() => handleApprove(p.id)}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[10px] h-7"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10px] h-7 rounded-lg shadow-sm"
                           >
                             {loadingId === p.id ? <Spinner className="w-3 h-3" /> : <CheckCircle className="w-3 h-3 mr-1" />} Approve
                           </Button>
@@ -236,7 +236,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                               setRejectingPayment(p);
                               setRejectReason("");
                             }}
-                            className="border-red-900/40 text-red-400 hover:bg-red-950/40 text-[10px] h-7"
+                            className="border-red-200 text-red-600 hover:bg-red-50 text-[10px] h-7 rounded-lg"
                           >
                             <XCircle className="w-3 h-3 mr-1" /> Reject
                           </Button>
@@ -253,12 +253,12 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
 
       {/* Rejection Modal Dialog */}
       {rejectingPayment && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-rose-500" /> Reject Payment Verification
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" /> Reject Payment Verification
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Provide a mandatory rejection reason for member <strong>{rejectingPayment.user?.name}</strong>.
             </p>
             <textarea
@@ -266,14 +266,14 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="e.g. UTR number not found in bank statement, screenshot unreadable..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-rose-500"
             />
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setRejectingPayment(null)}
-                className="border-slate-800 text-slate-300"
+                className="border-slate-200 text-slate-600 hover:bg-slate-50"
               >
                 Cancel
               </Button>
@@ -281,7 +281,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                 size="sm"
                 disabled={rejectingLoading || !rejectReason.trim()}
                 onClick={handleRejectConfirm}
-                className="bg-red-600 hover:bg-red-500 text-white font-semibold"
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg"
               >
                 {rejectingLoading ? <Spinner className="w-4 h-4 mr-1" /> : null} Confirm Rejection
               </Button>
@@ -292,15 +292,15 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
 
       {/* Receipt Viewer Modal */}
       {viewingReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-4 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-4 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-white text-sm">Payment Receipt Preview</h4>
-              <button onClick={() => setViewingReceipt(null)} className="text-slate-400 hover:text-white text-xs">
+              <h4 className="font-bold text-slate-900 text-sm">Payment Receipt Preview</h4>
+              <button onClick={() => setViewingReceipt(null)} className="text-slate-400 hover:text-slate-600 text-xs">
                 Close
               </button>
             </div>
-            <div className="w-full h-80 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center p-2">
+            <div className="w-full h-80 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center p-2">
               <img src={viewingReceipt} alt="Receipt" className="max-h-full max-w-full object-contain" />
             </div>
           </div>

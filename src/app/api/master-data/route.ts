@@ -44,6 +44,10 @@ export async function GET(request: NextRequest) {
         const res = await masterDataService.getStates(parentId || undefined);
         return NextResponse.json(res);
       }
+      case "districts": {
+        const res = await masterDataService.getDistricts(parentId || undefined);
+        return NextResponse.json(res);
+      }
       case "cities": {
         const res = await masterDataService.getCities(parentId || undefined);
         return NextResponse.json(res);

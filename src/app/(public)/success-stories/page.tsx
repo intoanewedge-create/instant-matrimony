@@ -9,7 +9,7 @@ const DEFAULT_STORIES = [
   {
     name: "Aarav & Priya",
     role: "Hyderabad, Telangana • Married October 2025",
-    content: "We matched through InstantMatrimony's Gold membership. Aarav's verified credentials and clear family background caught our attention immediately. Within 3 months of secure conversations and meeting with our families, everything was finalized!",
+    content: "We matched through InstantMatrimony's Standard membership. Aarav's verified credentials and clear family background caught our attention immediately. Within 3 months of secure conversations and meeting with our families, everything was finalized!",
     rating: 5,
     photoUrl: null,
   },
