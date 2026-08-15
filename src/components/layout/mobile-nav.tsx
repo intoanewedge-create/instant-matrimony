@@ -56,14 +56,6 @@ export function MobileNav({
             </Link>
 
             <Link
-              href="/success-stories"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-accent/10 transition-colors"
-            >
-              <Heart className="h-4 w-4 text-primary" /> Success Stories
-            </Link>
-
-            <Link
               href="/membership"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-accent/10 transition-colors"

@@ -122,7 +122,7 @@ export class PermissionService extends BaseService {
     try {
       if (senderId === receiverId) return true;
 
-      // Both profiles must be APPROVED, non-deleted, and active
+      // 1. Both profiles must be APPROVED, non-deleted, and active
       const senderProfile = await prisma.profile.findUnique({
         where: { userId: senderId },
         select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
@@ -146,7 +146,7 @@ export class PermissionService extends BaseService {
         return false;
       }
 
-      // Check block state
+      // 2. Check block state
       const blocked = await prisma.block.findFirst({
         where: {
           OR: [
@@ -157,8 +157,8 @@ export class PermissionService extends BaseService {
       });
       if (blocked) return false;
 
-      // Must have mutual match (accepted interest either way)
-      const match = await prisma.interest.findFirst({
+      // 3. Must have mutual match (either ACCEPTED interest, or interests sent both ways)
+      const acceptedMatch = await prisma.interest.findFirst({
         where: {
           OR: [
             { senderId, receiverId, status: "ACCEPTED" },
@@ -166,7 +166,42 @@ export class PermissionService extends BaseService {
           ],
         },
       });
-      return !!match;
+
+      let isMutual = !!acceptedMatch;
+      if (!isMutual) {
+        const sentAtoB = await prisma.interest.findFirst({ where: { senderId, receiverId } });
+        const sentBtoA = await prisma.interest.findFirst({ where: { senderId: receiverId, receiverId: senderId } });
+        if (sentAtoB && sentBtoA) {
+          isMutual = true;
+        }
+      }
+
+      if (!isMutual) return false;
+
+      // 4. Sender MUST have active ₹1,000+ membership
+      const activeMembership = await prisma.membership.findFirst({
+        where: {
+          userId: senderId,
+          status: "ACTIVE",
+          endDate: { gte: new Date() },
+        },
+        include: { plan: true },
+      });
+
+      if (!activeMembership) return false;
+
+      // Allow if plan price >= 1000 or plan name is concierge/standard or features contain direct messaging
+      const planPrice = activeMembership.plan?.price ?? 0;
+      const planName = activeMembership.plan?.name?.toLowerCase() || "";
+      const planFeatures = (activeMembership.plan?.features as string[]) || [];
+
+      const isEligiblePlan =
+        planPrice >= 1000 ||
+        planName.includes("standard") ||
+        planName.includes("concierge") ||
+        planFeatures.some((f) => f.toUpperCase().includes("MESSAGING") || f.toUpperCase().includes("CONTACT"));
+
+      return isEligiblePlan;
     } catch {
       return false;
     }

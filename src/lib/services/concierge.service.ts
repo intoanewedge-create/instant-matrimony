@@ -172,6 +172,37 @@ export class ConciergeService extends BaseService {
     }
   }
 
+  async addCustomerNote(userId: string, caseId: string, content: string): Promise<Result<any>> {
+    try {
+      const cCase = await prisma.conciergeCase.findUnique({ where: { id: caseId } });
+      if (!cCase || cCase.userId !== userId) {
+        return this.returnFailure("Unauthorized access to concierge case", "FORBIDDEN");
+      }
+
+      const update = await prisma.conciergeUpdate.create({
+        data: {
+          caseId,
+          authorId: userId,
+          content,
+          isCustomerVisible: true,
+        },
+      });
+
+      if (cCase.assignedAdminId) {
+        await this.notificationService.enqueue(
+          cCase.assignedAdminId,
+          "New Concierge Customer Note",
+          `Customer posted a note on case #${caseId}: "${content.substring(0, 40)}..."`,
+          "INFO"
+        );
+      }
+
+      return this.returnSuccess(update);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "ADD_CUSTOMER_NOTE_ERROR");
+    }
+  }
+
   async shortlistMatch(adminUserId: string, caseId: string, targetUserId: string, notes?: string): Promise<Result<any>> {
     try {
       const shortlist = await prisma.conciergeShortlist.upsert({

@@ -58,13 +58,6 @@ export async function Navbar() {
           </Link>
 
           <Link
-            href="/success-stories"
-            className="text-muted-foreground hover:text-primary transition-colors"
-          >
-            Stories
-          </Link>
-
-          <Link
             href="/membership"
             className="text-muted-foreground hover:text-primary transition-colors"
           >

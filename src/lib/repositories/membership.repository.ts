@@ -111,6 +111,19 @@ export class PrismaMembershipRepository implements IMembershipRepository {
         },
       });
 
+      // 6. Create Invoice
+      const invoiceNumber = `INV-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      await (tx as any).invoice.create({
+        data: {
+          orderId: order.id,
+          invoiceNumber,
+          amount: data.amount,
+          currency: "INR",
+          status: "PAID",
+          pdfUrl: `/api/billing/invoice/${order.id}`,
+        },
+      }).catch(() => null);
+
       return { order, payment, membership, transaction };
     });
   }
@@ -208,7 +221,35 @@ export class PrismaMembershipRepository implements IMembershipRepository {
         },
       });
 
-      // 4. Create ConciergeCase if Plan 2 / Concierge
+      // 4. Create Order & Invoice if not already present
+      let orderId = payment.orderId;
+      if (!orderId) {
+        const order = await tx.order.create({
+          data: {
+            userId,
+            planId: payment.planId!,
+            amount: payment.amount,
+            currency: "INR",
+            status: "COMPLETED",
+          },
+        });
+        orderId = order.id;
+        await tx.payment.update({ where: { id: paymentId }, data: { orderId } });
+      }
+
+      const invoiceNumber = `INV-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      await (tx as any).invoice.create({
+        data: {
+          orderId,
+          invoiceNumber,
+          amount: payment.amount,
+          currency: "INR",
+          status: "PAID",
+          pdfUrl: `/api/billing/invoice/${orderId}`,
+        },
+      }).catch(() => null);
+
+      // 5. Create ConciergeCase if Plan 2 / Concierge
       if (plan && (plan.name.toLowerCase().includes("concierge") || plan.price >= 100000)) {
         await tx.conciergeCase.upsert({
           where: { userId },

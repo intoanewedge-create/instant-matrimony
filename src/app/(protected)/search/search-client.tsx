@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { searchMatchesAction } from "@/lib/actions/search.actions";
+import { searchMatchesAction, getRecentlyViewedProfilesAction } from "@/lib/actions/search.actions";
 import { sendInterestAction } from "@/lib/actions/interest.actions";
 import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
 import {
@@ -31,6 +31,7 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
+  History,
 } from "lucide-react";
 
 export function SearchClient({
@@ -54,7 +55,7 @@ export function SearchClient({
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
-  const [searchMode, setSearchMode] = useState<"criteria" | "profileId">("criteria");
+  const [searchMode, setSearchMode] = useState<"criteria" | "profileId" | "recentlyViewed">("criteria");
   const [profileIdInput, setProfileIdInput] = useState("");
 
   // Master Data State
@@ -192,6 +193,32 @@ export function SearchClient({
     }
   };
 
+  const executeRecentlyViewedSearch = async () => {
+    setLoading(true);
+    try {
+      const res = await getRecentlyViewedProfilesAction();
+      if (res.success && res.data) {
+        setResultsData(res.data);
+        setPagination({
+          page: 1,
+          totalPages: 1,
+          totalRecords: res.data.length,
+        });
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModeSwitch = (mode: "criteria" | "profileId" | "recentlyViewed") => {
+    setSearchMode(mode);
+    if (mode === "recentlyViewed") {
+      executeRecentlyViewedSearch();
+    }
+  };
+
   const onSubmit = (data: any) => {
     executeSearch(data, 1, sortBy);
   };
@@ -272,17 +299,18 @@ export function SearchClient({
 
       {/* Search Mode Tabs */}
       <div className="flex gap-1 p-1 rounded-2xl w-fit" style={{ backgroundColor: '#F3F4F6', border: '1px solid #E5E7EB' }}>
-        {(['criteria', 'profileId'] as const).map((mode) => (
+        {(['criteria', 'profileId', 'recentlyViewed'] as const).map((mode) => (
           <button
             key={mode}
-            onClick={() => setSearchMode(mode)}
-            className={`px-4 py-1.5 rounded-xl text-sm font-semibold transition-all`}
+            onClick={() => handleModeSwitch(mode)}
+            className={`px-4 py-1.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5`}
             style={searchMode === mode
               ? { backgroundColor: '#FFFFFF', color: '#E11D48', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
               : { color: '#6B7280' }
             }
           >
-            {mode === 'criteria' ? 'By Criteria' : 'By Profile ID'}
+            {mode === 'recentlyViewed' && <History className="w-3.5 h-3.5" />}
+            {mode === 'criteria' ? 'By Criteria' : mode === 'profileId' ? 'By Profile ID' : 'Recently Viewed'}
           </button>
         ))}
       </div>

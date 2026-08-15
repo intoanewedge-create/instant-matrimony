@@ -9,12 +9,63 @@ import { Button } from "@/components/ui/button";
 import { createCheckoutAction, cancelSubscriptionAction } from "@/lib/actions/billing.actions";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 
-export function BillingClient({ plans, activeMembership, invoices, payments = [] }: any) {
+export function BillingClient({ plans, activeMembership, invoices = [], orders = [], payments = [] }: any) {
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Synthesize invoice list so historical orders/paid payments also render seamlessly
+  const combinedBillingHistory = (() => {
+    const map = new Map<string, any>();
+
+    // 1. Add explicit invoices
+    for (const inv of invoices) {
+      const key = inv.orderId || inv.id;
+      map.set(key, {
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        createdAt: inv.createdAt,
+        amount: inv.amount,
+        planName: inv.order?.plan?.name || "Premium Plan",
+        status: inv.status,
+      });
+    }
+
+    // 2. Add completed orders
+    for (const ord of orders) {
+      if (ord.status === "COMPLETED" && !map.has(ord.id)) {
+        map.set(ord.id, {
+          id: ord.id,
+          invoiceNumber: `INV-${ord.id.substring(0, 8).toUpperCase()}`,
+          createdAt: ord.createdAt,
+          amount: ord.amount,
+          planName: ord.plan?.name || "Premium Plan",
+          status: "PAID",
+        });
+      }
+    }
+
+    // 3. Add paid manual payments
+    for (const pm of payments) {
+      if (pm.status === "PAID" && !map.has(pm.orderId || pm.id)) {
+        const key = pm.orderId || pm.id;
+        map.set(key, {
+          id: pm.id,
+          invoiceNumber: `INV-${pm.id.substring(0, 8).toUpperCase()}`,
+          createdAt: pm.createdAt,
+          amount: pm.amount,
+          planName: pm.plan?.name || "Premium Plan",
+          status: "PAID",
+        });
+      }
+    }
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  })();
 
   const handleCheckout = async (planId: string, price: number) => {
     router.push(`/membership?planId=${planId}`);
@@ -267,19 +318,19 @@ export function BillingClient({ plans, activeMembership, invoices, payments = []
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {invoices.length === 0 ? (
+                {combinedBillingHistory.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-xs">
                       No invoices or billing history found.
                     </td>
                   </tr>
                 ) : (
-                  invoices.map((inv: any) => (
+                  combinedBillingHistory.map((inv: any) => (
                     <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-6 py-4 font-mono text-xs text-slate-800 font-semibold">{inv.invoiceNumber}</td>
                       <td className="px-6 py-4 text-slate-600">{formatDate(inv.createdAt)}</td>
                       <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(inv.amount)}</td>
-                      <td className="px-6 py-4 text-xs font-semibold text-rose-600">{inv.order?.plan?.name || "Premium Plan"}</td>
+                      <td className="px-6 py-4 text-xs font-semibold text-rose-600">{inv.planName}</td>
                       <td className="px-6 py-4">
                         <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {inv.status}

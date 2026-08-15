@@ -84,17 +84,13 @@ export function QuickActionsSidebar() {
         style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
       >
         <div className="p-3 border-b" style={{ borderColor: "#F3F4F6" }}>
-          <Link
-            href="/testimonials"
-            className="flex items-center justify-between text-xs font-bold hover:underline"
-            style={{ color: "#1F2937" }}
-          >
+          <div className="flex items-center justify-between text-xs font-bold" style={{ color: "#1F2937" }}>
             <div className="flex items-center gap-2">
               <HeartHandshake className="w-4 h-4" style={{ color: "#00A76F" }} />
-              <span>Success stories</span>
+              <span>Matrimony Services</span>
             </div>
             <Sparkles className="w-3.5 h-3.5" style={{ color: "#FF6B00" }} />
-          </Link>
+          </div>
         </div>
 
         {/* Divider & Matrimony.com Other Services */}

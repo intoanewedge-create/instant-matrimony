@@ -1,11 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Calendar, CheckCircle, FileText, Paperclip, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Sparkles, Calendar, CheckCircle, FileText, Paperclip, ArrowLeft, Send, UserCheck } from "lucide-react";
+import { addCustomerConciergeNoteAction } from "@/lib/actions/concierge.actions";
 
 export function UserConciergeClient({ caseData }: { caseData: any }) {
+  const [noteContent, setNoteContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSendNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteContent.trim() || !caseData?.id) return;
+    setSubmitting(true);
+    try {
+      const res = await addCustomerConciergeNoteAction(caseData.id, noteContent.trim());
+      if (res.success) {
+        setNoteContent("");
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (!caseData) {
     return (
       <div className="container mx-auto px-4 max-w-4xl space-y-8 text-slate-900">
@@ -96,8 +118,32 @@ export function UserConciergeClient({ caseData }: { caseData: any }) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Timeline Updates */}
+        {/* Left 2 Cols: Timeline Updates & Send Note */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Post Note Form */}
+          <Card className="border border-slate-200 bg-white p-6 space-y-3 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Send className="w-4 h-4 text-rose-600" /> Send Note to Relationship Manager
+            </h3>
+            <form onSubmit={handleSendNote} className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Type your question or preferences update for your manager..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                disabled={submitting}
+                className="text-xs flex-1 border-slate-200 focus:border-rose-500"
+              />
+              <Button
+                type="submit"
+                disabled={submitting || !noteContent.trim()}
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shrink-0"
+              >
+                {submitting ? "Sending..." : "Send Note"}
+              </Button>
+            </form>
+          </Card>
+
           <Card className="border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-4 h-4 text-rose-600" /> Manager Activity & Progress Updates
@@ -111,7 +157,15 @@ export function UserConciergeClient({ caseData }: { caseData: any }) {
                   <div key={u.id} className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
                     <div className="flex justify-between items-center text-[10px] text-slate-500">
                       <span className="font-bold text-rose-600 flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Relationship Manager Update
+                        {u.authorId === caseData.userId ? (
+                          <>
+                            <UserCheck className="w-3.5 h-3.5 text-blue-600" /> Your Note
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Relationship Manager Update
+                          </>
+                        )}
                       </span>
                       <span>{new Date(u.createdAt).toLocaleString()}</span>
                     </div>

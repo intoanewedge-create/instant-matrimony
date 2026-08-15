@@ -90,9 +90,12 @@ export class MessagingService extends BaseService {
 
   async getChatMessages(userId: string, contactId: string, cursor?: string, limit?: number): Promise<Result<any>> {
     try {
-      const allowed = await this.permissionService.canViewProfile(userId, contactId);
+      const allowed = await this.permissionService.canChat(userId, contactId);
       if (!allowed) {
-        return this.returnFailure("You cannot access this conversation.", "CHAT_ACCESS_DENIED");
+        return this.returnFailure(
+          "You must have a mutual interest and an active Standard membership (₹1,000) to chat.",
+          "CHAT_ACCESS_DENIED"
+        );
       }
 
       const messages = await this.messageRepository.findChatMessages(userId, contactId, cursor, limit);
@@ -117,6 +120,20 @@ export class MessagingService extends BaseService {
       const participant = await this.participantRepo.findParticipant(conversationId, userId);
       if (!participant || participant.isDeleted) {
         return this.returnFailure("You are not authorized to access this conversation.", "CONVERSATION_ACCESS_DENIED");
+      }
+
+      const conversation = (await this.conversationRepo.findById(conversationId)) as any;
+      if (conversation?.participants) {
+        const other = conversation.participants.find((p: any) => p.userId !== userId);
+        if (other?.userId) {
+          const allowed = await this.permissionService.canChat(userId, other.userId);
+          if (!allowed) {
+            return this.returnFailure(
+              "You must have a mutual interest and an active Standard membership (₹1,000) to access this conversation.",
+              "CONVERSATION_ACCESS_DENIED"
+            );
+          }
+        }
       }
 
       const messages = await this.messageRepository.findConversationMessages(conversationId, cursor, limit);

@@ -52,6 +52,16 @@ export default async function ProfileDetailPage({
     redirect("/dashboard");
   }
 
+  // Record profile visit for history tracking
+  if (selfUserId !== targetUserId) {
+    await prisma.profileVisitor.create({
+      data: {
+        visitorId: selfUserId,
+        visitedId: targetUserId,
+      },
+    }).catch(() => {});
+  }
+
   // Check connection status
   const sentInterest = await prisma.interest.findFirst({
     where: { senderId: selfUserId, receiverId: targetUserId },

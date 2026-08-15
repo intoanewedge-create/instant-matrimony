@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition, useCallback } from "react";
-import { Bell, CheckCheck, Clock, Sparkles } from "lucide-react";
+import { Bell, CheckCheck, Clock, Sparkles, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getRecentNotificationsAction,
   markNotificationAsReadAction,
   markAllNotificationsAsReadAction,
+  dismissNotificationAction,
 } from "@/lib/actions/notification.actions";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -60,6 +61,17 @@ export function NotificationBell({
     setUnread((c) => Math.max(0, c - 1));
     startTransition(async () => {
       await markNotificationAsReadAction(id);
+    });
+  };
+
+  const handleDismiss = (id: string, wasUnread: boolean) => {
+    // Optimistic remove
+    setItems((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) {
+      setUnread((c) => Math.max(0, c - 1));
+    }
+    startTransition(async () => {
+      await dismissNotificationAction(id);
     });
   };
 
@@ -134,16 +146,15 @@ export function NotificationBell({
                   items.map((n) => {
                     const isUnread = !n.read;
                     return (
-                      <button
+                      <div
                         key={n.id}
-                        onClick={() => isUnread && handleMarkOne(n.id)}
-                        className={`w-full text-left px-4 py-3 transition-colors flex gap-3 group ${
+                        className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 group relative ${
                           isUnread
                             ? "bg-rose-50/60 hover:bg-rose-50/90"
                             : "hover:bg-slate-50"
                         }`}
                       >
-                        <div className="pt-1">
+                        <div className="pt-1 shrink-0">
                           <span
                             className={`inline-block w-2 h-2 rounded-full ${
                               isUnread
@@ -152,7 +163,7 @@ export function NotificationBell({
                             }`}
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pr-12">
                           <div className="flex items-start justify-between gap-2">
                             <p
                               className={`text-xs font-semibold truncate ${isUnread ? "text-slate-900" : "text-slate-600"}`}
@@ -173,7 +184,25 @@ export function NotificationBell({
                             {n.message}
                           </p>
                         </div>
-                      </button>
+                        <div className="absolute right-2 top-3 flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          {isUnread && (
+                            <button
+                              onClick={() => handleMarkOne(n.id)}
+                              title="Mark as read"
+                              className="p-1 rounded hover:bg-rose-100 text-rose-600 transition-colors"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDismiss(n.id, isUnread)}
+                            title="Dismiss notification"
+                            className="p-1 rounded hover:bg-slate-200/80 text-slate-400 hover:text-slate-700 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     );
                   })
                 )}

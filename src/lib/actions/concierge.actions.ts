@@ -4,6 +4,7 @@ import { conciergeService } from "../services/concierge.service";
 import { revalidatePath } from "next/cache";
 import { verifyActionPermission } from "./action-utils";
 import { returnFailure } from "../result";
+import { auth } from "@/lib/auth";
 
 export async function updateConciergeStatusAction(caseId: string, status: string) {
   const permCheck = await verifyActionPermission("MANAGE_CONCIERGE");
@@ -152,5 +153,24 @@ export async function addConciergeAttachmentAction(caseId: string, fileName: str
 
   revalidatePath(`/admin/concierge/${caseId}`);
   revalidatePath(`/concierge`);
+  return { success: true, data: res.data };
+}
+
+export async function addCustomerConciergeNoteAction(caseId: string, content: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = session.user.id;
+
+  if (!content || !content.trim()) {
+    return { success: false, error: "Note content cannot be empty" };
+  }
+
+  const res = await conciergeService.addCustomerNote(userId, caseId, content.trim());
+  if (!res.success) return { success: false, error: res.error };
+
+  revalidatePath(`/dashboard/concierge`);
+  revalidatePath(`/admin/concierge/${caseId}`);
   return { success: true, data: res.data };
 }

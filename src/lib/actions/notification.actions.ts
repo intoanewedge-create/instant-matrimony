@@ -65,3 +65,20 @@ export async function markAllNotificationsAsReadAction() {
     return { success: false, error: e.message };
   }
 }
+
+export async function dismissNotificationAction(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await prisma.notification.deleteMany({
+      where: { id, userId: session.user.id },
+    });
+
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
