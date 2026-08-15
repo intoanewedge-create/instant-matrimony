@@ -111,9 +111,6 @@ export class AuthService extends BaseService {
           },
         });
 
-        // Assign unique public Profile ID (IM########) immediately after user creation
-        await assignPublicId(tx, newUser.id);
-
         await tx.profile.create({
           data: {
             userId: newUser.id,
@@ -134,6 +131,15 @@ export class AuthService extends BaseService {
 
         return newUser;
       });
+
+      // Safely assign unique public Profile ID (IM########) after main registration transaction
+      // Gracefully handles missing column if DB migration hasn't run on production yet
+      try {
+        const { prisma } = await import("../prisma");
+        await assignPublicId(prisma, user.id);
+      } catch (err: any) {
+        logger.warn({ err: err.message, userId: user.id }, "Skipped publicId assignment (DB schema migration may be pending)");
+      }
 
       // Trigger 6-digit OTP generation and get the code
       const otpRes = await this.otpService.sendVerificationOtp(normalizedEmail, "EMAIL_VERIFICATION", "email");

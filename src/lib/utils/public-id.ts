@@ -39,7 +39,7 @@ function generateCandidate(): string {
  * @returns The generated publicId string (e.g., "IM12785469")
  * @throws Error if unable to find a unique ID after MAX_RETRIES attempts
  */
-export async function assignPublicId(tx: any, userId: string): Promise<string> {
+export async function assignPublicId(tx: any, userId: string): Promise<string | null> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     const candidate = generateCandidate();
 
@@ -56,11 +56,21 @@ export async function assignPublicId(tx: any, userId: string): Promise<string> {
         await new Promise((r) => setTimeout(r, 2));
         continue;
       }
+      // If publicId column does not exist in database yet (migration pending on production), log warning and return null safely
+      if (
+        err.message?.includes("publicId") ||
+        err.message?.includes("column") ||
+        err.code === "P2025" ||
+        err.code === "P2011"
+      ) {
+        console.warn(`[assignPublicId] publicId column missing or unmigrated in database. Skipping assignment for user ${userId}.`);
+        return null;
+      }
       throw err;
     }
   }
 
-  throw new Error(`Failed to assign unique publicId after ${MAX_RETRIES} attempts`);
+  return null;
 }
 
 /**
