@@ -389,17 +389,28 @@ export function ConciergeDetailClient({
             </Card>
 
             <div className="lg:col-span-2 space-y-3">
-              {caseData.updates?.map((u: any) => (
-                <Card key={u.id} className="border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.isCustomerVisible ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-800 text-slate-400"}`}>
-                      {u.isCustomerVisible ? "Customer Visible" : "Admin Only Note"}
-                    </span>
-                    <span className="text-slate-500 text-[10px]">{new Date(u.createdAt).toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-slate-200 pt-1 leading-relaxed">{u.content}</p>
-                </Card>
-              ))}
+              {caseData.updates?.map((u: any) => {
+                const isCustomerNote = u.authorId === caseData.userId;
+                return (
+                  <Card key={u.id} className="border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          isCustomerNote
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : u.isCustomerVisible
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : "bg-slate-800 text-slate-400"
+                        }`}
+                      >
+                        {isCustomerNote ? "💬 Customer Note" : u.isCustomerVisible ? "📢 Customer Visible" : "🔒 Admin Only Note"}
+                      </span>
+                      <span className="text-slate-500 text-[10px]">{new Date(u.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="text-xs text-slate-200 pt-1 leading-relaxed">{u.content}</p>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

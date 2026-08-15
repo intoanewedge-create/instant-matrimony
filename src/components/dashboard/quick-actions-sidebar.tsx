@@ -36,12 +36,6 @@ export function QuickActionsSidebar() {
     },
   ];
 
-  const externalServices = [
-    { name: "AstroFreeChat.com", href: "https://astrofreechat.com" },
-    { name: "WeddingBazaar.com", href: "https://weddingbazaar.com" },
-    { name: "Mandap.com", href: "https://mandap.com" },
-  ];
-
   return (
     <div className="space-y-4">
       {/* Account Management Card */}
@@ -75,44 +69,6 @@ export function QuickActionsSidebar() {
               <span>{label}</span>
             </Link>
           ))}
-        </div>
-      </div>
-
-      {/* Community & Other Services Card */}
-      <div
-        className="rounded-2xl border shadow-xs overflow-hidden"
-        style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
-      >
-        <div className="p-3 border-b" style={{ borderColor: "#F3F4F6" }}>
-          <div className="flex items-center justify-between text-xs font-bold" style={{ color: "#1F2937" }}>
-            <div className="flex items-center gap-2">
-              <HeartHandshake className="w-4 h-4" style={{ color: "#00A76F" }} />
-              <span>Matrimony Services</span>
-            </div>
-            <Sparkles className="w-3.5 h-3.5" style={{ color: "#FF6B00" }} />
-          </div>
-        </div>
-
-        {/* Divider & Matrimony.com Other Services */}
-        <div className="p-3 space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#9CA3AF" }}>
-            Matrimony.com - Other Services
-          </p>
-          <div className="space-y-1">
-            {externalServices.map(({ name, href }) => (
-              <a
-                key={name}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50"
-                style={{ color: "#4B5563" }}
-              >
-                <span>{name}</span>
-                <ExternalLink className="w-3 h-3" style={{ color: "#9CA3AF" }} />
-              </a>
-            ))}
-          </div>
         </div>
       </div>
     </div>

@@ -227,4 +227,20 @@ export class MessagingService extends BaseService {
       return this.returnFailure(e.message, "MESSAGE_SEARCH_ERROR");
     }
   }
+
+  async deleteMessage(userId: string, messageId: string): Promise<Result<boolean>> {
+    try {
+      const message = await this.messageRepository.findById(messageId);
+      if (!message) {
+        return this.returnFailure("Message not found", "NOT_FOUND");
+      }
+      if (message.senderId !== userId) {
+        return this.returnFailure("You can only delete your own messages", "UNAUTHORIZED");
+      }
+      await this.messageRepository.softDelete(messageId);
+      return this.returnSuccess(true);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "MESSAGE_DELETE_ERROR");
+    }
+  }
 }

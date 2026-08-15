@@ -83,11 +83,17 @@ export class PrismaConversationRepository implements IConversationRepository {
         const lastMsg = conv.messages[0];
         if (!otherParticipant) return null;
 
+        const photoUrl = otherParticipant.user.profile?.photos?.find((p) => p.isMain)?.url || otherParticipant.user.image;
+
         return {
           id: conv.id,
+          contactId: otherParticipant.userId,
           partnerId: otherParticipant.userId,
+          contactName: otherParticipant.user.name,
           name: otherParticipant.user.name,
-          image: otherParticipant.user.profile?.photos?.find((p) => p.isMain)?.url || otherParticipant.user.image,
+          publicId: otherParticipant.user.publicId,
+          contactPhoto: photoUrl,
+          image: photoUrl,
           lastMessage: lastMsg ? lastMsg.content : "",
           lastMessageAt: lastMsg ? lastMsg.createdAt : conv.updatedAt,
           unreadCount: entry.unreadCount,

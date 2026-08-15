@@ -65,7 +65,7 @@ export class ConciergeService extends BaseService {
 
   async getUserCase(userId: string): Promise<Result<any>> {
     try {
-      const caseItem = await prisma.conciergeCase.findUnique({
+      let caseItem = await prisma.conciergeCase.findUnique({
         where: { userId },
         include: {
           assignedAdmin: { select: { name: true, email: true } },
@@ -82,6 +82,43 @@ export class ConciergeService extends BaseService {
           },
         },
       });
+
+      if (!caseItem) {
+        const activeMembership = await prisma.membership.findFirst({
+          where: {
+            userId,
+            status: "ACTIVE",
+            endDate: { gte: new Date() },
+          },
+          include: { plan: true },
+        });
+
+        const planName = activeMembership?.plan?.name?.toLowerCase() || "";
+        const planPrice = activeMembership?.plan?.price || 0;
+
+        if (activeMembership && (planName.includes("concierge") || planPrice >= 100000)) {
+          caseItem = await prisma.conciergeCase.create({
+            data: {
+              userId,
+              status: "OPEN",
+            },
+            include: {
+              assignedAdmin: { select: { name: true, email: true } },
+              updates: {
+                where: { isCustomerVisible: true },
+                orderBy: { createdAt: "desc" },
+              },
+              meetings: { orderBy: { scheduledAt: "asc" } },
+              attachments: true,
+              shortlists: {
+                include: {
+                  targetUser: { select: { id: true, name: true } },
+                },
+              },
+            },
+          });
+        }
+      }
 
       return this.returnSuccess(caseItem || null);
     } catch (e: any) {

@@ -227,3 +227,26 @@ export async function searchConversationMessagesAction(conversationId: string, q
 
   return { success: true, messages: serviceResult.data };
 }
+
+export async function deleteMessageAction(messageId: string, contactId?: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const serviceResult = await container.services.messagingService.deleteMessage(
+    session.user.id,
+    messageId
+  );
+
+  if (!serviceResult.success) {
+    return { success: false, error: serviceResult.error };
+  }
+
+  if (contactId) {
+    revalidatePath(`/messages/${contactId}`);
+  }
+  revalidatePath("/messages");
+
+  return { success: true };
+}

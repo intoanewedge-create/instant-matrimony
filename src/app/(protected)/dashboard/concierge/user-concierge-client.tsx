@@ -8,21 +8,31 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, Calendar, CheckCircle, FileText, Paperclip, ArrowLeft, Send, UserCheck } from "lucide-react";
 import { addCustomerConciergeNoteAction } from "@/lib/actions/concierge.actions";
 
+import { useRouter } from "next/navigation";
+
 export function UserConciergeClient({ caseData }: { caseData: any }) {
+  const router = useRouter();
+  const [updates, setUpdates] = useState<any[]>(caseData?.updates || []);
   const [noteContent, setNoteContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSendNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!noteContent.trim() || !caseData?.id) return;
     setSubmitting(true);
+    setErrorMsg(null);
     try {
       const res = await addCustomerConciergeNoteAction(caseData.id, noteContent.trim());
-      if (res.success) {
+      if (res.success && res.data) {
         setNoteContent("");
+        setUpdates((prev) => [res.data, ...prev]);
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to send note to Relationship Manager");
       }
-    } catch {
-      // ignore
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred");
     } finally {
       setSubmitting(false);
     }
@@ -125,6 +135,7 @@ export function UserConciergeClient({ caseData }: { caseData: any }) {
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Send className="w-4 h-4 text-rose-600" /> Send Note to Relationship Manager
             </h3>
+            {errorMsg && <p className="text-xs font-semibold text-rose-600 bg-rose-50 p-2 rounded-lg">{errorMsg}</p>}
             <form onSubmit={handleSendNote} className="flex gap-2">
               <Input
                 type="text"
@@ -150,10 +161,10 @@ export function UserConciergeClient({ caseData }: { caseData: any }) {
             </h3>
 
             <div className="space-y-4">
-              {caseData.updates?.length === 0 ? (
+              {updates.length === 0 ? (
                 <p className="text-xs text-slate-400 italic">No updates published yet.</p>
               ) : (
-                caseData.updates?.map((u: any) => (
+                updates.map((u: any) => (
                   <div key={u.id} className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
                     <div className="flex justify-between items-center text-[10px] text-slate-500">
                       <span className="font-bold text-rose-600 flex items-center gap-1">
