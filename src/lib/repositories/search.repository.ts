@@ -35,6 +35,7 @@ export class PrismaSearchRepository implements ISearchRepository {
     const where = SearchSpecification.buildWhereClause({
       viewerId,
       blockedUserIds,
+      profilePublicId: filters.profilePublicId,
       gender: filters.gender,
       minAge: filters.minAge,
       maxAge: filters.maxAge,

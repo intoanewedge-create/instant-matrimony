@@ -9,6 +9,7 @@ export class ProfileMapper {
     return {
       id: profile.id,
       userId: profile.userId,
+      publicId: (profile as any).user?.publicId || null,
       gender: profile.gender,
       age: profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : null,
       dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,

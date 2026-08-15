@@ -11,6 +11,7 @@ export default async function DashboardPage() {
   }
 
   const userId = (session.user as any).id as string | undefined;
+  const sessionPublicId = (session.user as any).publicId as string | null;
 
   if (!userId) {
     redirect("/login");
@@ -34,18 +35,19 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
+  // Prefer publicId from profile DTO (which comes from DB), fall back to session token
+  const publicId = data.profile?.publicId || sessionPublicId;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900">
-      <DashboardClient
-        profile={data.profile}
-        membership={data.membership}
-        receivedInterests={data.receivedInterests}
-        sentInterests={data.sentInterests}
-        suggestions={data.suggestions}
-        conversations={data.conversations}
-        notifications={data.notifications}
-      />
-    </div>
+    <DashboardClient
+      profile={data.profile}
+      membership={data.membership}
+      receivedInterests={data.receivedInterests}
+      sentInterests={data.sentInterests}
+      suggestions={data.suggestions}
+      conversations={data.conversations}
+      notifications={data.notifications}
+      publicId={publicId}
+    />
   );
 }
-

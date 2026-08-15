@@ -153,7 +153,7 @@ export function AdminProfileTable({
           <div className="relative w-full">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by name, email, phone, city..."
+              placeholder="Search by name, email, phone, Profile ID (IM...), city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400"
@@ -176,6 +176,7 @@ export function AdminProfileTable({
         <table className="w-full text-left text-sm text-slate-700">
           <thead className="bg-slate-50/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
             <tr>
+              <th className="px-6 py-3">Profile ID</th>
               <th className="px-6 py-3">Member Details</th>
               <th className="px-6 py-3">Demographics</th>
               <th className="px-6 py-3">Location</th>
@@ -194,6 +195,11 @@ export function AdminProfileTable({
             ) : (
               profiles.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="px-6 py-4">
+                    <span className="inline-block font-mono text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3' }}>
+                      {p.user?.publicId || '—'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">{p.user?.name || "Unnamed"}</div>
                     <div className="text-xs text-slate-500">{p.user?.email}</div>

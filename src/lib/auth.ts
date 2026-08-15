@@ -81,6 +81,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          publicId: user.publicId,
           rememberMe: remember,
         } as any;
       },
@@ -137,6 +138,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        token.publicId = (user as any).publicId || null;
 
         const remember = (user as any).rememberMe === true;
 
@@ -157,8 +159,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user && token) {
         (session.user as any).role = token.role;
-
         (session.user as any).id = token.id;
+        (session.user as any).publicId = (token as any).publicId || null;
       }
 
       if (token && (token as any).exp) {

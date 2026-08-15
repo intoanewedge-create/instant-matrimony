@@ -4,6 +4,7 @@ export class SearchSpecification {
   static buildWhereClause(params: {
     viewerId: string;
     blockedUserIds?: string[];
+    profilePublicId?: string;
     gender?: string;
     minAge?: number;
     maxAge?: number;
@@ -41,6 +42,13 @@ export class SearchSpecification {
 
     if (params.blockedUserIds && params.blockedUserIds.length > 0) {
       andClauses.push({ userId: { notIn: params.blockedUserIds } });
+    }
+
+    // Filter by public Profile ID (IM########)
+    if (params.profilePublicId && params.profilePublicId.trim().length > 0) {
+      andClauses.push({
+        user: { publicId: { equals: params.profilePublicId.trim().toUpperCase(), mode: "insensitive" } },
+      });
     }
 
     if (params.gender) {

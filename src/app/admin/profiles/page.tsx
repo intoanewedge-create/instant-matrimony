@@ -24,6 +24,7 @@ export default async function AdminProfilesPage({
       { user: { name: { contains: searchQuery, mode: "insensitive" } } },
       { user: { email: { contains: searchQuery, mode: "insensitive" } } },
       { user: { phone: { contains: searchQuery, mode: "insensitive" } } },
+      { user: { publicId: { contains: searchQuery, mode: "insensitive" } } },
       { city: { contains: searchQuery, mode: "insensitive" } },
       { caste: { contains: searchQuery, mode: "insensitive" } },
     ];
@@ -35,7 +36,7 @@ export default async function AdminProfilesPage({
     orderBy: { updatedAt: "desc" },
     include: {
       user: {
-        select: { id: true, name: true, email: true, phone: true, isActive: true, createdAt: true },
+        select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, createdAt: true },
       },
       photos: {
         where: { deletedAt: null },

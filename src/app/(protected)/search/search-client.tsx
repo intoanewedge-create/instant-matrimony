@@ -54,6 +54,8 @@ export function SearchClient({
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<"criteria" | "profileId">("criteria");
+  const [profileIdInput, setProfileIdInput] = useState("");
 
   // Master Data State
   const [religions, setReligions] = useState<any[]>([]);
@@ -166,6 +168,30 @@ export function SearchClient({
     }
   };
 
+  const executeProfileIdSearch = async () => {
+    if (!profileIdInput.trim()) return;
+    setLoading(true);
+    try {
+      const res = await searchMatchesAction({
+        filters: { profilePublicId: profileIdInput.trim() },
+        page: 1,
+        limit: 12,
+      });
+      if (res.success) {
+        setResultsData(res.data || []);
+        setPagination({
+          page: res.page || 1,
+          totalPages: res.totalPages || 1,
+          totalRecords: res.totalRecords || 0,
+        });
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = (data: any) => {
     executeSearch(data, 1, sortBy);
   };
@@ -244,9 +270,52 @@ export function SearchClient({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Search Mode Tabs */}
+      <div className="flex gap-1 p-1 rounded-2xl w-fit" style={{ backgroundColor: '#F3F4F6', border: '1px solid #E5E7EB' }}>
+        {(['criteria', 'profileId'] as const).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setSearchMode(mode)}
+            className={`px-4 py-1.5 rounded-xl text-sm font-semibold transition-all`}
+            style={searchMode === mode
+              ? { backgroundColor: '#FFFFFF', color: '#E11D48', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+              : { color: '#6B7280' }
+            }
+          >
+            {mode === 'criteria' ? 'By Criteria' : 'By Profile ID'}
+          </button>
+        ))}
+      </div>
+
+      {/* Profile ID Search Bar */}
+      {searchMode === 'profileId' && (
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="IM12785469"
+              value={profileIdInput}
+              onChange={(e) => setProfileIdInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && executeProfileIdSearch()}
+              className="pl-9 h-10 font-mono border-slate-200 bg-white text-slate-900 focus-visible:ring-rose-500"
+              aria-label="Search by Profile ID"
+            />
+          </div>
+          <Button
+            onClick={executeProfileIdSearch}
+            disabled={loading || !profileIdInput.trim()}
+            className="bg-rose-600 hover:bg-rose-700 text-white"
+          >
+            {loading ? <Spinner className="w-4 h-4 mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+            Search
+          </Button>
+        </div>
+      )}
+
+      <div className={`grid grid-cols-1 lg:grid-cols-4 gap-8 ${searchMode === 'profileId' ? 'lg:grid-cols-1' : ''}`}>
         {/* Filters Sidebar */}
-        <Card className="border border-slate-200 bg-white shadow-sm h-fit lg:col-span-1 overflow-hidden">
+        {searchMode === 'criteria' && <Card className="border border-slate-200 bg-white shadow-sm h-fit lg:col-span-1 overflow-hidden">
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="text-lg font-bold flex items-center gap-2 text-rose-600">
               <SlidersHorizontal className="w-5 h-5" /> Filter Criteria
@@ -374,10 +443,10 @@ export function SearchClient({
               </Button>
             </form>
           </CardContent>
-        </Card>
+        </Card>}
 
         {/* Results Grid */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className={searchMode === 'profileId' ? 'lg:col-span-4 space-y-6' : 'lg:col-span-3 space-y-6'}>
           <div className="flex justify-between items-center text-xs text-slate-500">
             <span>Showing {resultsData.length} of {pagination.totalRecords} Profiles Found</span>
             <span>Page {pagination.page} of {pagination.totalPages}</span>

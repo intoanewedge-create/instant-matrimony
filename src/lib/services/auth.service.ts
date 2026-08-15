@@ -8,6 +8,7 @@ import { EmailProvider } from "../email/email-provider";
 import { hashPassword, verifyPassword } from "../utils/crypto";
 import { resetPasswordTemplate } from "../email/templates";
 import { logger } from "../logger/logger";
+import { assignPublicId } from "../utils/public-id";
 
 export class AuthService extends BaseService {
   constructor(
@@ -109,6 +110,9 @@ export class AuthService extends BaseService {
             isPhoneVerified: false,
           },
         });
+
+        // Assign unique public Profile ID (IM########) immediately after user creation
+        await assignPublicId(tx, newUser.id);
 
         await tx.profile.create({
           data: {

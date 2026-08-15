@@ -1,0 +1,29 @@
+warning: in the working copy of 'src/config/email.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/config/env.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/email.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/email/mock-email-provider.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/email/resend-provider.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/email/smtp-provider.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/repositories/profile.repository.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/tests/e2e-business-audit.ts', LF will be replaced by CRLF the next time Git touches it
+ package.json                                    |   4 [32m+[m[31m-[m
+ src/app/(protected)/interests/page.tsx          |  10 [32m+[m[31m-[m
+ src/app/(protected)/profile/[id]/page.tsx       |   8 [32m+[m[31m-[m
+ src/config/email.config.ts                      | 117 [32m++++++++++[m[31m--[m
+ src/config/env.ts                               |  16 [32m++[m
+ src/lib/auth.ts                                 |   4 [32m+[m[31m-[m
+ src/lib/container.ts                            |  28 [32m++[m[31m-[m
+ src/lib/email.ts                                | 226 [32m++++++++++++++++[m[31m--------[m
+ src/lib/email/mock-email-provider.ts            |  17 [32m+[m[31m-[m
+ src/lib/email/resend-provider.ts                | 100 [32m++++++++[m[31m---[m
+ src/lib/email/smtp-provider.ts                  |  58 [32m++++[m[31m--[m
+ src/lib/repositories/profile.repository.ts      |  21 [32m++[m[31m-[m
+ src/lib/services/auth.service.ts                |  44 [32m+++++[m
+ src/lib/services/bulk-operation.service.ts      |  63 [32m++++++[m[31m-[m
+ src/lib/services/contact-unlock.service.ts      |   9 [32m+[m
+ src/lib/services/favorite.service.ts            |  10 [32m+[m[31m-[m
+ src/lib/services/permission.service.ts          |  55 [32m++++[m[31m--[m
+ src/lib/services/profile.service.ts             |  33 [32m+++[m[31m-[m
+ src/lib/specifications/profile.specification.ts |   4 [32m+[m
+ src/lib/tests/e2e-business-audit.ts             |  10 [32m++[m
+ 20 files changed, 681 insertions(+), 156 deletions(-)
