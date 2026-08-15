@@ -37,14 +37,19 @@ export class AuthService extends BaseService {
       }
 
       const normalizedPhone = data.phone?.trim() ? data.phone.trim() : null;
-      if (normalizedPhone) {
-        const existingPhone = await this.userRepository.findByPhone(normalizedPhone);
-        if (existingPhone) {
-          return this.returnFailure(
-            "An account with this phone number already exists. Please use a different phone number or log in to your existing account.",
-            "DUPLICATE_PHONE"
-          );
-        }
+      if (!normalizedPhone) {
+        return this.returnFailure(
+          "Phone number is required for account verification.",
+          "REQUIRED_PHONE"
+        );
+      }
+
+      const existingPhone = await this.userRepository.findByPhone(normalizedPhone);
+      if (existingPhone) {
+        return this.returnFailure(
+          "An account with this phone number already exists. Please use a different phone number or log in to your existing account.",
+          "DUPLICATE_PHONE"
+        );
       }
 
       const hashedPassword = await hashPassword(data.password || "Password@123");

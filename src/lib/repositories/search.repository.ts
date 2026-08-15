@@ -32,11 +32,18 @@ export class PrismaSearchRepository implements ISearchRepository {
       )
     );
 
+    const viewerProfile = await prisma.profile.findUnique({
+      where: { userId: viewerId },
+      select: { gender: true },
+    });
+    const viewerGender = viewerProfile?.gender?.toUpperCase();
+    const enforcedTargetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "NONE";
+
     const where = SearchSpecification.buildWhereClause({
       viewerId,
       blockedUserIds,
       profilePublicId: filters.profilePublicId,
-      gender: filters.gender,
+      gender: enforcedTargetGender,
       minAge: filters.minAge,
       maxAge: filters.maxAge,
       minHeight: filters.minHeight,

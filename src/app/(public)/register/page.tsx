@@ -15,6 +15,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
+import { CaptchaWidget } from "@/components/ui/captcha-widget";
+
+const COUNTRY_CODES = [
+  { code: "+91", country: "India (+91)", flag: "🇮🇳" },
+  { code: "+1", country: "USA / Canada (+1)", flag: "🇺🇸" },
+  { code: "+44", country: "UK (+44)", flag: "🇬🇧" },
+  { code: "+61", country: "Australia (+61)", flag: "🇦🇺" },
+  { code: "+971", country: "UAE (+971)", flag: "🇦🇪" },
+  { code: "+65", country: "Singapore (+65)", flag: "🇸🇬" },
+  { code: "+60", country: "Malaysia (+60)", flag: "🇲🇾" },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,28 +35,51 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [countryCode, setCountryCode] = useState("+91");
+  const [rawPhone, setRawPhone] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      phone: "+91",
       password: "",
       confirmPassword: "",
       acceptTerms: false,
     },
   });
 
+  const handlePhoneChange = (val: string) => {
+    const cleanedDigits = val.replace(/\D/g, "");
+    setRawPhone(cleanedDigits);
+    const fullPhone = cleanedDigits ? `${countryCode}${cleanedDigits}` : "";
+    setValue("phone", fullPhone, { shouldValidate: true });
+  };
+
+  const handleCountryCodeChange = (code: string) => {
+    setCountryCode(code);
+    const fullPhone = rawPhone ? `${code}${rawPhone}` : "";
+    setValue("phone", fullPhone, { shouldValidate: true });
+  };
+
   const onSubmit = async (data: any) => {
+    if (!captchaToken) {
+      setError("Please complete the security verification before submitting.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
     try {
-      const res = await registerAction(data);
+      const payload = { ...data, captchaToken };
+      const res = await registerAction(payload);
       if (!res.success) {
         setError(res.error || "Registration failed. Please check your details.");
       } else {
@@ -90,18 +124,18 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent className="space-y-4 pt-2">
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl text-center font-medium">
                 {error}
               </div>
             )}
             {successMsg && (
-              <div className="p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+              <div className="p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl text-center font-medium">
                 {successMsg}
               </div>
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-slate-700 font-medium text-xs">Full Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-slate-700 font-medium text-xs">Full Name *</Label>
                 <Input
                   id="name"
                   type="text"
@@ -110,11 +144,12 @@ export default function RegisterPage() {
                   {...register("name")}
                 />
                 {errors.name && (
-                  <p className="text-xs text-red-500">{errors.name.message as string}</p>
+                  <p className="text-xs text-red-500 font-medium">{errors.name.message as string}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700 font-medium text-xs">Email Address</Label>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-slate-700 font-medium text-xs">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -123,24 +158,47 @@ export default function RegisterPage() {
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-xs text-red-500">{errors.email.message as string}</p>
+                  <p className="text-xs text-red-500 font-medium">{errors.email.message as string}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-700 font-medium text-xs">Phone Number (Optional)</Label>
-                <Input
-                  id="phone"
-                  type="text"
-                  placeholder="+919876543210"
-                  className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                  {...register("phone")}
-                />
+
+              {/* Required Phone Number Input with Country Code Selector */}
+              <div className="space-y-1.5">
+                <Label htmlFor="phone" className="text-slate-700 font-medium text-xs">Phone Number *</Label>
+                <div className="flex gap-2">
+                  <select
+                    id="countryCode"
+                    aria-label="Country Code"
+                    value={countryCode}
+                    onChange={(e) => handleCountryCodeChange(e.target.value)}
+                    className="h-10 px-2.5 border border-slate-300 bg-slate-50 text-slate-900 text-xs font-semibold rounded-xl focus:border-rose-500 focus:ring-rose-500 focus:outline-none shrink-0"
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.code}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={rawPhone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm flex-1"
+                  />
+                </div>
                 {errors.phone && (
-                  <p className="text-xs text-red-500">{errors.phone.message as string}</p>
+                  <p className="text-xs text-red-500 font-medium" id="phone-error">
+                    {errors.phone.message as string === "Required" || !rawPhone
+                      ? "Phone number is required for account verification."
+                      : (errors.phone.message as string)}
+                  </p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700 font-medium text-xs">Password</Label>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-slate-700 font-medium text-xs">Password *</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -163,11 +221,12 @@ export default function RegisterPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-red-500">{errors.password.message as string}</p>
+                  <p className="text-xs text-red-500 font-medium">{errors.password.message as string}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-slate-700 font-medium text-xs">Confirm Password</Label>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-slate-700 font-medium text-xs">Confirm Password *</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -190,10 +249,11 @@ export default function RegisterPage() {
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-xs text-red-500">{errors.confirmPassword.message as string}</p>
+                  <p className="text-xs text-red-500 font-medium">{errors.confirmPassword.message as string}</p>
                 )}
               </div>
-              <div className="flex items-center space-x-2 pt-2">
+
+              <div className="flex items-center space-x-2 pt-1">
                 <input
                   id="acceptTerms"
                   type="checkbox"
@@ -209,15 +269,28 @@ export default function RegisterPage() {
                 </label>
               </div>
               {errors.acceptTerms && (
-                <p className="text-xs text-red-500">{errors.acceptTerms.message as string}</p>
+                <p className="text-xs text-red-500 font-medium">{errors.acceptTerms.message as string}</p>
               )}
+
+              {/* CAPTCHA Protection Component immediately before Submit */}
+              <div className="pt-2">
+                <CaptchaWidget
+                  onVerify={(token) => {
+                    setCaptchaToken(token);
+                    setError(null);
+                  }}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                />
+              </div>
+
               <Button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold transition-all shadow-md shadow-rose-600/20 rounded-xl h-11"
+                disabled={loading || !captchaToken}
+                className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold transition-all shadow-md shadow-rose-600/20 rounded-xl h-11 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? <Spinner className="w-5 h-5 mr-2" /> : null}
-                Get Started
+                {loading ? "Registering..." : "Register / Create Account"}
               </Button>
             </form>
             <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">

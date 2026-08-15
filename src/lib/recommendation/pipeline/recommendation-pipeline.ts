@@ -27,7 +27,7 @@ import { loggerService } from "../../services/logger.service";
 // 1. Candidate Collector
 export class DbCandidateCollector implements ICandidateCollector {
   async collect(viewer: UserProfile): Promise<UserProfile[]> {
-    const genderToFetch = viewer.gender === "MALE" ? "FEMALE" : viewer.gender === "FEMALE" ? "MALE" : undefined;
+    const genderToFetch = viewer.gender === "MALE" ? "FEMALE" : viewer.gender === "FEMALE" ? "MALE" : "NONE";
     
     const profiles = await prisma.profile.findMany({
       where: {

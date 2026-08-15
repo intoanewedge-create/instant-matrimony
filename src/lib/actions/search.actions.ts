@@ -65,6 +65,13 @@ export async function getRecentlyViewedProfilesAction() {
   const userId = session.user.id;
 
   try {
+    const selfProfile = await prisma.profile.findUnique({
+      where: { userId },
+      select: { gender: true },
+    });
+    const uG = selfProfile?.gender?.toUpperCase();
+    const targetGender = uG === "MALE" ? "FEMALE" : uG === "FEMALE" ? "MALE" : "NONE";
+
     const rawVisits = await prisma.profileVisitor.findMany({
       where: {
         visitorId: userId,
@@ -74,6 +81,7 @@ export async function getRecentlyViewedProfilesAction() {
           profile: {
             status: "APPROVED",
             deletedAt: null,
+            gender: targetGender,
           },
         },
       },

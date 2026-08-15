@@ -72,8 +72,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
     const matchesSearch =
       !searchQuery ||
       p.utrNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      (p.user?.publicId || `IM${p.userId?.slice(0, 8)}`).toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesStatus && matchesSearch;
   });
@@ -130,7 +129,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             type="text"
-            placeholder="Search UTR, name, email..."
+            placeholder="Search UTR, Profile ID (IM...)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400"
@@ -160,7 +159,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 font-semibold">
               <tr>
-                <th className="p-4">User</th>
+                <th className="p-4">Profile ID</th>
                 <th className="p-4">Plan & Amount</th>
                 <th className="p-4">Method & Reference</th>
                 <th className="p-4">Submitted Date</th>
@@ -179,8 +178,9 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                 filteredPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4 font-semibold text-slate-900">
-                      <div>{p.user?.name || "Member"}</div>
-                      <div className="text-[10px] text-slate-500 font-normal">{p.user?.email}</div>
+                      <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
+                        {p.user?.publicId || `IM${p.userId?.slice(0, 8)}`}
+                      </span>
                     </td>
                     <td className="p-4">
                       <div className="font-bold text-rose-600">{formatCurrency(p.amount)}</div>
@@ -259,7 +259,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
               <AlertTriangle className="w-5 h-5 text-red-600" /> Reject Payment Verification
             </h3>
             <p className="text-xs text-slate-500">
-              Provide a mandatory rejection reason for member <strong>{rejectingPayment.user?.name}</strong>.
+              Provide a mandatory rejection reason for Profile ID <strong>{rejectingPayment.user?.publicId || `IM${rejectingPayment.userId?.slice(0, 8)}`}</strong>.
             </p>
             <textarea
               rows={3}

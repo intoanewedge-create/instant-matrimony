@@ -50,7 +50,7 @@ export class DefaultRecommendationProvider implements RecommendationProvider {
               ? "FEMALE"
               : viewer.gender === "FEMALE"
                 ? "MALE"
-                : undefined,
+                : "NONE",
         },
         include: {
           photos: {

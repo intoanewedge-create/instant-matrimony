@@ -52,6 +52,14 @@ export default async function ProfileDetailPage({
     redirect("/dashboard");
   }
 
+  if (!isAdmin) {
+    const { container } = await import("@/lib/container");
+    const canView = await container.services.permissionService.canViewProfile(selfUserId, targetUserId);
+    if (!canView) {
+      redirect("/dashboard");
+    }
+  }
+
   // Record profile visit for history tracking
   if (selfUserId !== targetUserId) {
     await prisma.profileVisitor.create({

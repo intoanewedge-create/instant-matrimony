@@ -17,7 +17,7 @@ export default async function AdminProfileDetailPage({
     where: { id: profileId },
     include: {
       user: {
-        select: { id: true, name: true, email: true, phone: true, createdAt: true },
+        select: { id: true, publicId: true, createdAt: true },
       },
       photos: {
         where: { deletedAt: null },
@@ -42,7 +42,7 @@ export default async function AdminProfileDetailPage({
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            Reviewing Profile: <span className="text-rose-600">{profile.user?.name}</span>
+            Reviewing Profile: <span className="text-rose-600">{profile.user?.publicId || `Profile ID: ${profile.userId.slice(0, 8)}`}</span>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 profile.status === "APPROVED"
@@ -59,7 +59,7 @@ export default async function AdminProfileDetailPage({
               {profile.status}
             </span>
           </h1>
-          <p className="text-xs text-slate-500">User ID: {profile.userId} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-slate-500">Profile ID: {profile.user?.publicId || profile.userId.slice(0, 8)} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
 

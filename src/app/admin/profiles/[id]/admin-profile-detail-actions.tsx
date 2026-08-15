@@ -240,7 +240,7 @@ export function AdminProfileDetailActions({ profile }: { profile: any }) {
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Target Member:</span>
-                  <span className="font-semibold text-slate-900">{profile.user?.name || "Unnamed"}</span>
+                  <span className="font-semibold text-slate-900">{profile.user?.publicId || `IM${profile.userId?.slice(0, 8)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Profile ID:</span>

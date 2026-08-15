@@ -39,10 +39,40 @@ export class PermissionService extends BaseService {
     }
   }
 
+  // --- Helper for Strict Gender-Based Matching Isolation ---
+  async isGenderOpposite(userId: string, targetUserId: string): Promise<boolean> {
+    try {
+      if (userId === targetUserId) return true;
+      const userProfile = await prisma.profile.findUnique({
+        where: { userId },
+        select: { gender: true },
+      });
+      const targetProfile = await prisma.profile.findUnique({
+        where: { userId: targetUserId },
+        select: { gender: true },
+      });
+
+      if (!userProfile?.gender || !targetProfile?.gender) return false;
+
+      const uGender = userProfile.gender.toUpperCase();
+      const tGender = targetProfile.gender.toUpperCase();
+
+      if (uGender === "MALE") return tGender === "FEMALE";
+      if (uGender === "FEMALE") return tGender === "MALE";
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   // --- User-to-User Interaction Permission Checks ---
   async canSendInterest(senderId: string, receiverId: string): Promise<boolean> {
     try {
       if (senderId === receiverId) return false;
+
+      // 0. Strict Gender Isolation Check
+      const isOpposite = await this.isGenderOpposite(senderId, receiverId);
+      if (!isOpposite) return false;
 
       // Check profile approval status for both sender & receiver
       const senderProfile = await prisma.profile.findUnique({
@@ -112,6 +142,11 @@ export class PermissionService extends BaseService {
       if (!interest) return false;
       if (!interest.sender?.isActive || interest.sender?.deletedAt !== null) return false;
       if (!interest.receiver?.isActive || interest.receiver?.deletedAt !== null) return false;
+
+      // Enforce gender isolation for accept
+      const isOpposite = await this.isGenderOpposite(interest.senderId, interest.receiverId);
+      if (!isOpposite) return false;
+
       return interest.receiverId === receiverId && interest.status === "PENDING";
     } catch {
       return false;
@@ -121,6 +156,10 @@ export class PermissionService extends BaseService {
   async canChat(senderId: string, receiverId: string): Promise<boolean> {
     try {
       if (senderId === receiverId) return true;
+
+      // 0. Strict Gender Isolation Check
+      const isOpposite = await this.isGenderOpposite(senderId, receiverId);
+      if (!isOpposite) return false;
 
       // 1. Both profiles must be APPROVED, non-deleted, and active
       const senderProfile = await prisma.profile.findUnique({
@@ -210,6 +249,10 @@ export class PermissionService extends BaseService {
   async canViewProfile(userId: string, targetUserId: string): Promise<boolean> {
     try {
       if (userId === targetUserId) return true;
+
+      // Enforce Gender Isolation
+      const isOpposite = await this.isGenderOpposite(userId, targetUserId);
+      if (!isOpposite) return false;
 
       const targetProfile = await prisma.profile.findUnique({
         where: { userId: targetUserId },

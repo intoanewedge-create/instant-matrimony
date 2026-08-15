@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
@@ -22,6 +22,10 @@ import {
   Compass,
   FileText,
   Lock,
+  Pencil,
+  Sparkles,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import type { CompletionBreakdown } from "@/lib/services/completion.service";
 import {
@@ -35,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
 import {
   updateProfileAction,
   updatePreferencesAction,
@@ -63,6 +68,7 @@ interface PartnerPreference {
   motherTongue?: string;
   education?: string;
   country?: string;
+  bio?: string;
 }
 
 interface UserProfile {
@@ -93,9 +99,19 @@ interface UserProfile {
   foodPreference?: string;
   status?: string;
   completionPercent?: number;
+  profileCreatedFor?: string;
+  phone?: string;
   photos?: ProfilePhoto[];
   partnerPreference?: PartnerPreference;
   privacy?: any;
+  user?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    publicId?: string;
+    isActive?: boolean;
+    identityVerification?: any;
+  };
 }
 
 export function ProfileClient({
@@ -146,6 +162,11 @@ export function ProfileClient({
   const [subCastes, setSubCastes] = useState<any[]>([]);
   const [gothrams, setGothrams] = useState<any[]>([]);
 
+  // Preferences Inline Editing State
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [rowSaving, setRowSaving] = useState(false);
+  const [activePrefSection, setActivePrefSection] = useState<string>("pref-basic");
+
   // Setup Details Form
   const {
     register: registerDetails,
@@ -183,23 +204,18 @@ export function ProfileClient({
     },
   });
 
-  // Setup Preferences Form
-  const {
-    register: registerPref,
-    handleSubmit: handleSubmitPref,
-    reset: resetPref,
-  } = useForm({
-    defaultValues: {
-      minAge: profile.partnerPreference?.minAge || 18,
-      maxAge: profile.partnerPreference?.maxAge || 40,
-      minHeight: profile.partnerPreference?.minHeight || 140,
-      maxHeight: profile.partnerPreference?.maxHeight || 220,
-      maritalStatus: profile.partnerPreference?.maritalStatus || "Never Married",
-      religion: profile.partnerPreference?.religion || "",
-      motherTongue: profile.partnerPreference?.motherTongue || "",
-      education: profile.partnerPreference?.education || "",
-      country: profile.partnerPreference?.country || "India",
-    },
+  // Setup Preferences State & Local Form Values
+  const [prefValues, setPrefValues] = useState({
+    minAge: profile.partnerPreference?.minAge || 18,
+    maxAge: profile.partnerPreference?.maxAge || 40,
+    minHeight: profile.partnerPreference?.minHeight || 140,
+    maxHeight: profile.partnerPreference?.maxHeight || 220,
+    maritalStatus: profile.partnerPreference?.maritalStatus || "Never Married",
+    religion: profile.partnerPreference?.religion || "",
+    motherTongue: profile.partnerPreference?.motherTongue || "",
+    education: profile.partnerPreference?.education || "",
+    country: profile.partnerPreference?.country || "India",
+    bio: profile.partnerPreference?.bio || "",
   });
 
   const selectedReligion = watchDetails("religion");
@@ -210,7 +226,9 @@ export function ProfileClient({
   useEffect(() => {
     fetch("/api/master-data?type=religions")
       .then((r) => r.json())
-      .then((res) => { if (res.success && res.data) setReligions(res.data); })
+      .then((res) => {
+        if (res.success && res.data) setReligions(res.data);
+      })
       .catch(() => {});
 
     getProfilePrivacyAction().then((res) => {
@@ -228,11 +246,15 @@ export function ProfileClient({
   // Fetch Castes when Religion changes
   useEffect(() => {
     if (selectedReligion) {
-      const relObj = religions.find((r) => r.name === selectedReligion || r.id === selectedReligion);
+      const relObj = religions.find(
+        (r) => r.name === selectedReligion || r.id === selectedReligion,
+      );
       const queryId = relObj?.id || selectedReligion;
       fetch(`/api/master-data?type=castes&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
-        .then((res) => { if (res.success && res.data) setCastes(res.data); })
+        .then((res) => {
+          if (res.success && res.data) setCastes(res.data);
+        })
         .catch(() => {});
     } else {
       setCastes([]);
@@ -242,11 +264,17 @@ export function ProfileClient({
   // Fetch SubCastes when Caste changes
   useEffect(() => {
     if (selectedCaste) {
-      const casteObj = castes.find((c) => c.name === selectedCaste || c.id === selectedCaste);
+      const casteObj = castes.find(
+        (c) => c.name === selectedCaste || c.id === selectedCaste,
+      );
       const queryId = casteObj?.id || selectedCaste;
-      fetch(`/api/master-data?type=subcastes&parentId=${encodeURIComponent(queryId)}`)
+      fetch(
+        `/api/master-data?type=subcastes&parentId=${encodeURIComponent(queryId)}`,
+      )
         .then((r) => r.json())
-        .then((res) => { if (res.success && res.data) setSubCastes(res.data); })
+        .then((res) => {
+          if (res.success && res.data) setSubCastes(res.data);
+        })
         .catch(() => {});
     } else {
       setSubCastes([]);
@@ -256,60 +284,62 @@ export function ProfileClient({
   // Fetch Gothrams when SubCaste changes
   useEffect(() => {
     if (selectedSubCaste) {
-      const scObj = subCastes.find((sc) => sc.name === selectedSubCaste || sc.id === selectedSubCaste);
+      const scObj = subCastes.find(
+        (sc) => sc.name === selectedSubCaste || sc.id === selectedSubCaste,
+      );
       const queryId = scObj?.id || selectedSubCaste;
-      fetch(`/api/master-data?type=gothrams&parentId=${encodeURIComponent(queryId)}`)
+      fetch(
+        `/api/master-data?type=gothrams&parentId=${encodeURIComponent(queryId)}`,
+      )
         .then((r) => r.json())
-        .then((res) => { if (res.success && res.data) setGothrams(res.data); })
+        .then((res) => {
+          if (res.success && res.data) setGothrams(res.data);
+        })
         .catch(() => {});
     } else {
       setGothrams([]);
     }
   }, [selectedSubCaste, subCastes]);
 
-  // Sync state & forms if props update from Server Components
+  // IntersectionObserver for Sticky Edit Preferences Scroll Spy
   useEffect(() => {
-    setProfile(initialProfile);
-    resetDetails({
-      gender: initialProfile.gender || "MALE",
-      dateOfBirth: initialProfile.dateOfBirth
-        ? new Date(initialProfile.dateOfBirth).toISOString().split("T")[0]
-        : "",
-      religion: initialProfile.religion || "",
-      motherTongue: initialProfile.motherTongue || "",
-      caste: initialProfile.caste || "",
-      subCaste: initialProfile.subCaste || "",
-      gothram: initialProfile.gothram || "",
-      height: initialProfile.height || 160,
-      weight: initialProfile.weight || 65,
-      maritalStatus: initialProfile.maritalStatus || "Never Married",
-      education: initialProfile.education || "",
-      occupation: initialProfile.occupation || "",
-      income: initialProfile.income || 0,
-      city: initialProfile.city || "",
-      district: initialProfile.district || "",
-      state: initialProfile.state || "",
-      country: initialProfile.country || "India",
-      bio: initialProfile.bio || "",
-      familyValues: initialProfile.familyValues || "",
-      familyDetails: initialProfile.familyDetails || "",
-      horoscope: initialProfile.horoscope || "",
-      smoking: initialProfile.smoking || "",
-      drinking: initialProfile.drinking || "",
-      foodPreference: initialProfile.foodPreference || "",
+    if (activeTab !== "preferences") return;
+
+    const sections = [
+      "pref-basic",
+      "pref-religious",
+      "pref-professional",
+      "pref-location",
+      "pref-about-partner",
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActivePrefSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.3 },
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
     });
-    resetPref({
-      minAge: initialProfile.partnerPreference?.minAge || 18,
-      maxAge: initialProfile.partnerPreference?.maxAge || 40,
-      minHeight: initialProfile.partnerPreference?.minHeight || 140,
-      maxHeight: initialProfile.partnerPreference?.maxHeight || 220,
-      maritalStatus: initialProfile.partnerPreference?.maritalStatus || "Never Married",
-      religion: initialProfile.partnerPreference?.religion || "",
-      motherTongue: initialProfile.partnerPreference?.motherTongue || "",
-      education: initialProfile.partnerPreference?.education || "",
-      country: initialProfile.partnerPreference?.country || "India",
-    });
-  }, [initialProfile, resetDetails, resetPref]);
+
+    return () => observer.disconnect();
+  }, [activeTab]);
+
+  // Scroll to preference section smoothly
+  const scrollToPrefSection = (id: string) => {
+    setActivePrefSection(id);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const onUpdateDetails = async (data: Record<string, any>) => {
     setDetailsSuccess(null);
@@ -337,33 +367,37 @@ export function ProfileClient({
     }
   };
 
-  const onUpdatePref = async (data: Record<string, any>) => {
-    setPrefSuccess(null);
+  const handleSaveInlineRow = async (updatedFields: Partial<typeof prefValues>) => {
+    setRowSaving(true);
     setPrefError(null);
-    setIsPending(true);
+    setPrefSuccess(null);
+
+    const merged = { ...prefValues, ...updatedFields };
     try {
       const payload = {
-        ...data,
-        minAge: data.minAge ? Number(data.minAge) : undefined,
-        maxAge: data.maxAge ? Number(data.maxAge) : undefined,
-        minHeight: data.minHeight ? Number(data.minHeight) : undefined,
-        maxHeight: data.maxHeight ? Number(data.maxHeight) : undefined,
+        ...merged,
+        minAge: Number(merged.minAge),
+        maxAge: Number(merged.maxAge),
+        minHeight: Number(merged.minHeight),
+        maxHeight: Number(merged.maxHeight),
       };
       const res = await updatePreferencesAction(payload);
       if (res.success) {
+        setPrefValues(merged);
         setPrefSuccess("Partner match criteria updated successfully!");
         setProfile((prev) => ({
           ...prev,
-          partnerPreference: { ...prev.partnerPreference, ...payload },
+          partnerPreference: { ...prev.partnerPreference, ...merged },
         }));
+        setEditingRow(null);
         router.refresh();
       } else {
-        setPrefError(res.error || "Failed to update preferences");
+        setPrefError(res.error || "Failed to save criteria update");
       }
     } catch (e: any) {
-      setPrefError(e.message || "Failed to update preferences");
+      setPrefError(e.message || "Failed to save criteria update");
     } finally {
-      setIsPending(false);
+      setRowSaving(false);
     }
   };
 
@@ -464,20 +498,35 @@ export function ProfileClient({
     }
   };
 
+  // Helper variables for header
+  const mainPhoto = profile.photos?.find((p) => p.isMain) || profile.photos?.[0];
+  const profileName = profile.user?.name || "Member Profile";
+  const profileRelation = profile.profileCreatedFor || "Self";
+  const publicId = profile.user?.publicId || profile.id.slice(0, 8);
+  const phoneDisplay = profile.user?.phone || profile.phone || "Not set";
+  const isPhoneVerified = !!(profile.user?.identityVerification?.status === "VERIFIED" || profile.user?.phone);
+
+  const calculatedAge = profile.dateOfBirth
+    ? Math.floor(
+        (new Date().getTime() - new Date(profile.dateOfBirth).getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000),
+      )
+    : null;
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 text-slate-900">
-      {/* Title Header */}
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6 text-slate-900">
+      {/* Title & Completeness Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
-            My Matrimonial Profile
+            Edit Matrimonial Profile
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Manage your personal bio, cultural background, partner preferences, and photo privacy.
+            Manage identity, preferences, photos, and public biodata presentation.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium shadow-xs">
+          <span className="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-xl font-medium shadow-xs">
             Completeness: <span className="text-rose-600 font-bold">{completion.percent}%</span>
           </span>
           <span
@@ -494,42 +543,107 @@ export function ProfileClient({
         </div>
       </div>
 
-      {/* Profile Completion Meter */}
-      <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <CardContent className="p-5 space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-semibold text-slate-700">Profile Completion Status</span>
-            <span className="text-sm font-extrabold text-rose-600">{completion.percent}%</span>
-          </div>
-
-          <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-rose-600 to-pink-600 transition-all duration-300"
-              style={{ width: `${completion.percent}%` }}
-            />
-          </div>
-
-          {completion.sections.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {completion.sections.map((section) => (
-                <div
-                  key={section.key}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
-                    section.completed
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-slate-100 text-slate-600 border-slate-200"
-                  }`}
-                >
-                  {section.completed ? (
-                    <CircleCheck className="w-3 h-3 text-emerald-600" />
-                  ) : (
-                    <Circle className="w-3 h-3 text-slate-400" />
-                  )}
-                  {section.name}
-                </div>
-              ))}
+      {/* SECTION 4: RESPONSIVE 3-COLUMN EDIT PROFILE HEADER */}
+      <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* LEFT COLUMN: Main Avatar Box + Add/Edit Photos */}
+            <div className="md:col-span-3 flex flex-col items-center justify-center text-center space-y-3 border-r-0 md:border-r border-slate-100 pr-0 md:pr-4">
+              <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-rose-200 shadow-md bg-rose-50 flex items-center justify-center">
+                {mainPhoto ? (
+                  <img
+                    src={mainPhoto.url}
+                    alt={profileName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-14 h-14 text-rose-300" />
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab("photos")}
+                className="text-xs border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl"
+              >
+                <Camera className="w-3.5 h-3.5 mr-1.5" /> Add / Edit Photos
+              </Button>
             </div>
-          )}
+
+            {/* MIDDLE COLUMN: Name, Relation, Key Stats & Mobile Number */}
+            <div className="md:col-span-6 space-y-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl font-extrabold text-slate-900">{profileName}</h2>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                    Profile Created For: {profileRelation}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 font-mono mt-0.5">Profile ID: {publicId}</p>
+              </div>
+
+              {/* Key Stats */}
+              <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div>
+                  <span className="text-slate-400">Age & Height:</span>{" "}
+                  <span className="font-semibold text-slate-800">
+                    {calculatedAge ? `${calculatedAge} yrs` : "N/A"}, {profile.height ? `${profile.height} cm` : "N/A"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Religion/Caste:</span>{" "}
+                  <span className="font-semibold text-slate-800">
+                    {profile.religion || "N/A"}{profile.caste ? `, ${profile.caste}` : ""}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Location:</span>{" "}
+                  <span className="font-semibold text-slate-800">
+                    {profile.city || profile.state || profile.country || "India"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Education:</span>{" "}
+                  <span className="font-semibold text-slate-800">
+                    {profile.education || "Not specified"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Number & Verification */}
+              <div className="flex items-center justify-between text-xs pt-1 flex-wrap gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">Mobile:</span>
+                  <span className="font-semibold text-slate-900">{phoneDisplay}</span>
+                  {isPhoneVerified ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-0.5">
+                      <Check className="w-3 h-3" /> (Verified)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                      (Unverified)
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setActiveTab("details")}
+                  className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1"
+                >
+                  [Edit Mobile No]
+                </button>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Profile Preview Button */}
+            <div className="md:col-span-3 flex flex-col items-center md:items-end justify-center border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
+              <Button
+                onClick={() => setActiveTab("preview")}
+                className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-md rounded-xl h-10 px-5"
+              >
+                <Eye className="w-4 h-4 mr-2" /> Profile Preview
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -587,794 +701,1072 @@ export function ProfileClient({
         </button>
       </div>
 
-      {/* Tabs Content */}
-      <div className="mt-4">
-        {/* TAB 1: DETAILS */}
-        {activeTab === "details" && (
-          <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <User className="w-5 h-5 text-rose-600" /> Comprehensive Matrimonial Details
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Update your identity, cultural background, education, and lifestyle.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmitDetails(onUpdateDetails)} className="space-y-8">
-                {detailsSuccess && (
-                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-medium">{detailsSuccess}</span>
-                  </div>
-                )}
-                {detailsError && (
-                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
-                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span className="font-medium">{detailsError}</span>
-                  </div>
-                )}
-
-                {/* Section A: Demographics */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    1. Basic Demographics
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="gender" className="text-xs font-semibold text-slate-700">Gender</Label>
-                      <select
-                        id="gender"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("gender")}
-                      >
-                        <option value="MALE">Male (Groom)</option>
-                        <option value="FEMALE">Female (Bride)</option>
-                      </select>
+      {/* MAIN LAYOUT: TAB CONTENT + SECTION 5 SIDEBAR COMPLETION PROMPTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Tab View (3 Cols on Desktop) */}
+        <div className="lg:col-span-3">
+          {/* TAB 1: DETAILS */}
+          {activeTab === "details" && (
+            <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-rose-600" /> Personal & Cultural Biodata
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Update your identity, cultural background, education, and lifestyle.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleSubmitDetails(onUpdateDetails)} className="space-y-8">
+                  {detailsSuccess && (
+                    <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-medium">{detailsSuccess}</span>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="dateOfBirth" className="text-xs font-semibold text-slate-700">Date of Birth</Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("dateOfBirth")}
-                      />
+                  )}
+                  {detailsError && (
+                    <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                      <span className="font-medium">{detailsError}</span>
                     </div>
+                  )}
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="height" className="text-xs font-semibold text-slate-700">Height (cm)</Label>
-                      <Input
-                        id="height"
-                        type="number"
-                        placeholder="170"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("height")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="weight" className="text-xs font-semibold text-slate-700">Weight (kg)</Label>
-                      <Input
-                        id="weight"
-                        type="number"
-                        placeholder="65"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("weight")}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="maritalStatus" className="text-xs font-semibold text-slate-700">Marital Status</Label>
-                      <select
-                        id="maritalStatus"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("maritalStatus")}
-                      >
-                        <option value="Never Married">Never Married</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Awaiting Divorce">Awaiting Divorce</option>
-                        <option value="Annulled">Annulled</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section B: Cultural & Horoscope */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    2. Religion, Caste & Horoscope
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="religion" className="text-xs font-semibold text-slate-700">Religion</Label>
-                      <select
-                        id="religion"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("religion")}
-                      >
-                        <option value="">Select</option>
-                        <option value="Hindu">Hindu</option>
-                        <option value="Muslim">Muslim</option>
-                        <option value="Christian">Christian</option>
-                        <option value="Sikh">Sikh</option>
-                        <option value="Jain">Jain</option>
-                        <option value="Buddhist">Buddhist</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="caste" className="text-xs font-semibold text-slate-700">Caste</Label>
-                      {castes.length > 0 ? (
+                  {/* Section A: Demographics */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                      1. Basic Demographics
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="gender" className="text-xs font-semibold text-slate-700">Gender</Label>
                         <select
-                          id="caste"
+                          id="gender"
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("caste")}
+                          {...registerDetails("gender")}
                         >
-                          <option value="">Select Caste</option>
-                          {castes.map((c) => (
-                            <option key={c.id} value={c.name}>{c.name}</option>
-                          ))}
+                          <option value="MALE">Male (Groom)</option>
+                          <option value="FEMALE">Female (Bride)</option>
                         </select>
-                      ) : (
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="dateOfBirth" className="text-xs font-semibold text-slate-700">Date of Birth</Label>
                         <Input
-                          id="caste"
-                          placeholder="e.g. Reddy, Kamma, Brahmin"
+                          id="dateOfBirth"
+                          type="date"
                           className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                          {...registerDetails("caste")}
+                          {...registerDetails("dateOfBirth")}
                         />
-                      )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="height" className="text-xs font-semibold text-slate-700">Height (cm)</Label>
+                        <Input
+                          id="height"
+                          type="number"
+                          placeholder="170"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("height")}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="weight" className="text-xs font-semibold text-slate-700">Weight (kg)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          placeholder="65"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("weight")}
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="subCaste" className="text-xs font-semibold text-slate-700">Sub Caste</Label>
-                      {subCastes.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="maritalStatus" className="text-xs font-semibold text-slate-700">Marital Status</Label>
                         <select
-                          id="subCaste"
+                          id="maritalStatus"
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("subCaste")}
+                          {...registerDetails("maritalStatus")}
                         >
-                          <option value="">Select Sub Caste</option>
-                          {subCastes.map((sc) => (
-                            <option key={sc.id} value={sc.name}>{sc.name}</option>
-                          ))}
+                          <option value="Never Married">Never Married</option>
+                          <option value="Divorced">Divorced</option>
+                          <option value="Widowed">Widowed</option>
+                          <option value="Awaiting Divorce">Awaiting Divorce</option>
+                          <option value="Annulled">Annulled</option>
                         </select>
-                      ) : (
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section B: Cultural & Horoscope */}
+                  <div id="horoscope-section" className="space-y-4">
+                    <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                      2. Religion, Caste & Horoscope
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="religion" className="text-xs font-semibold text-slate-700">Religion</Label>
+                        <select
+                          id="religion"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("religion")}
+                        >
+                          <option value="">Select</option>
+                          <option value="Hindu">Hindu</option>
+                          <option value="Muslim">Muslim</option>
+                          <option value="Christian">Christian</option>
+                          <option value="Sikh">Sikh</option>
+                          <option value="Jain">Jain</option>
+                          <option value="Buddhist">Buddhist</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="caste" className="text-xs font-semibold text-slate-700">Caste</Label>
+                        {castes.length > 0 ? (
+                          <select
+                            id="caste"
+                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                            {...registerDetails("caste")}
+                          >
+                            <option value="">Select Caste</option>
+                            {castes.map((c) => (
+                              <option key={c.id} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="caste"
+                            placeholder="e.g. Reddy, Kamma, Brahmin"
+                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                            {...registerDetails("caste")}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="subCaste" className="text-xs font-semibold text-slate-700">Sub Caste</Label>
+                        {subCastes.length > 0 ? (
+                          <select
+                            id="subCaste"
+                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                            {...registerDetails("subCaste")}
+                          >
+                            <option value="">Select Sub Caste</option>
+                            {subCastes.map((sc) => (
+                              <option key={sc.id} value={sc.name}>{sc.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="subCaste"
+                            placeholder="e.g. Motati, Pedakanti"
+                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                            {...registerDetails("subCaste")}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="gothram" className="text-xs font-semibold text-slate-700">Gothram</Label>
                         <Input
-                          id="subCaste"
-                          placeholder="e.g. Motati, Pedakanti"
+                          id="gothram"
+                          placeholder="e.g. Kashyapa"
                           className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                          {...registerDetails("subCaste")}
+                          {...registerDetails("gothram")}
                         />
-                      )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="motherTongue" className="text-xs font-semibold text-slate-700">Mother Tongue</Label>
+                        <Input
+                          id="motherTongue"
+                          placeholder="e.g. Telugu"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("motherTongue")}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="horoscope" className="text-xs font-semibold text-slate-700">Horoscope / Rasi</Label>
+                        <Input
+                          id="horoscope"
+                          placeholder="e.g. Mesha / Aries - Bharani Star"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("horoscope")}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="gothram" className="text-xs font-semibold text-slate-700">Gothram</Label>
-                      <Input
-                        id="gothram"
-                        placeholder="e.g. Kasyapa, Bharadwaja"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("gothram")}
-                      />
-                    </div>
+                  {/* Section C: Education & Career */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                      3. Education & Profession
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="education" className="text-xs font-semibold text-slate-700">Education Degree</Label>
+                        <Input
+                          id="education"
+                          placeholder="e.g. B.Tech Computer Science"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("education")}
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="motherTongue" className="text-xs font-semibold text-slate-700">Mother Tongue</Label>
-                      <select
-                        id="motherTongue"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("motherTongue")}
-                      >
-                        <option value="Telugu">Telugu</option>
-                        <option value="Tamil">Tamil</option>
-                        <option value="Kannada">Kannada</option>
-                        <option value="Hindi">Hindi</option>
-                        <option value="Marathi">Marathi</option>
-                        <option value="Malayalam">Malayalam</option>
-                      </select>
-                    </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="occupation" className="text-xs font-semibold text-slate-700">Occupation / Job Title</Label>
+                        <Input
+                          id="occupation"
+                          placeholder="e.g. Software Engineer"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("occupation")}
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="horoscope" className="text-xs font-semibold text-slate-700">Horoscope / Rashi</Label>
-                      <Input
-                        id="horoscope"
-                        placeholder="e.g. Mesha (Aries) / Krittika"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("horoscope")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section C: Education & Career */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    3. Education & Profession
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="education" className="text-xs font-semibold text-slate-700">Education Degree</Label>
-                      <Input
-                        id="education"
-                        placeholder="e.g. B.Tech Computer Science"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("education")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="occupation" className="text-xs font-semibold text-slate-700">Occupation</Label>
-                      <Input
-                        id="occupation"
-                        placeholder="e.g. Software Engineer / Lead"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("occupation")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="income" className="text-xs font-semibold text-slate-700">Annual Income (Lakhs INR)</Label>
-                      <Input
-                        id="income"
-                        type="number"
-                        placeholder="18"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("income")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section D: Location */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    4. Location Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="country" className="text-xs font-semibold text-slate-700">Country</Label>
-                      <Input
-                        id="country"
-                        placeholder="India"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("country")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="state" className="text-xs font-semibold text-slate-700">State</Label>
-                      <Input
-                        id="state"
-                        placeholder="Andhra Pradesh"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("state")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
-                      <Input
-                        id="district"
-                        placeholder="Visakhapatnam"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("district")}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="city" className="text-xs font-semibold text-slate-700">City</Label>
-                      <Input
-                        id="city"
-                        placeholder="Vijayawada"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerDetails("city")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section E: Family & Lifestyle */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                    5. Family & Lifestyle
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="familyValues" className="text-xs font-semibold text-slate-700">Family Values</Label>
-                      <select
-                        id="familyValues"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("familyValues")}
-                      >
-                        <option value="">Select</option>
-                        <option value="Traditional">Traditional</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Liberal">Liberal</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="foodPreference" className="text-xs font-semibold text-slate-700">Diet / Food</Label>
-                      <select
-                        id="foodPreference"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("foodPreference")}
-                      >
-                        <option value="">Select</option>
-                        <option value="Vegetarian">Vegetarian</option>
-                        <option value="Non-Vegetarian">Non-Vegetarian</option>
-                        <option value="Eggetarian">Eggetarian</option>
-                        <option value="Jain">Jain</option>
-                        <option value="Vegan">Vegan</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="smoking" className="text-xs font-semibold text-slate-700">Smoking</Label>
-                      <select
-                        id="smoking"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("smoking")}
-                      >
-                        <option value="">Select</option>
-                        <option value="NO">No</option>
-                        <option value="OCCASIONAL">Occasional</option>
-                        <option value="YES">Yes</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="drinking" className="text-xs font-semibold text-slate-700">Drinking</Label>
-                      <select
-                        id="drinking"
-                        className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                        {...registerDetails("drinking")}
-                      >
-                        <option value="">Select</option>
-                        <option value="NO">No</option>
-                        <option value="OCCASIONAL">Occasional</option>
-                        <option value="YES">Yes</option>
-                      </select>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="income" className="text-xs font-semibold text-slate-700">Annual Income (₹)</Label>
+                        <Input
+                          id="income"
+                          type="number"
+                          placeholder="1200000"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("income")}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="familyDetails" className="text-xs font-semibold text-slate-700">Family Background & Parents Details</Label>
-                    <Textarea
-                      id="familyDetails"
-                      placeholder="Parents background, siblings, native place..."
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-20 resize-none focus-visible:ring-rose-500"
-                      {...registerDetails("familyDetails")}
-                    />
+                  {/* Section D: Location */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                      4. Location & Residence
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="city" className="text-xs font-semibold text-slate-700">City</Label>
+                        <Input
+                          id="city"
+                          placeholder="e.g. Hyderabad"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("city")}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
+                        <Input
+                          id="district"
+                          placeholder="e.g. Rangareddy"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("district")}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="state" className="text-xs font-semibold text-slate-700">State</Label>
+                        <Input
+                          id="state"
+                          placeholder="e.g. Telangana"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("state")}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="country" className="text-xs font-semibold text-slate-700">Country</Label>
+                        <Input
+                          id="country"
+                          placeholder="e.g. India"
+                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          {...registerDetails("country")}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="bio" className="text-xs font-semibold text-slate-700">About Me (Bio Overview)</Label>
-                    <Textarea
-                      id="bio"
-                      placeholder="Share your interests, aspirations, and what makes you unique..."
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-24 resize-none focus-visible:ring-rose-500"
-                      {...registerDetails("bio")}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4 border-t border-slate-100">
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 font-semibold px-8 py-2 text-white text-xs shadow-md shadow-rose-500/20"
-                  >
-                    {isPending ? "Saving..." : "Save Matrimonial Details"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* TAB 2: PREFERENCES */}
-        {activeTab === "preferences" && (
-          <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-rose-600" /> Desired Partner Criteria
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Define the criteria you seek in a life partner. These are used by our AI Matchmaker.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmitPref(onUpdatePref)} className="space-y-6">
-                {prefSuccess && (
-                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-medium">{prefSuccess}</span>
-                  </div>
-                )}
-                {prefError && (
-                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
-                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span className="font-medium">{prefError}</span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Age Range */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Section E: Family & About */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
+                      5. Family & Personal Bio
+                    </h3>
                     <div className="space-y-1.5">
-                      <Label htmlFor="minAge" className="text-xs font-semibold text-slate-700">Min Partner Age</Label>
-                      <Input
-                        id="minAge"
-                        type="number"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerPref("minAge")}
+                      <Label htmlFor="familyDetails" className="text-xs font-semibold text-slate-700">Family Background</Label>
+                      <Textarea
+                        id="familyDetails"
+                        placeholder="Father's occupation, mother's background, siblings, hometown..."
+                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-[80px] focus-visible:ring-rose-500"
+                        {...registerDetails("familyDetails")}
                       />
                     </div>
+
                     <div className="space-y-1.5">
-                      <Label htmlFor="maxAge" className="text-xs font-semibold text-slate-700">Max Partner Age</Label>
-                      <Input
-                        id="maxAge"
-                        type="number"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerPref("maxAge")}
+                      <Label htmlFor="bio" className="text-xs font-semibold text-slate-700">About Myself (Bio)</Label>
+                      <Textarea
+                        id="bio"
+                        placeholder="Describe your values, lifestyle, interests, and partner expectations..."
+                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-[100px] focus-visible:ring-rose-500"
+                        {...registerDetails("bio")}
                       />
                     </div>
                   </div>
 
-                  {/* Height Range */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="minHeight" className="text-xs font-semibold text-slate-700">Min Height (cm)</Label>
-                      <Input
-                        id="minHeight"
-                        type="number"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerPref("minHeight")}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="maxHeight" className="text-xs font-semibold text-slate-700">Max Height (cm)</Label>
-                      <Input
-                        id="maxHeight"
-                        type="number"
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                        {...registerPref("maxHeight")}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="maritalStatusPref" className="text-xs font-semibold text-slate-700">Marital Status</Label>
-                    <select
-                      id="maritalStatusPref"
-                      className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                      {...registerPref("maritalStatus")}
+                  <div className="pt-4 flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-md rounded-xl h-11 px-8"
                     >
-                      <option value="Never Married">Never Married</option>
-                      <option value="Any">Any Status</option>
-                      <option value="Divorced">Divorced</option>
-                      <option value="Widowed">Widowed</option>
-                    </select>
+                      {isPending ? <Spinner className="w-4 h-4 mr-2" /> : null}
+                      Save Profile Details
+                    </Button>
                   </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="religionPref" className="text-xs font-semibold text-slate-700">Preferred Religion</Label>
-                    <Input
-                      id="religionPref"
-                      placeholder="e.g. Hindu, Any"
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                      {...registerPref("religion")}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="languagePref" className="text-xs font-semibold text-slate-700">Preferred Mother Tongue</Label>
-                    <Input
-                      id="languagePref"
-                      placeholder="e.g. Telugu, Any"
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                      {...registerPref("motherTongue")}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="educationPref" className="text-xs font-semibold text-slate-700">Preferred Education</Label>
-                    <Input
-                      id="educationPref"
-                      placeholder="e.g. Graduate, B.Tech, Master"
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                      {...registerPref("education")}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5 md:col-span-2">
-                    <Label htmlFor="countryPref" className="text-xs font-semibold text-slate-700">Preferred Country</Label>
-                    <Input
-                      id="countryPref"
-                      placeholder="e.g. India, USA, Any"
-                      className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                      {...registerPref("country")}
-                    />
-                  </div>
+          {/* TAB 2: SECTION 6 & 7 — EDIT PREFERENCES (STICKY SIDEBAR & INLINE ROW EDITING) */}
+          {activeTab === "preferences" && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* STICKY LEFT SIDEBAR NAVIGATION WITH GREEN ACCENT */}
+              <div className="md:col-span-1">
+                <div className="sticky top-20 bg-white border border-slate-200 rounded-2xl p-3 space-y-1 shadow-xs overflow-x-auto flex md:flex-col gap-1 md:gap-1">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 px-3 py-1 hidden md:block">
+                    Navigation
+                  </span>
+                  {[
+                    { id: "pref-basic", label: "Basic Criteria" },
+                    { id: "pref-religious", label: "Religious & Cultural" },
+                    { id: "pref-professional", label: "Professional" },
+                    { id: "pref-location", label: "Location" },
+                    { id: "pref-about-partner", label: "About My Partner" },
+                  ].map((sec) => (
+                    <button
+                      key={sec.id}
+                      onClick={() => scrollToPrefSection(sec.id)}
+                      className={`text-left text-xs px-3.5 py-2.5 rounded-xl font-semibold transition-all whitespace-nowrap w-full flex items-center justify-between ${
+                        activePrefSection === sec.id
+                          ? "bg-emerald-50 text-emerald-800 border-l-4 border-emerald-600 font-bold shadow-2xs"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      <span>{sec.label}</span>
+                      <ChevronRight className={`w-3.5 h-3.5 transition-transform ${activePrefSection === sec.id ? "text-emerald-600 translate-x-0.5" : "text-slate-300"}`} />
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex justify-end pt-4 border-t border-slate-100">
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 font-semibold px-8 py-2 text-white text-xs shadow-md shadow-rose-500/20"
-                  >
-                    {isPending ? "Saving..." : "Save Preferences"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+              {/* RIGHT COLUMN: INLINE PREFERENCE ROWS */}
+              <div className="md:col-span-3 space-y-6">
+                <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+                  <CardHeader className="border-b border-slate-100 pb-4">
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-rose-600" /> Partner Match Criteria
+                    </CardTitle>
+                    <CardDescription className="text-xs text-slate-500">
+                      Click the edit pencil icon on any preference row to update inline without losing state.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    {prefSuccess && (
+                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="font-medium">{prefSuccess}</span>
+                      </div>
+                    )}
+                    {prefError && (
+                      <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                        <span className="font-medium">{prefError}</span>
+                      </div>
+                    )}
 
-        {/* TAB 3: PHOTOS */}
-        {activeTab === "photos" && (
-          <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Camera className="w-5 h-5 text-rose-600" /> Photo Gallery Management
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Upload up to 4 high-resolution photos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {photoSuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">{photoSuccess}</span>
-                </div>
-              )}
-              {photoError && (
-                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <span className="font-medium">{photoError}</span>
-                </div>
-              )}
+                    {/* SECTION 1: BASIC CRITERIA */}
+                    <div id="pref-basic" className="space-y-3 pt-1">
+                      <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                        1. Basic Criteria
+                      </h3>
 
-              <div className="border-2 border-dashed border-slate-300 hover:border-rose-400 bg-rose-50/20 hover:bg-rose-50/40 rounded-xl p-6 text-center transition-colors">
-                <Input
-                  type="file"
-                  id="photoInput"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-                <label htmlFor="photoInput" className="cursor-pointer flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                    <Upload className="w-5 h-5" />
+                      {/* Row 1: Age Range */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Age Range</span>
+                            <span className="text-xs text-slate-500">
+                              {prefValues.minAge} yrs — {prefValues.maxAge} yrs
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "age" ? null : "age")}
+                            aria-label="Edit Age Range"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "age" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-[11px] font-semibold text-slate-700">Min Age (yrs)</Label>
+                                <Input
+                                  type="number"
+                                  value={prefValues.minAge}
+                                  onChange={(e) => setPrefValues({ ...prefValues, minAge: Number(e.target.value) })}
+                                  className="h-9 text-xs border-slate-200 mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[11px] font-semibold text-slate-700">Max Age (yrs)</Label>
+                                <Input
+                                  type="number"
+                                  value={prefValues.maxAge}
+                                  onChange={(e) => setPrefValues({ ...prefValues, maxAge: Number(e.target.value) })}
+                                  className="h-9 text-xs border-slate-200 mt-1"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minAge: prefValues.minAge, maxAge: prefValues.maxAge })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 2: Height Range */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Height Range</span>
+                            <span className="text-xs text-slate-500">
+                              {prefValues.minHeight} cm — {prefValues.maxHeight} cm
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "height" ? null : "height")}
+                            aria-label="Edit Height Range"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "height" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-[11px] font-semibold text-slate-700">Min Height (cm)</Label>
+                                <Input
+                                  type="number"
+                                  value={prefValues.minHeight}
+                                  onChange={(e) => setPrefValues({ ...prefValues, minHeight: Number(e.target.value) })}
+                                  className="h-9 text-xs border-slate-200 mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[11px] font-semibold text-slate-700">Max Height (cm)</Label>
+                                <Input
+                                  type="number"
+                                  value={prefValues.maxHeight}
+                                  onChange={(e) => setPrefValues({ ...prefValues, maxHeight: Number(e.target.value) })}
+                                  className="h-9 text-xs border-slate-200 mt-1"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minHeight: prefValues.minHeight, maxHeight: prefValues.maxHeight })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 3: Marital Status */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Marital Status Preference</span>
+                            <span className="text-xs text-slate-500">{prefValues.maritalStatus}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "maritalStatus" ? null : "maritalStatus")}
+                            aria-label="Edit Marital Status Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "maritalStatus" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.maritalStatus}
+                              onChange={(e) => setPrefValues({ ...prefValues, maritalStatus: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="Never Married">Never Married</option>
+                              <option value="Divorced">Divorced</option>
+                              <option value="Widowed">Widowed</option>
+                              <option value="Awaiting Divorce">Awaiting Divorce</option>
+                              <option value="Any">Any Marital Status</option>
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ maritalStatus: prefValues.maritalStatus })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SECTION 2: RELIGIOUS & CULTURAL */}
+                    <div id="pref-religious" className="space-y-3 pt-2">
+                      <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                        2. Religious & Cultural Criteria
+                      </h3>
+
+                      {/* Row 4: Religion */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Religion</span>
+                            <span className="text-xs text-slate-500">{prefValues.religion || "Any Religion"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "religion" ? null : "religion")}
+                            aria-label="Edit Religion Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "religion" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.religion}
+                              onChange={(e) => setPrefValues({ ...prefValues, religion: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Religion</option>
+                              <option value="Hindu">Hindu</option>
+                              <option value="Muslim">Muslim</option>
+                              <option value="Christian">Christian</option>
+                              <option value="Sikh">Sikh</option>
+                              <option value="Jain">Jain</option>
+                              <option value="Buddhist">Buddhist</option>
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ religion: prefValues.religion })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 5: Mother Tongue */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Mother Tongue</span>
+                            <span className="text-xs text-slate-500">{prefValues.motherTongue || "Any Language"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "motherTongue" ? null : "motherTongue")}
+                            aria-label="Edit Mother Tongue Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "motherTongue" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.motherTongue}
+                              placeholder="e.g. Telugu"
+                              onChange={(e) => setPrefValues({ ...prefValues, motherTongue: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SECTION 3: PROFESSIONAL */}
+                    <div id="pref-professional" className="space-y-3 pt-2">
+                      <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                        3. Professional Criteria
+                      </h3>
+
+                      {/* Row 6: Education */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Education Requirement</span>
+                            <span className="text-xs text-slate-500">{prefValues.education || "Any Degree / Education"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "education" ? null : "education")}
+                            aria-label="Edit Education Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "education" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.education}
+                              placeholder="e.g. Bachelor's / Master's / Any Degree"
+                              onChange={(e) => setPrefValues({ ...prefValues, education: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SECTION 4: LOCATION */}
+                    <div id="pref-location" className="space-y-3 pt-2">
+                      <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                        4. Location Criteria
+                      </h3>
+
+                      {/* Row 7: Country */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Country</span>
+                            <span className="text-xs text-slate-500">{prefValues.country || "India"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "country" ? null : "country")}
+                            aria-label="Edit Country Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "country" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.country}
+                              placeholder="e.g. India / USA / Any"
+                              onChange={(e) => setPrefValues({ ...prefValues, country: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SECTION 5: ABOUT MY PARTNER */}
+                    <div id="pref-about-partner" className="space-y-3 pt-2">
+                      <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wider border-b border-slate-100 pb-2">
+                        5. About My Partner (Expectations)
+                      </h3>
+
+                      {/* Row 8: Bio / Description */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 pr-4">
+                            <span className="text-xs font-bold text-slate-800 block">Partner Description</span>
+                            <span className="text-xs text-slate-500 line-clamp-2 mt-0.5">
+                              {prefValues.bio || "No specific expectation details provided yet."}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "bio" ? null : "bio")}
+                            aria-label="Edit About Partner"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors shrink-0"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "bio" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Textarea
+                              value={prefValues.bio}
+                              rows={3}
+                              placeholder="Describe desired qualities, family values, and lifestyle..."
+                              onChange={(e) => setPrefValues({ ...prefValues, bio: e.target.value })}
+                              className="text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ bio: prefValues.bio })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                                {rowSaving ? "Saving..." : "Save Row"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: PHOTOS */}
+          {activeTab === "photos" && (
+            <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-rose-600" /> Photo Gallery Management
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Upload clear photos of yourself. Mark your main photo for biodata display.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {photoSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-medium">{photoSuccess}</span>
+                  </div>
+                )}
+                {photoError && (
+                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span className="font-medium">{photoError}</span>
+                  </div>
+                )}
+
+                {/* Upload Box */}
+                <div className="border-2 border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-8 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                    <Upload className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-slate-800 text-xs font-bold">Click to upload a new photo</p>
-                    <p className="text-slate-500 text-[10px] mt-0.5">PNG, JPG or WEBP (Max 3MB)</p>
+                    <p className="text-xs font-bold text-slate-800">Upload New Profile Photo</p>
+                    <p className="text-[11px] text-slate-500">Supports JPG, PNG, WEBP formats up to 5MB</p>
                   </div>
-                </label>
-              </div>
+                  <div className="flex justify-center">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                      <Camera className="w-4 h-4" />
+                      <span>{uploading ? "Uploading..." : "Select Photo"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {(profile.photos || []).map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-[3/4] shadow-sm"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={photo.url} alt="Profile Photo" className="w-full h-full object-cover" />
-                    {photo.isMain && (
-                      <span className="absolute top-2 left-2 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
-                        <Star className="w-3 h-3 fill-current" /> Primary
-                      </span>
-                    )}
-                    <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      {!photo.isMain && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleSetPrimary(photo.id)}
-                          className="h-7 text-[11px] bg-white hover:bg-slate-100 text-slate-900 px-2 font-semibold shadow-xs"
-                        >
-                          Make Primary
-                        </Button>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => handleDeletePhoto(photo.id)}
-                        className="h-7 w-7 bg-red-600 text-white border-red-600 hover:bg-red-700"
+                {/* Photos Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pt-2">
+                  {profile.photos && profile.photos.length > 0 ? (
+                    profile.photos.map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 aspect-square shadow-xs"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* TAB 4: PRIVACY & VISIBILITY */}
-        {activeTab === "privacy" && (
-          <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-500" /> Privacy & Contact Visibility Controls
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                You have full control over who sees your photos, phone number, and financial metadata.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {privacySuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">{privacySuccess}</span>
-                </div>
-              )}
-              {privacyError && (
-                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <span className="font-medium">{privacyError}</span>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {/* Photo Blur Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-rose-600" /> Blur Profile Photos
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      When enabled, your photos appear blurred to public discovery. Photos unlock only after you accept an interest request.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={privacySettings.blurPhotos}
-                    onChange={(e) => setPrivacySettings((p) => ({ ...p, blurPhotos: e.target.checked }))}
-                    className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                {/* Hide Phone Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-amber-500" /> Strict Phone Masking
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      Phone numbers are never shown publicly and require verified quota unlock even after mutual connection.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={privacySettings.hidePhone}
-                    onChange={(e) => setPrivacySettings((p) => ({ ...p, hidePhone: e.target.checked }))}
-                    className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                {/* Hide Income Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold text-slate-900">Hide Exact Annual Income</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Hides your specific salary figure and displays only education & profession.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={privacySettings.hideIncome}
-                    onChange={(e) => setPrivacySettings((p) => ({ ...p, hideIncome: e.target.checked }))}
-                    className="w-4 h-4 accent-rose-600 rounded cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4 border-t border-slate-100">
-                <Button
-                  onClick={onUpdatePrivacy}
-                  disabled={isPending}
-                  className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 font-semibold px-6 py-2 text-white text-xs shadow-md shadow-rose-500/20"
-                >
-                  {isPending ? "Saving..." : "Save Privacy Preferences"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* TAB 5: PREVIEW */}
-        {activeTab === "preview" && (
-          <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Eye className="w-5 h-5 text-emerald-600" /> Public Biodata Preview
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                This is how verified prospective matches will see your profile.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="w-36 h-48 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-sm">
-                  {profile.photos?.find((p) => p.isMain)?.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profile.photos.find((p) => p.isMain)?.url}
-                      alt="Primary"
-                      className="w-full h-full object-cover"
-                    />
+                        <img
+                          src={photo.url}
+                          alt="Profile photo"
+                          className="w-full h-full object-cover"
+                        />
+                        {photo.isMain && (
+                          <span className="absolute top-2 left-2 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-white" /> Primary
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => handleDeletePhoto(photo.id)}
+                              className="p-1.5 bg-red-600/90 text-white rounded-lg hover:bg-red-700 transition-colors"
+                              title="Delete photo"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {!photo.isMain && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleSetPrimary(photo.id)}
+                              className="w-full text-[11px] bg-white text-slate-900 hover:bg-slate-100 font-bold rounded-lg h-7"
+                            >
+                              Set Main
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-400 flex-col gap-2">
-                      <User className="w-10 h-10" />
-                      <span className="text-[10px] font-medium">No Photo</span>
+                    <div className="col-span-full p-8 text-center text-slate-400 text-xs">
+                      No photos uploaded yet. Click above to add your first photo.
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          )}
 
-                <div className="space-y-3 flex-grow">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">
-                      {profile.gender === "FEMALE" ? "Matrimonial Bride" : "Matrimonial Groom"}
-                    </h2>
-                    <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                      {profile.city ? `${profile.city}, ${profile.state || ""}, ${profile.country || "India"}` : "Location not specified"}
-                    </p>
+          {/* TAB 4: PRIVACY */}
+          {activeTab === "privacy" && (
+            <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-amber-500" /> Privacy & Contact Controls
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Control photo visibility, phone access, and financial privacy.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {privacySuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-800 text-xs">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-medium">{privacySuccess}</span>
+                  </div>
+                )}
+                {privacyError && (
+                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span className="font-medium">{privacyError}</span>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50/50">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Blur Photos for Non-Members</span>
+                      <span className="text-[11px] text-slate-500">Only verified logged-in users can view clear profile photos</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.blurPhotos}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, blurPhotos: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    />
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 text-[11px]">
-                    {profile.religion && (
-                      <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 font-medium">
-                        {profile.religion} {profile.caste ? `• ${profile.caste}` : ""}
-                      </span>
-                    )}
-                    {profile.motherTongue && (
-                      <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 font-medium">
-                        {profile.motherTongue}
-                      </span>
-                    )}
-                    {profile.occupation && (
-                      <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 font-medium">
-                        {profile.occupation}
-                      </span>
-                    )}
-                    {profile.education && (
-                      <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200 font-medium">
-                        {profile.education}
-                      </span>
-                    )}
-                    {profile.income ? (
-                      <span className="bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-md border border-rose-200 font-semibold">
-                        ₹{profile.income} Lakhs / Yr
-                      </span>
-                    ) : null}
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50/50">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Hide Phone Number</span>
+                      <span className="text-[11px] text-slate-500">Requires explicit contact request approval before sharing phone</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.hidePhone}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, hidePhone: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50/50">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Hide Annual Income</span>
+                      <span className="text-[11px] text-slate-500">Keep financial details private from public biodata view</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.hideIncome}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, hideIncome: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-slate-50/50">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Hide Detailed Family Notes</span>
+                      <span className="text-[11px] text-slate-500">Hide background notes from casual profile viewers</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.hideFamilyDetails}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, hideFamilyDetails: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex justify-end">
+                  <Button
+                    onClick={onUpdatePrivacy}
+                    disabled={isPending}
+                    className="bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white font-bold text-xs shadow-md rounded-xl h-11 px-8"
+                  >
+                    {isPending ? <Spinner className="w-4 h-4 mr-2" /> : null}
+                    Save Privacy Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* TAB 5: PREVIEW */}
+          {activeTab === "preview" && (
+            <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-emerald-600" /> Public Biodata Preview
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  This is how your profile appears to potential life partners.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="p-6 border border-slate-200 rounded-2xl bg-gradient-to-br from-white to-slate-50/80 space-y-6">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-rose-200 shadow-md bg-rose-100 flex items-center justify-center shrink-0">
+                      {mainPhoto ? (
+                        <img src={mainPhoto.url} alt={profileName} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12 text-rose-400" />
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-extrabold text-slate-900">{profileName}</h3>
+                      <p className="text-xs text-slate-500">
+                        {calculatedAge ? `${calculatedAge} yrs` : "N/A"} • {profile.height ? `${profile.height} cm` : "N/A"} • {profile.maritalStatus || "Never Married"}
+                      </p>
+                      <p className="text-xs font-semibold text-rose-600">
+                        {profile.religion || "N/A"} {profile.caste ? `(${profile.caste})` : ""}
+                      </p>
+                      <p className="text-xs text-slate-500 flex items-center gap-1 justify-center sm:justify-start">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                        {profile.city || profile.state || "India"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-200">
+                    <div className="space-y-1">
+                      <span className="text-slate-400 font-medium block">Education</span>
+                      <span className="font-bold text-slate-800">{profile.education || "Not specified"}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-400 font-medium block">Profession</span>
+                      <span className="font-bold text-slate-800">{profile.occupation || "Not specified"}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-400 font-medium block">Mother Tongue</span>
+                      <span className="font-bold text-slate-800">{profile.motherTongue || "Telugu"}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-400 font-medium block">Gothram / Horoscope</span>
+                      <span className="font-bold text-slate-800">{profile.gothram || profile.horoscope || "Not specified"}</span>
+                    </div>
                   </div>
 
                   {profile.bio && (
-                    <p className="text-slate-600 text-xs leading-relaxed italic pt-2 border-t border-slate-100">
-                      &ldquo;{profile.bio}&rdquo;
-                    </p>
+                    <div className="pt-2 border-t border-slate-200 space-y-1">
+                      <span className="text-xs text-slate-400 font-medium block">About Myself</span>
+                      <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
+                        {profile.bio}
+                      </p>
+                    </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* SECTION 5: RIGHT-SIDE SIDEBAR COMPLETION PROMPTS */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Card 1: Add Horoscope */}
+          <Card className="border border-slate-200 bg-white shadow-xs rounded-2xl overflow-hidden">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-rose-600 font-bold text-xs">
+                <Compass className="w-4 h-4" /> Add Horoscope
               </div>
+              <p className="text-[11px] text-slate-500">
+                Enhance your matrimonial biodata compatibility by adding your horoscope details.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setActiveTab("details");
+                  setTimeout(() => {
+                    const el = document.getElementById("horoscope-section");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                }}
+                className="w-full text-xs border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-semibold"
+              >
+                Add Horoscope Now
+              </Button>
             </CardContent>
           </Card>
-        )}
+
+          {/* Card 2: Add Photos Now */}
+          <Card className="border border-slate-200 bg-white shadow-xs rounded-2xl overflow-hidden">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-rose-600 font-bold text-xs">
+                <Camera className="w-4 h-4" /> Add Photos Now
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Profiles with clear photos receive up to 10x more match responses and profile views.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab("photos")}
+                className="w-full text-xs border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl font-semibold"
+              >
+                Upload Photos
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Happy Marriage / Success Stories */}
+          <Card className="border border-pink-200 bg-gradient-to-br from-rose-50 to-pink-50 shadow-xs rounded-2xl overflow-hidden">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-rose-700 font-bold text-xs">
+                <Heart className="w-4 h-4 fill-rose-600 text-rose-600" /> Success Stories
+              </div>
+              <p className="text-[11px] text-rose-900/80">
+                Read real Andhra & Telangana marriage success stories from InstantMatrimony couples.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => router.push("/success-stories")}
+                className="w-full text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-xs"
+              >
+                Read Success Stories
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

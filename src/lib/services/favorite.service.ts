@@ -47,6 +47,19 @@ export class FavoriteService extends BaseService {
         );
       }
 
+      // Enforce Gender Isolation
+      const userProf = await prisma.profile.findUnique({ where: { userId }, select: { gender: true } });
+      const targetProf = await prisma.profile.findUnique({ where: { userId: favoriteUserId }, select: { gender: true } });
+      const uG = userProf?.gender?.toUpperCase();
+      const tG = targetProf?.gender?.toUpperCase();
+      const isOpposite = (uG === "MALE" && tG === "FEMALE") || (uG === "FEMALE" && tG === "MALE");
+      if (!isOpposite) {
+        return this.returnFailure(
+          "You cannot favorite a same-gender profile.",
+          "FAVORITE_NOT_ALLOWED"
+        );
+      }
+
       // Upsert enforces uniqueness (userId + favoriteUserId).
       const favorite = await prisma.favorite.upsert({
         where: { userId_favoriteUserId: { userId, favoriteUserId } },

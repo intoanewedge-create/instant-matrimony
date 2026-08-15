@@ -24,16 +24,18 @@ export const registerSchema = z
     email: z.string().email("Invalid email address"),
 
     phone: z
-      .string()
-      .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
-      .optional()
-      .or(z.literal("")),
+      .string({ message: "Phone number is required for account verification." })
+      .trim()
+      .min(1, "Phone number is required for account verification.")
+      .regex(/^\+[1-9]\d{7,14}$/, "Invalid phone number format. Please include a valid country code."),
 
     password: passwordSchema,
 
     confirmPassword: z.string().min(1, "Please confirm your password"),
 
     acceptTerms: z.boolean().refine((val) => val === true, "You must accept the terms and conditions"),
+
+    captchaToken: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",

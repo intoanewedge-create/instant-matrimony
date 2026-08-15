@@ -201,9 +201,8 @@ export function AdminProfileTable({
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-slate-900">{p.user?.name || "Unnamed"}</div>
-                    <div className="text-xs text-slate-500">{p.user?.email}</div>
-                    <div className="text-xs text-slate-400">{p.user?.phone || "No phone"}</div>
+                    <div className="font-semibold text-slate-900">{p.user?.publicId || `Profile ID: ${p.userId?.slice(0, 8)}`}</div>
+                    <div className="text-xs text-slate-500">Public Profile ID</div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs text-slate-700">
@@ -385,11 +384,7 @@ export function AdminProfileTable({
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Member:</span>
-                <span className="font-semibold text-slate-900">{deletingProfile.user?.name || "Unnamed"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Email:</span>
-                <span className="font-mono text-slate-700">{deletingProfile.user?.email || "No email"}</span>
+                <span className="font-semibold text-slate-900">{deletingProfile.user?.publicId || `Profile ID: ${deletingProfile.userId?.slice(0, 8)}`}</span>
               </div>
             </div>
 

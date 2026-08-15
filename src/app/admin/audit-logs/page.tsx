@@ -46,7 +46,7 @@ export default function AdminAuditLogsPage() {
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-muted/30">
                     <td className="p-3 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
-                    <td className="p-3 font-sans font-medium">{log.user?.name || log.user?.email || "System"}</td>
+                    <td className="p-3 font-sans font-medium">{log.user?.publicId || (log.userId ? `IM${log.userId?.slice(0, 8)}` : "System")}</td>
                     <td className="p-3"><span className="bg-muted px-2 py-0.5 rounded font-semibold">{log.action}</span></td>
                     <td className="p-3">{log.module || "SYSTEM"}</td>
                     <td className="p-3">{log.ipAddress || "127.0.0.1"}</td>

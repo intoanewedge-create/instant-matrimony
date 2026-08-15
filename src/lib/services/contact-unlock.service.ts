@@ -20,6 +20,19 @@ export class ContactUnlockService extends BaseService {
         return this.returnFailure("Target profile is no longer available.", "TARGET_USER_NOT_AVAILABLE");
       }
 
+      // Enforce Gender Isolation
+      const userProf = await prisma.profile.findUnique({ where: { userId }, select: { gender: true } });
+      const targetProf = await prisma.profile.findUnique({ where: { userId: targetUserId }, select: { gender: true } });
+      const uG = userProf?.gender?.toUpperCase();
+      const tG = targetProf?.gender?.toUpperCase();
+      const isOpposite = (uG === "MALE" && tG === "FEMALE") || (uG === "FEMALE" && tG === "MALE");
+      if (!isOpposite) {
+        return this.returnFailure(
+          "Contact details can only be unlocked for eligible opposite gender profiles.",
+          "UNLOCK_NOT_ALLOWED"
+        );
+      }
+
       // 1. Check active membership
       const activeMembership = await prisma.membership.findFirst({
         where: {
