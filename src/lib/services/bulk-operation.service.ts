@@ -76,7 +76,35 @@ export class BulkOperationService extends BaseService {
           } else if (type === "RESTORE") {
             await prisma.user.update({ where: { id }, data: { role: "MEMBER" as any } });
           } else if (type === "DELETE") {
-            await prisma.user.delete({ where: { id } });
+            const now = new Date();
+            const timestamp = now.getTime();
+            const cleanId = original.id.replace(/-/g, "").slice(0, 8);
+            const anonymizedEmail = original.email.startsWith("deleted_")
+              ? original.email
+              : `deleted_${timestamp}_${cleanId}_${original.email}`;
+            const anonymizedPhone = original.phone
+              ? original.phone.startsWith("deleted_")
+                ? original.phone
+                : `deleted_${timestamp}_${cleanId}_${original.phone}`
+              : null;
+
+            await prisma.user.update({
+              where: { id },
+              data: {
+                isActive: false,
+                accountStatus: "SUSPENDED",
+                deletedAt: now,
+                email: anonymizedEmail,
+                phone: anonymizedPhone,
+              },
+            });
+            await prisma.profile.updateMany({
+              where: { userId: id },
+              data: {
+                status: "DELETED",
+                deletedAt: now,
+              },
+            });
           }
         } else if (entity === "profiles") {
           original = await prisma.profile.findUnique({ where: { id } });
@@ -89,7 +117,38 @@ export class BulkOperationService extends BaseService {
           } else if (type === "RESTORE") {
             await prisma.profile.update({ where: { id }, data: { status: "APPROVED" } });
           } else if (type === "DELETE") {
-            await prisma.profile.delete({ where: { id } });
+            const now = new Date();
+            await prisma.profile.update({
+              where: { id },
+              data: {
+                status: "DELETED",
+                deletedAt: now,
+              },
+            });
+            const user = await prisma.user.findUnique({ where: { id: original.userId } });
+            if (user) {
+              const timestamp = now.getTime();
+              const cleanId = user.id.replace(/-/g, "").slice(0, 8);
+              const anonymizedEmail = user.email.startsWith("deleted_")
+                ? user.email
+                : `deleted_${timestamp}_${cleanId}_${user.email}`;
+              const anonymizedPhone = user.phone
+                ? user.phone.startsWith("deleted_")
+                  ? user.phone
+                  : `deleted_${timestamp}_${cleanId}_${user.phone}`
+                : null;
+
+              await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                  isActive: false,
+                  accountStatus: "SUSPENDED",
+                  deletedAt: now,
+                  email: anonymizedEmail,
+                  phone: anonymizedPhone,
+                },
+              });
+            }
           }
         } else if (entity === "cmsPages") {
           original = await prisma.cmsPage.findUnique({ where: { id } });

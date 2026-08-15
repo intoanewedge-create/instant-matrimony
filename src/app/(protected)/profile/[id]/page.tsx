@@ -42,7 +42,13 @@ export default async function ProfileDetailPage({
     },
   });
 
-  if (!targetProfile || (!isAdmin && targetProfile.status !== "APPROVED")) {
+  if (
+    !targetProfile ||
+    targetProfile.deletedAt !== null ||
+    targetProfile.status === "DELETED" ||
+    !targetProfile.user?.isActive ||
+    (!isAdmin && targetProfile.status !== "APPROVED")
+  ) {
     redirect("/dashboard");
   }
 

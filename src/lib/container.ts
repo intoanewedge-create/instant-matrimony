@@ -129,7 +129,7 @@ import { SearchIndexService } from "./services/search-index.service";
 import { BulkOperationService } from "./services/bulk-operation.service";
 import { SystemConfigService } from "./services/system-config.service";
 
-import { emailConfig } from "../config/email.config";
+import { emailConfig, getEmailConfig } from "../config/email.config";
 import { smsConfig } from "../config/sms.config";
 import { storageConfig } from "../config/storage.config";
 import { paymentConfig } from "../config/payment.config";
@@ -177,15 +177,25 @@ const jobRepository = new PrismaJobRepository();
 const bulkOperationRepository = new PrismaBulkOperationRepository();
 const telemetryRepository = new PrismaTelemetryRepository();
 
-// Select Email Provider based on config
-let emailProvider: EmailProvider;
-if (emailConfig.provider === "smtp") {
-  emailProvider = new SmtpEmailProvider();
-} else if (emailConfig.provider === "resend") {
-  emailProvider = new ResendEmailProvider();
-} else {
-  emailProvider = new MockEmailProvider();
+// Select Email Provider dynamically based on runtime config
+class DynamicEmailProvider implements EmailProvider {
+  private smtpProvider = new SmtpEmailProvider();
+  private resendProvider = new ResendEmailProvider();
+  private mockProvider = new MockEmailProvider();
+
+  async send(to: string, subject: string, body: string): Promise<void> {
+    const config = getEmailConfig();
+    if (config.provider === "smtp") {
+      return this.smtpProvider.send(to, subject, body);
+    }
+    if (config.provider === "resend") {
+      return this.resendProvider.send(to, subject, body);
+    }
+    return this.mockProvider.send(to, subject, body);
+  }
 }
+
+const emailProvider: EmailProvider = new DynamicEmailProvider();
 
 // Setup OTP Providers
 const mockOtpProvider = new MockOtpProvider();

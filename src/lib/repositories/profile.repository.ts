@@ -8,7 +8,14 @@ export class PrismaProfileRepository extends BaseRepository<Profile> implements 
 
   async findByUserId(userId: string): Promise<Profile | null> {
     return prisma.profile.findFirst({
-      where: { userId, deletedAt: null },
+      where: {
+        userId,
+        deletedAt: null,
+        user: {
+          isActive: true,
+          deletedAt: null,
+        },
+      },
       include: {
         photos: true,
         partnerPreference: true,
@@ -26,7 +33,11 @@ export class PrismaProfileRepository extends BaseRepository<Profile> implements 
 
   async findPendingApproval(cursor?: string, limit: number = 10): Promise<Profile[]> {
     return prisma.profile.findMany({
-      where: { status: "PENDING", deletedAt: null },
+      where: {
+        status: "PENDING",
+        deletedAt: null,
+        user: { deletedAt: null },
+      },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
@@ -37,7 +48,11 @@ export class PrismaProfileRepository extends BaseRepository<Profile> implements 
 
   async findApproved(cursor?: string, limit: number = 10): Promise<Profile[]> {
     return prisma.profile.findMany({
-      where: { status: "APPROVED", deletedAt: null },
+      where: {
+        status: "APPROVED",
+        deletedAt: null,
+        user: { deletedAt: null, isActive: true },
+      },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,

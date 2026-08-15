@@ -22,7 +22,10 @@ export default async function InterestsPage() {
   // Fetch received and sent interests with member profiles and photos
   const [receivedInterests, sentInterests] = await Promise.all([
     prisma.interest.findMany({
-      where: { receiverId: userId },
+      where: {
+        receiverId: userId,
+        sender: { deletedAt: null, isActive: true },
+      },
       orderBy: { createdAt: "desc" },
       include: {
         sender: {
@@ -38,7 +41,10 @@ export default async function InterestsPage() {
       },
     }),
     prisma.interest.findMany({
-      where: { senderId: userId },
+      where: {
+        senderId: userId,
+        receiver: { deletedAt: null, isActive: true },
+      },
       orderBy: { createdAt: "desc" },
       include: {
         receiver: {

@@ -381,14 +381,35 @@ export class ProfileService extends BaseService {
           },
         });
 
-        await tx.user.update({
+        const existingUser = await tx.user.findUnique({
           where: { id: profile.userId },
-          data: {
-            isActive: false,
-            accountStatus: "SUSPENDED",
-            deletedAt: now,
-          },
+          select: { id: true, email: true, phone: true },
         });
+
+        if (existingUser) {
+          const timestamp = now.getTime();
+          const cleanId = existingUser.id.replace(/-/g, "").slice(0, 8);
+          const anonymizedEmail = existingUser.email.startsWith("deleted_")
+            ? existingUser.email
+            : `deleted_${timestamp}_${cleanId}_${existingUser.email}`;
+
+          const anonymizedPhone = existingUser.phone
+            ? existingUser.phone.startsWith("deleted_")
+              ? existingUser.phone
+              : `deleted_${timestamp}_${cleanId}_${existingUser.phone}`
+            : null;
+
+          await tx.user.update({
+            where: { id: profile.userId },
+            data: {
+              isActive: false,
+              accountStatus: "SUSPENDED",
+              deletedAt: now,
+              email: anonymizedEmail,
+              phone: anonymizedPhone,
+            },
+          });
+        }
 
         return updatedProfile;
       });

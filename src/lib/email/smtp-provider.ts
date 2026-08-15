@@ -1,32 +1,70 @@
 import { EmailProvider } from "./email-provider";
-import { emailConfig } from "../../config/email.config";
+import { getEmailConfig } from "../../config/email.config";
 import nodemailer from "nodemailer";
 import { logger } from "../logger/logger";
+import { getRecipientDomain } from "./email-utils";
 
 export class SmtpEmailProvider implements EmailProvider {
-  private transporter: nodemailer.Transporter;
+  private getTransporter() {
+    const config = getEmailConfig();
+    const { host, port, secure, user, pass } = config.smtp;
 
-  constructor() {
-    const { host, port, user, pass } = emailConfig.smtp;
-    this.transporter = nodemailer.createTransport({
+    return nodemailer.createTransport({
       host,
       port,
-      secure: port === 465,
+      secure,
       auth: user && pass ? { user, pass } : undefined,
     });
   }
 
   async send(to: string, subject: string, body: string): Promise<void> {
+    const config = getEmailConfig();
+    const fromAddress = config.from;
+    const recipientDomain = getRecipientDomain(to);
+
+    logger.info(
+      {
+        provider: "smtp",
+        attempted: true,
+        recipientDomain,
+        sender: fromAddress,
+        subject,
+      },
+      "Attempting email delivery via SMTP"
+    );
+
     try {
-      await this.transporter.sendMail({
-        from: emailConfig.from,
+      const transporter = this.getTransporter();
+      const info = await transporter.sendMail({
+        from: fromAddress,
         to,
         subject,
         html: body,
       });
-      logger.info({ to, subject }, "Email sent successfully via SMTP");
+
+      logger.info(
+        {
+          provider: "smtp",
+          attempted: true,
+          result: "SUCCESS",
+          recipientDomain,
+          sender: fromAddress,
+          messageId: info?.messageId,
+        },
+        "Verification email delivered successfully via SMTP"
+      );
     } catch (error: any) {
-      logger.error({ to, error: error.message }, "Failed to send email via SMTP");
+      logger.error(
+        {
+          provider: "smtp",
+          attempted: true,
+          result: "FAILED",
+          recipientDomain,
+          sender: fromAddress,
+          error: error?.message || error,
+        },
+        "Failed to send email via SMTP"
+      );
       throw error;
     }
   }

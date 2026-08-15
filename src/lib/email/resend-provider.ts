@@ -1,24 +1,53 @@
 import { EmailProvider } from "./email-provider";
-import { emailConfig } from "../../config/email.config";
+import { getEmailConfig } from "../../config/email.config";
 import { logger } from "../logger/logger";
+import { getRecipientDomain } from "./email-utils";
 
 export class ResendEmailProvider implements EmailProvider {
   async send(to: string, subject: string, body: string): Promise<void> {
-    const apiKey = process.env.RESEND_API_KEY || emailConfig.resend.apiKey;
+    const config = getEmailConfig();
+    const apiKey = config.resend.apiKey;
+    const fromAddress = config.from;
+    const recipientDomain = getRecipientDomain(to);
+
     if (!apiKey) {
       if (process.env.NODE_ENV === "production") {
-        logger.error({ to, subject }, "RESEND_API_KEY is not configured in the production environment.");
+        logger.error(
+          {
+            provider: "resend",
+            attempted: false,
+            result: "CONFIG_ERROR",
+            recipientDomain,
+            sender: fromAddress,
+          },
+          "RESEND_API_KEY is not configured in the production environment."
+        );
         throw new Error("Email service is currently unavailable. Please check server configuration.");
       }
-      logger.info({ to, subject }, "[ResendEmailProvider (Mock)] API Key is missing in development. Simulating delivery.");
+      logger.info(
+        {
+          provider: "resend",
+          attempted: false,
+          result: "DEV_FALLBACK",
+          recipientDomain,
+          sender: fromAddress,
+          subject,
+        },
+        "[ResendEmailProvider (Dev/Test)] API Key is missing. Simulating local delivery."
+      );
       return;
     }
 
-    // Always use configured InstantMatrimony sender or verified environment sender
-    const fromAddress =
-      process.env.EMAIL_FROM ||
-      emailConfig.from ||
-      "InstantMatrimony <noreply@instantmatrimony.com>";
+    logger.info(
+      {
+        provider: "resend",
+        attempted: true,
+        recipientDomain,
+        sender: fromAddress,
+        subject,
+      },
+      "Attempting email delivery via Resend API"
+    );
 
     try {
       const resendModule = await import("resend" as any);
@@ -32,24 +61,35 @@ export class ResendEmailProvider implements EmailProvider {
       });
 
       if (error) {
-        logger.error({ to, error: error.message || error }, "Resend API returned error response");
+        logger.error(
+          {
+            provider: "resend",
+            attempted: true,
+            result: "FAILED",
+            recipientDomain,
+            sender: fromAddress,
+            error: error.message || error,
+          },
+          "Resend API returned error response"
+        );
 
-        // If Resend is operating in sandbox mode with recipient restrictions
+        // Handle Resend unverified sandbox restrictions
         if (
           error.message?.includes("testing emails to your own email address") ||
           (error as any).statusCode === 403 ||
           (error as any).statusCode === 422
         ) {
           logger.warn(
-            { to, from: fromAddress },
-            "Resend sandbox restriction detected: Production domain verification is required to send emails to arbitrary recipients."
+            {
+              provider: "resend",
+              attempted: true,
+              result: "SANDBOX_RESTRICTION",
+              recipientDomain,
+              sender: fromAddress,
+            },
+            "Resend sandbox restriction detected: Production domain verification is required to send emails to arbitrary recipients. Verify your domain at https://resend.com/domains."
           );
           if (process.env.NODE_ENV !== "production") {
-            // In dev / test, log the email so development is not blocked
-            logger.info(
-              { to, subject, preview: body.replace(/<[^>]*>?/gm, "").substring(0, 150) + "..." },
-              "[Resend Sandbox Dev Notice] Email logged locally."
-            );
             return;
           }
           throw new Error("Resend production domain verification is required before arbitrary user email addresses can reliably receive verification emails.");
@@ -58,9 +98,29 @@ export class ResendEmailProvider implements EmailProvider {
         throw new Error(error.message || "Failed to send email via Resend API");
       }
 
-      logger.info({ to, subject, id: data?.id }, "Verification email sent successfully via Resend API");
+      logger.info(
+        {
+          provider: "resend",
+          attempted: true,
+          result: "SUCCESS",
+          recipientDomain,
+          sender: fromAddress,
+          messageId: data?.id,
+        },
+        "Verification email delivered successfully via Resend API"
+      );
     } catch (error: any) {
-      logger.error({ to, error: error?.message || error }, "Failed to send email via Resend API");
+      logger.error(
+        {
+          provider: "resend",
+          attempted: true,
+          result: "FAILED",
+          recipientDomain,
+          sender: fromAddress,
+          error: error?.message || error,
+        },
+        "Failed to send email via Resend API"
+      );
       if (process.env.NODE_ENV === "production") {
         throw error;
       }

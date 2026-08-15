@@ -3,6 +3,10 @@ export class ProfileSpecification {
     return {
       status: "APPROVED" as any,
       deletedAt: null,
+      user: {
+        isActive: true,
+        deletedAt: null,
+      },
     };
   }
 

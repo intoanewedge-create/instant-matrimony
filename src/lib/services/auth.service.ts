@@ -54,6 +54,50 @@ export class AuthService extends BaseService {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       const user = await this.executeTransaction(async (tx) => {
+        // In the same transaction: safely archive any soft-deleted account holding this email/phone to free unique constraints
+        const deletedUsersWithEmail = await tx.user.findMany({
+          where: {
+            email: { equals: normalizedEmail, mode: "insensitive" },
+            deletedAt: { not: null },
+          },
+        });
+
+        for (const delUser of deletedUsersWithEmail) {
+          const timestamp = Date.now();
+          const cleanId = delUser.id.replace(/-/g, "").slice(0, 8);
+          const anonymizedEmail = `deleted_${timestamp}_${cleanId}_${delUser.email}`;
+          await tx.user.update({
+            where: { id: delUser.id },
+            data: { email: anonymizedEmail },
+          });
+        }
+
+        if (normalizedPhone) {
+          const phoneVariants = [normalizedPhone];
+          if (normalizedPhone.startsWith("+91")) {
+            phoneVariants.push(normalizedPhone.slice(3).trim());
+          } else if (normalizedPhone.length === 10) {
+            phoneVariants.push(`+91${normalizedPhone}`);
+          }
+
+          const deletedUsersWithPhone = await tx.user.findMany({
+            where: {
+              phone: { in: phoneVariants },
+              deletedAt: { not: null },
+            },
+          });
+
+          for (const delUser of deletedUsersWithPhone) {
+            const timestamp = Date.now();
+            const cleanId = delUser.id.replace(/-/g, "").slice(0, 8);
+            const anonymizedPhone = `deleted_${timestamp}_${cleanId}_${delUser.phone}`;
+            await tx.user.update({
+              where: { id: delUser.id },
+              data: { phone: anonymizedPhone },
+            });
+          }
+        }
+
         const newUser = await tx.user.create({
           data: {
             email: normalizedEmail,

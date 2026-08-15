@@ -25,7 +25,7 @@ export class FavoriteService extends BaseService {
       const targetUser = await prisma.user.findUnique({
         where: { id: favoriteUserId },
       });
-      if (!targetUser) {
+      if (!targetUser || !targetUser.isActive || targetUser.deletedAt !== null) {
         return this.returnFailure(
           "Profile to favorite not found.",
           "USER_NOT_FOUND",
@@ -84,7 +84,13 @@ export class FavoriteService extends BaseService {
   async listFavorites(userId: string): Promise<Result<any[]>> {
     try {
       const favorites = await prisma.favorite.findMany({
-        where: { userId },
+        where: {
+          userId,
+          favoriteUser: {
+            isActive: true,
+            deletedAt: null,
+          },
+        },
         include: {
           favoriteUser: {
             include: {

@@ -44,6 +44,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findFirst({
           where: {
             email: { equals: cleanEmail, mode: "insensitive" },
+            deletedAt: null,
+            isActive: true,
           },
         });
 
@@ -53,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!passwordsMatch) return null;
 
-        // Check for suspended, blocked, or deactivated accounts
+        // Check for suspended or blocked accounts
         if (
           user.accountStatus === "SUSPENDED" ||
           user.accountStatus === "BLOCKED" ||

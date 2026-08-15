@@ -47,17 +47,29 @@ export class PermissionService extends BaseService {
       // Check profile approval status for both sender & receiver
       const senderProfile = await prisma.profile.findUnique({
         where: { userId: senderId },
-        select: { status: true, user: { select: { isActive: true } } },
+        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
       });
       const receiverProfile = await prisma.profile.findUnique({
         where: { userId: receiverId },
-        select: { status: true, user: { select: { isActive: true } } },
+        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
       });
 
-      if (!senderProfile || senderProfile.status !== "APPROVED" || !senderProfile.user?.isActive) {
+      if (
+        !senderProfile ||
+        senderProfile.deletedAt !== null ||
+        senderProfile.status !== "APPROVED" ||
+        !senderProfile.user?.isActive ||
+        senderProfile.user?.deletedAt !== null
+      ) {
         return false;
       }
-      if (!receiverProfile || receiverProfile.status !== "APPROVED" || !receiverProfile.user?.isActive) {
+      if (
+        !receiverProfile ||
+        receiverProfile.deletedAt !== null ||
+        receiverProfile.status !== "APPROVED" ||
+        !receiverProfile.user?.isActive ||
+        receiverProfile.user?.deletedAt !== null
+      ) {
         return false;
       }
 
@@ -92,8 +104,14 @@ export class PermissionService extends BaseService {
     try {
       const interest = await prisma.interest.findUnique({
         where: { id: interestId },
+        include: {
+          sender: { select: { isActive: true, deletedAt: true } },
+          receiver: { select: { isActive: true, deletedAt: true } },
+        },
       });
       if (!interest) return false;
+      if (!interest.sender?.isActive || interest.sender?.deletedAt !== null) return false;
+      if (!interest.receiver?.isActive || interest.receiver?.deletedAt !== null) return false;
       return interest.receiverId === receiverId && interest.status === "PENDING";
     } catch {
       return false;
@@ -104,16 +122,27 @@ export class PermissionService extends BaseService {
     try {
       if (senderId === receiverId) return true;
 
-      // Both profiles must be APPROVED
+      // Both profiles must be APPROVED, non-deleted, and active
       const senderProfile = await prisma.profile.findUnique({
         where: { userId: senderId },
-        select: { status: true },
+        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
       });
       const receiverProfile = await prisma.profile.findUnique({
         where: { userId: receiverId },
-        select: { status: true },
+        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
       });
-      if (senderProfile?.status !== "APPROVED" || receiverProfile?.status !== "APPROVED") {
+      if (
+        !senderProfile ||
+        senderProfile.deletedAt !== null ||
+        senderProfile.status !== "APPROVED" ||
+        !senderProfile.user?.isActive ||
+        senderProfile.user?.deletedAt !== null ||
+        !receiverProfile ||
+        receiverProfile.deletedAt !== null ||
+        receiverProfile.status !== "APPROVED" ||
+        !receiverProfile.user?.isActive ||
+        receiverProfile.user?.deletedAt !== null
+      ) {
         return false;
       }
 
@@ -149,9 +178,15 @@ export class PermissionService extends BaseService {
 
       const targetProfile = await prisma.profile.findUnique({
         where: { userId: targetUserId },
-        select: { status: true, user: { select: { isActive: true } } },
+        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
       });
-      if (!targetProfile || targetProfile.status !== "APPROVED" || !targetProfile.user?.isActive) {
+      if (
+        !targetProfile ||
+        targetProfile.deletedAt !== null ||
+        targetProfile.status !== "APPROVED" ||
+        !targetProfile.user?.isActive ||
+        targetProfile.user?.deletedAt !== null
+      ) {
         return false;
       }
 

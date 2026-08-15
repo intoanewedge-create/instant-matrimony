@@ -11,6 +11,15 @@ export class ContactUnlockService extends BaseService {
         return this.returnFailure("You cannot unlock your own contact", "INVALID_TARGET");
       }
 
+      // Check target user is active and not deleted
+      const targetUser = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { id: true, isActive: true, deletedAt: true },
+      });
+      if (!targetUser || !targetUser.isActive || targetUser.deletedAt !== null) {
+        return this.returnFailure("Target profile is no longer available.", "TARGET_USER_NOT_AVAILABLE");
+      }
+
       // 1. Check active membership
       const activeMembership = await prisma.membership.findFirst({
         where: {
