@@ -57,7 +57,7 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
 
   return (
     <div
-      className="rounded-2xl border shadow-sm overflow-hidden"
+      className="rounded-2xl border shadow-xs overflow-hidden"
       style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
     >
       {/* Header */}
@@ -66,13 +66,13 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
         style={{ borderColor: "#F3F4F6" }}
       >
         <div>
-          <h2 className="text-base font-bold" style={{ color: "#111827" }}>Daily Recommendations</h2>
-          <p className="text-xs" style={{ color: "#6B7280" }}>Today's Recommendations</p>
+          <h2 className="text-base font-bold" style={{ color: "#1F2937" }}>Daily Recommendations</h2>
+          <p className="text-xs" style={{ color: "#6B7280" }}>Recommended matches for today</p>
         </div>
         <Link
-          href="/search"
-          className="flex items-center gap-1 text-xs font-semibold hover:opacity-80 transition-opacity"
-          style={{ color: "#E11D48" }}
+          href="/matches"
+          className="flex items-center gap-1 text-xs font-bold hover:opacity-80 transition-opacity"
+          style={{ color: "#00A76F" }}
           aria-label="View all matches"
         >
           View All <ChevronRight className="w-3.5 h-3.5" />
@@ -88,8 +88,8 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
             </p>
             <Link
               href="/onboarding"
-              className="mt-3 inline-block text-xs font-semibold px-4 py-2 rounded-xl"
-              style={{ backgroundColor: "#FFF1F2", color: "#E11D48" }}
+              className="mt-3 inline-block text-xs font-bold px-4 py-2 rounded-xl text-white shadow-xs"
+              style={{ backgroundColor: "#00A76F" }}
             >
               Complete Profile
             </Link>
@@ -113,8 +113,8 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
               return (
                 <div
                   key={userId}
-                  className="rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all group"
-                  style={{ borderColor: "#E5E7EB" }}
+                  className="rounded-xl border overflow-hidden shadow-xs hover:shadow-md transition-all group"
+                  style={{ borderColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}
                 >
                   {/* Portrait photo — approx 3:4 ratio */}
                   <div className="relative" style={{ paddingBottom: "133%" }}>
@@ -128,7 +128,7 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                       ) : (
                         <div
                           className="w-full h-full flex items-center justify-center text-3xl font-bold"
-                          style={{ background: "linear-gradient(135deg, #FFF1F2, #FFE4E6)", color: "#E11D48" }}
+                          style={{ background: "linear-gradient(135deg, #E6F4EA, #D1E7DD)", color: "#00A76F" }}
                         >
                           {name.charAt(0)}
                         </div>
@@ -138,8 +138,8 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                     {/* Match score badge */}
                     {matchScore > 0 && (
                       <span
-                        className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: "#E11D48", color: "#FFFFFF" }}
+                        className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full text-white shadow-xs"
+                        style={{ backgroundColor: "#00A76F" }}
                       >
                         {matchScore}% Match
                       </span>
@@ -148,13 +148,13 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                     {/* Favorite button */}
                     <button
                       onClick={() => handleToggleFavorite(userId)}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full border flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full border flex items-center justify-center shadow-xs hover:scale-110 transition-transform"
                       style={{ backgroundColor: "rgba(255,255,255,0.9)", borderColor: "#E5E7EB" }}
                       aria-label={s.favorited ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
                     >
                       <Heart
                         className="w-3.5 h-3.5"
-                        style={{ color: s.favorited ? "#E11D48" : "#9CA3AF", fill: s.favorited ? "#E11D48" : "none" }}
+                        style={{ color: s.favorited ? "#00A76F" : "#9CA3AF", fill: s.favorited ? "#00A76F" : "none" }}
                       />
                     </button>
                   </div>
@@ -162,9 +162,9 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                   {/* Info */}
                   <div className="p-3 space-y-1">
                     <div className="flex items-center gap-1">
-                      <h3 className="text-sm font-bold truncate" style={{ color: "#111827" }}>{name}</h3>
+                      <h3 className="text-sm font-bold truncate" style={{ color: "#1F2937" }}>{name}</h3>
                       {isVerified && (
-                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" style={{ color: "#16A34A" }} aria-label="Verified profile" />
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" style={{ color: "#00A76F" }} aria-label="Verified profile" />
                       )}
                     </div>
 
@@ -182,7 +182,7 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                     )}
 
                     {publicId && (
-                      <p className="text-xs font-mono" style={{ color: "#9CA3AF" }}>{publicId}</p>
+                      <p className="text-xs font-mono font-bold" style={{ color: "#00A76F" }}>{publicId}</p>
                     )}
                   </div>
 
@@ -198,8 +198,8 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                     <button
                       disabled={s.interestSent || processingId === userId}
                       onClick={() => handleSendInterest(userId)}
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
-                      style={{ background: s.interestSent ? "#9CA3AF" : "linear-gradient(135deg, #E11D48, #F43F5E)" }}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-95 disabled:opacity-60"
+                      style={{ backgroundColor: s.interestSent ? "#9CA3AF" : "#00A76F" }}
                       aria-label={s.interestSent ? `Interest already sent to ${name}` : `Send interest to ${name}`}
                     >
                       <Heart className="w-3.5 h-3.5" aria-hidden="true" />
@@ -216,9 +216,9 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
         {items.length > 0 && (
           <div className="mt-4 text-center">
             <Link
-              href="/search"
-              className="inline-flex items-center gap-1 text-sm font-semibold hover:opacity-80 transition-opacity"
-              style={{ color: "#E11D48" }}
+              href="/matches"
+              className="inline-flex items-center gap-1 text-xs font-bold hover:opacity-80 transition-opacity"
+              style={{ color: "#00A76F" }}
             >
               View All Matches <ChevronRight className="w-4 h-4" />
             </Link>

@@ -9,32 +9,36 @@ import {
   withdrawInterestAction,
 } from "@/lib/actions/interest.actions";
 import { formatDate } from "@/lib/utils/format";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   RotateCcw,
   Eye,
   Clock,
-  Send,
-  Inbox,
+  Search,
   Filter,
+  BellRing,
+  Inbox,
+  Send,
+  MessageSquare,
+  Sparkles,
 } from "lucide-react";
+
+interface InterestsClientProps {
+  receivedInterests: any[];
+  sentInterests: any[];
+}
 
 export function InterestsClient({
   receivedInterests: initialReceived,
   sentInterests: initialSent,
-}: {
-  receivedInterests: any[];
-  sentInterests: any[];
-}) {
+}: InterestsClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"received" | "sent">("received");
+  const [activeDirection, setActiveDirection] = useState<"received" | "sent">("received");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [primeMode, setPrimeMode] = useState<"regular" | "prime">("regular");
+  const [searchQuery, setSearchQuery] = useState("");
   const [received, setReceived] = useState(initialReceived || []);
   const [sent, setSent] = useState(initialSent || []);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -90,213 +94,337 @@ export function InterestsClient({
     }
   };
 
-  const currentList = activeTab === "received" ? received : sent;
+  const currentList = activeDirection === "received" ? received : sent;
   const filteredList = currentList.filter((item) => {
-    if (statusFilter === "ALL") return true;
-    return item.status === statusFilter;
+    if (statusFilter !== "ALL" && item.status !== statusFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const member = activeDirection === "received" ? item.sender : item.receiver;
+      const name = member?.name?.toLowerCase() || "";
+      const pubId = member?.publicId?.toLowerCase() || "";
+      return name.includes(q) || pubId.includes(q);
+    }
+    return true;
   });
 
-  const pendingReceivedCount = received.filter((i) => i.status === "PENDING").length;
+  const sidebarReceivedCounts = {
+    ALL: received.length,
+    PENDING: received.filter((i) => i.status === "PENDING").length,
+    ACCEPTED: received.filter((i) => i.status === "ACCEPTED").length,
+    DECLINED: received.filter((i) => i.status === "DECLINED" || i.status === "REJECTED").length,
+  };
+
+  const sidebarSentCounts = {
+    ALL: sent.length,
+    PENDING: sent.filter((i) => i.status === "PENDING").length,
+    ACCEPTED: sent.filter((i) => i.status === "ACCEPTED").length,
+    DECLINED: sent.filter((i) => i.status === "DECLINED" || i.status === "REJECTED").length,
+  };
 
   return (
-    <div className="container mx-auto px-4 max-w-6xl space-y-8 text-slate-900">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
-            <Heart className="w-8 h-8 text-rose-600 fill-rose-100" /> Interest Management
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage your incoming match requests and sent interest proposals.
-          </p>
-        </div>
+    <div className="space-y-6" style={{ color: "#1F2937" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
 
-        {/* Tab Selector */}
-        <div className="flex bg-slate-100 border border-slate-200 rounded-xl p-1.5 gap-1 shrink-0">
-          <button
-            onClick={() => setActiveTab("received")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "received"
-                ? "bg-rose-600 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+        {/* ── 8A. INTEREST SIDEBAR (LEFT 25-30%) ── */}
+        <aside className="space-y-4" aria-label="Interest navigation sidebar">
+          <div
+            className="rounded-2xl border shadow-xs overflow-hidden"
+            style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
           >
-            <Inbox className="w-4 h-4" /> Received ({received.length})
-            {pendingReceivedCount > 0 && (
-              <span className="ml-1 bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold">
-                {pendingReceivedCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("sent")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "sent"
-                ? "bg-rose-600 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Send className="w-4 h-4" /> Sent ({sent.length})
-          </button>
-        </div>
-      </div>
+            {/* RECEIVED SECTION */}
+            <div className="p-4 border-b space-y-2" style={{ borderColor: "#F3F4F6" }}>
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400">
+                <Inbox className="w-4 h-4 text-emerald-600" />
+                <span>Interests Received</span>
+              </div>
+              <div className="space-y-1">
+                {[
+                  { id: "ALL", label: "All", count: sidebarReceivedCounts.ALL },
+                  { id: "PENDING", label: "Pending", count: sidebarReceivedCounts.PENDING },
+                  { id: "ACCEPTED", label: "Accepted / Replied", count: sidebarReceivedCounts.ACCEPTED },
+                  { id: "DECLINED", label: "Declined", count: sidebarReceivedCounts.DECLINED },
+                ].map((cat) => {
+                  const active = activeDirection === "received" && statusFilter === cat.id;
+                  return (
+                    <button
+                      key={`rec-${cat.id}`}
+                      onClick={() => {
+                        setActiveDirection("received");
+                        setStatusFilter(cat.id);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                      style={
+                        active
+                          ? { backgroundColor: "#E6F4EA", color: "#00A76F", fontWeight: "700" }
+                          : { backgroundColor: "transparent", color: "#374151" }
+                      }
+                    >
+                      <span>{cat.label}</span>
+                      <span
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                        style={
+                          active
+                            ? { backgroundColor: "#00A76F", color: "#FFFFFF" }
+                            : { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                        }
+                      >
+                        {cat.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-      {/* Status Filter Sub-bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-          <Filter className="w-4 h-4 text-rose-600" /> Filter Status:
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {["ALL", "PENDING", "ACCEPTED", "DECLINED", "WITHDRAWN"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-                statusFilter === status
-                  ? "bg-rose-50 text-rose-700 border border-rose-200 font-bold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* List Feed */}
-      {filteredList.length === 0 ? (
-        <Card className="border border-slate-200 bg-white p-12 text-center shadow-sm">
-          <div className="h-14 w-14 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mx-auto mb-3">
-            <Heart className="w-7 h-7" />
+            {/* SENT SECTION */}
+            <div className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400">
+                <Send className="w-4 h-4 text-emerald-600" />
+                <span>Interests Sent</span>
+              </div>
+              <div className="space-y-1">
+                {[
+                  { id: "ALL", label: "All", count: sidebarSentCounts.ALL },
+                  { id: "PENDING", label: "Pending", count: sidebarSentCounts.PENDING },
+                  { id: "ACCEPTED", label: "Accepted / Replied", count: sidebarSentCounts.ACCEPTED },
+                  { id: "DECLINED", label: "Declined", count: sidebarSentCounts.DECLINED },
+                ].map((cat) => {
+                  const active = activeDirection === "sent" && statusFilter === cat.id;
+                  return (
+                    <button
+                      key={`sent-${cat.id}`}
+                      onClick={() => {
+                        setActiveDirection("sent");
+                        setStatusFilter(cat.id);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                      style={
+                        active
+                          ? { backgroundColor: "#E6F4EA", color: "#00A76F", fontWeight: "700" }
+                          : { backgroundColor: "transparent", color: "#374151" }
+                      }
+                    >
+                      <span>{cat.label}</span>
+                      <span
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                        style={
+                          active
+                            ? { backgroundColor: "#00A76F", color: "#FFFFFF" }
+                            : { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                        }
+                      >
+                        {cat.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <h3 className="text-lg font-bold text-slate-900">
-            No {activeTab} interests in this category
-          </h3>
-          <p className="text-xs text-slate-500 mt-1">
-            Discover compatible profiles in search to initiate interest proposals.
-          </p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {filteredList.map((item) => {
-              const member = activeTab === "received" ? item.sender : item.receiver;
-              const profile = member?.profile || {};
-              const photoUrl = profile.photos?.[0]?.url || "/placeholder-avatar.png";
+        </aside>
 
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+        {/* ── 8B & 8C. INTEREST MAIN AREA (RIGHT 70-75%) ── */}
+        <main className="space-y-4" aria-label="Interest details main view">
+          {/* Top Bar: Regular / PRIME toggle + Search */}
+          <div
+            className="p-4 rounded-2xl border shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
+            style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
+          >
+            {/* Regular vs PRIME toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-xl w-fit border" style={{ borderColor: "#E5E7EB" }}>
+              {(["regular", "prime"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setPrimeMode(mode)}
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  style={
+                    primeMode === mode
+                      ? { backgroundColor: "#FFFFFF", color: "#00A76F", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
+                      : { color: "#6B7280" }
+                  }
                 >
-                  <Card className="border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between h-full profile-card overflow-hidden">
-                    <div>
-                      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                        <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          {formatDate(item.createdAt)}
-                        </span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                            item.status === "ACCEPTED"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : item.status === "PENDING"
-                              ? "bg-amber-50 text-amber-800 border-amber-200"
-                              : item.status === "DECLINED" || item.status === "REJECTED"
-                              ? "bg-red-50 text-red-700 border-red-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
+                  {mode === "regular" ? "Regular" : "PRIME*"}
+                </button>
+              ))}
+            </div>
 
-                      <div className="p-5 flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-full overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
+            {/* Search input */}
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search in Interests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-3 border rounded-xl text-xs bg-white text-gray-900 focus:outline-none focus:border-emerald-500"
+                style={{ borderColor: "#E5E7EB" }}
+              />
+            </div>
+          </div>
+
+          {/* Section Header */}
+          <div className="flex items-center justify-between px-1">
+            <div>
+              <h2 className="text-base font-extrabold text-gray-900 capitalize">
+                {statusFilter.toLowerCase()} {activeDirection} interests
+              </h2>
+              <p className="text-xs text-gray-500">
+                {activeDirection === "received"
+                  ? "Interests from members awaiting your response"
+                  : "Interests sent by you to prospective matches"}
+              </p>
+            </div>
+          </div>
+
+          {/* ── 8D. MATRIMONIAL EMPTY STATE or RESULTS ── */}
+          {filteredList.length === 0 ? (
+            <div
+              className="p-12 text-center rounded-2xl border bg-white shadow-xs space-y-3"
+              style={{ borderColor: "#E5E7EB" }}
+            >
+              <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto shadow-xs">
+                <BellRing className="w-8 h-8 animate-pulse" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900">
+                No {statusFilter !== "ALL" ? statusFilter.toLowerCase() : ""} {activeDirection} interests so far
+              </h3>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                {activeDirection === "received"
+                  ? "When other members express interest in your profile, they will appear here."
+                  : "Browse profiles in search and send interests to initiate match conversations."}
+              </p>
+              <Link
+                href="/matches"
+                className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
+              >
+                Browse Matches
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredList.map((item) => {
+                const member = activeDirection === "received" ? item.sender : item.receiver;
+                const profile = member?.profile || {};
+                const photos: any[] = profile.photos || [];
+                const mainPhoto = photos.find((ph: any) => ph.isMain)?.url || photos[0]?.url;
+                const publicId = member?.publicId || profile?.publicId || null;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border bg-white shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between"
+                    style={{ borderColor: "#E5E7EB" }}
+                  >
+                    {/* Header line with status */}
+                    <div className="px-4 py-2.5 bg-gray-50 border-b flex items-center justify-between text-xs" style={{ borderColor: "#F3F4F6" }}>
+                      <span className="text-gray-500 flex items-center gap-1 font-medium text-[11px]">
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        {formatDate(item.createdAt)}
+                      </span>
+                      <span
+                        className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase"
+                        style={
+                          item.status === "ACCEPTED"
+                            ? { backgroundColor: "#E6F4EA", color: "#00A76F", borderColor: "#A7F3D0" }
+                            : item.status === "PENDING"
+                            ? { backgroundColor: "#FEF3C7", color: "#92400E", borderColor: "#FDE68A" }
+                            : { backgroundColor: "#F3F4F6", color: "#6B7280", borderColor: "#E5E7EB" }
+                        }
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+
+                    {/* Main content */}
+                    <div className="p-4 flex gap-4">
+                      {/* Avatar */}
+                      <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                        {mainPhoto ? (
                           <img
-                            src={photoUrl}
+                            src={mainPhoto}
                             alt={member?.name || "Member"}
                             className="w-full h-full object-cover"
                           />
-                        </div>
-                        <div className="space-y-1 overflow-hidden">
-                          <h3 className="font-bold text-slate-900 text-base truncate">
-                            {member?.name || "Anonymous Member"}
-                          </h3>
-                          <p className="text-xs text-slate-500">
-                            {profile.religion || "N/A"} • {profile.caste || "General"}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate">
-                            {profile.education || "N/A"} • {profile.occupation || "N/A"}
-                          </p>
-                          <p className="text-xs text-rose-600 font-medium truncate">
-                            {profile.city ? `${profile.city}, ${profile.state || ""}` : "India"}
-                          </p>
-                        </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-emerald-50 text-emerald-600">
+                            {(member?.name || "M").charAt(0)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 text-sm truncate">
+                          {member?.name || "Anonymous Member"}
+                        </h3>
+                        {publicId && (
+                          <span className="inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {publicId}
+                          </span>
+                        )}
+                        <p className="text-xs text-gray-600 truncate">
+                          {profile.religion || "N/A"} • {profile.caste || "General"}
+                        </p>
+                        <p className="text-xs text-gray-600 truncate">
+                          {profile.education || "Graduate"} • {profile.occupation || "Professional"}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Footer Action Buttons */}
-                    <div className="p-4 pt-0 space-y-2 border-t border-slate-100 mt-2 pt-3">
-                      {activeTab === "received" && item.status === "PENDING" && (
+                    {/* Actions bar */}
+                    <div className="px-4 py-3 bg-gray-50 border-t space-y-2" style={{ borderColor: "#F3F4F6" }}>
+                      {activeDirection === "received" && item.status === "PENDING" && (
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
+                          <button
                             disabled={loadingId === item.id}
                             onClick={() => handleAccept(item.id)}
-                            className="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs"
+                            className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all flex items-center justify-center gap-1 shadow-xs"
                           >
-                            {loadingId === item.id ? <Spinner className="w-3.5 h-3.5 mr-1" /> : <CheckCircle className="w-3.5 h-3.5 mr-1" />} Accept
-                          </Button>
-                          <Button
-                            size="sm"
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Accept
+                          </button>
+                          <button
                             disabled={loadingId === item.id}
-                            variant="outline"
                             onClick={() => handleDecline(item.id)}
-                            className="w-1/2 border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold shadow-xs"
+                            className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50 transition-all flex items-center justify-center gap-1"
                           >
-                            <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
-                          </Button>
+                            <XCircle className="w-3.5 h-3.5" /> Decline
+                          </button>
                         </div>
                       )}
 
-                      {activeTab === "received" && item.status === "ACCEPTED" && (
+                      {activeDirection === "received" && item.status === "ACCEPTED" && (
                         <Link
                           href="/messages"
-                          className="inline-flex items-center justify-center w-full py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white shadow-md shadow-rose-500/20"
+                          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
                         >
-                          Start Chatting
+                          <MessageSquare className="w-3.5 h-3.5" /> Start Chatting
                         </Link>
                       )}
 
-                      {activeTab === "sent" && item.status === "PENDING" && (
-                        <Button
-                          size="sm"
+                      {activeDirection === "sent" && item.status === "PENDING" && (
+                        <button
                           disabled={loadingId === item.id}
-                          variant="outline"
                           onClick={() => handleWithdraw(item.id)}
-                          className="w-full border-slate-200 text-slate-700 hover:bg-slate-100 text-xs shadow-xs"
+                          className="w-full py-1.5 rounded-xl text-xs font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 transition-all flex items-center justify-center gap-1"
                         >
-                          {loadingId === item.id ? <Spinner className="w-3.5 h-3.5 mr-1" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />} Withdraw Request
-                        </Button>
+                          <RotateCcw className="w-3.5 h-3.5" /> Withdraw Interest
+                        </button>
                       )}
 
                       <Link
                         href={`/profile/${member?.id}`}
-                        className="inline-flex items-center justify-center w-full py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                        className="flex items-center justify-center gap-1 w-full py-1 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors"
                       >
-                        <Eye className="w-3.5 h-3.5 mr-1 text-slate-400" /> View Full Profile
+                        <Eye className="w-3.5 h-3.5 text-gray-400" /> View Profile
                       </Link>
                     </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

@@ -45,25 +45,21 @@ export function ProfileCompletionWidget({
 
   return (
     <div
-      className="rounded-2xl border shadow-sm overflow-hidden"
+      className="rounded-2xl border shadow-xs overflow-hidden"
       style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
     >
       {/* Header */}
       <div className="px-5 py-4 border-b" style={{ borderColor: "#F3F4F6" }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold" style={{ color: "#111827" }}>Complete Your Profile</h2>
-          <span className="text-sm font-bold" style={{ color: "#E11D48" }}>{completionPercent}%</span>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-base font-bold" style={{ color: "#1F2937" }}>Complete Your Profile</h2>
+          <span className="text-sm font-bold" style={{ color: "#00A76F" }}>{completionPercent}%</span>
         </div>
         <div className="w-full h-2 rounded-full" style={{ backgroundColor: "#F3F4F6" }}>
           <div
             className="h-2 rounded-full transition-all duration-500"
             style={{
               width: `${completionPercent}%`,
-              background: completionPercent >= 80
-                ? "linear-gradient(90deg, #16A34A, #22C55E)"
-                : completionPercent >= 50
-                ? "linear-gradient(90deg, #E11D48, #F43F5E)"
-                : "linear-gradient(90deg, #F59E0B, #FBBF24)",
+              backgroundColor: "#00A76F",
             }}
             role="progressbar"
             aria-valuenow={completionPercent}
@@ -87,35 +83,35 @@ export function ProfileCompletionWidget({
           done ? (
             <div
               key={title}
-              className="rounded-xl p-3 flex flex-col gap-1"
-              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+              className="rounded-xl p-3 flex flex-col gap-1 border"
+              style={{ backgroundColor: "#E6F4EA", borderColor: "#A7F3D0" }}
             >
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} aria-hidden="true" />
-                <span className="text-xs font-bold" style={{ color: "#166534" }}>{doneLabel}</span>
+                <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#00A76F" }} aria-hidden="true" />
+                <span className="text-xs font-bold" style={{ color: "#008F60" }}>{doneLabel}</span>
               </div>
-              <p className="text-xs" style={{ color: "#4ADE80" }}>{desc}</p>
+              <p className="text-[11px]" style={{ color: "#047857" }}>{desc}</p>
             </div>
           ) : (
             <Link
               key={title}
               href={href}
-              className="rounded-xl p-3 flex flex-col gap-1 border hover:border-rose-200 hover:bg-rose-50 transition-all group"
-              style={{ borderColor: "#E5E7EB" }}
+              className="rounded-xl p-3 flex flex-col gap-1.5 border hover:border-emerald-200 hover:bg-emerald-50 transition-all group"
+              style={{ borderColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: "#FFF1F2" }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "#E6F4EA" }}
                   >
-                    <Icon className="w-3.5 h-3.5" style={{ color: "#E11D48" }} aria-hidden="true" />
+                    <Icon className="w-4 h-4" style={{ color: "#00A76F" }} aria-hidden="true" />
                   </div>
-                  <span className="text-xs font-bold" style={{ color: "#111827" }}>{title}</span>
+                  <span className="text-xs font-bold" style={{ color: "#1F2937" }}>{title}</span>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" style={{ color: "#9CA3AF" }} />
               </div>
-              <p className="text-xs pl-9" style={{ color: "#6B7280" }}>{desc}</p>
+              <p className="text-[11px] pl-9" style={{ color: "#6B7280" }}>{desc}</p>
             </Link>
           )
         ))}

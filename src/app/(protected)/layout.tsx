@@ -29,6 +29,12 @@ export default async function ProtectedLayout({
   const isAdmin = (session.user as any)?.role && (session.user as any).role !== "USER";
   const userName = session.user.name || "User";
 
+  const notificationsRes = userId
+    ? await appContainer.repositories.notificationRepository
+        .findUserNotifications(userId, undefined, 10)
+        .catch(() => []) as any[]
+    : [];
+
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: "#F8F9FA", color: "#111827" }}>
       {/* Top Navigation Header */}
@@ -38,6 +44,7 @@ export default async function ProtectedLayout({
         isPremium={isPremium}
         planName={planName}
         isAdmin={isAdmin}
+        notifications={notificationsRes || []}
         signOutAction={async () => {
           "use server";
           await signOut({ redirectTo: "/login" });

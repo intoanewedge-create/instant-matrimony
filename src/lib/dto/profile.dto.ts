@@ -1,6 +1,7 @@
 export interface ProfileResponse {
   id: string;
   userId: string;
+  publicId?: string | null;
   gender: string | null;
   age: number | null;
   dateOfBirth: string | null;

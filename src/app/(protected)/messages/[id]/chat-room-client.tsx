@@ -62,16 +62,6 @@ export function ChatRoomClient({
     };
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() < 0.1) {
-        setIsContactOnline(prev => !prev);
-      }
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setContent(e.target.value);
 
@@ -80,7 +70,7 @@ export function ChatRoomClient({
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      // stop typing simulation
+      // stop typing
     }, 2000);
   };
 
@@ -219,37 +209,37 @@ export function ChatRoomClient({
 
   return (
     <div className="flex-grow w-full flex flex-col justify-center items-center p-4">
-      <Card className="w-full max-w-3xl h-[650px] flex flex-col border border-slate-200 bg-white shadow-xl relative overflow-hidden">
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-4 flex flex-row items-center justify-between">
+      <Card className="w-full max-w-3xl h-[650px] flex flex-col border border-gray-200 bg-white shadow-xl relative overflow-hidden rounded-2xl">
+        <CardHeader className="border-b border-gray-100 bg-gray-50/80 p-4 flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/messages" className="text-slate-500 hover:text-slate-900 transition-colors">
+            <Link href="/messages" className="text-gray-500 hover:text-gray-900 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-600 to-pink-600 flex items-center justify-center font-bold text-white shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white shadow-xs">
                 {contactName.charAt(0)}
               </div>
-              <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isContactOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+              <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isContactOnline ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-slate-900">{contactName}</CardTitle>
-              <span className="text-[10px] text-slate-500 font-medium">
+              <CardTitle className="text-base font-bold text-gray-900">{contactName}</CardTitle>
+              <span className="text-[10px] text-gray-500 font-medium">
                 {isContactOnline ? 'Online' : 'Offline'}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 shadow-xs">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
               88% Match
             </span>
           </div>
         </CardHeader>
 
-        <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin bg-slate-50/30">
+        <CardContent className="flex-grow overflow-y-auto p-4 space-y-4 bg-gray-50/30">
           <AnimatePresence initial={false}>
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs italic gap-2">
-                <MessageSquare className="w-8 h-8 text-rose-300" />
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 text-xs italic gap-2">
+                <MessageSquare className="w-8 h-8 text-emerald-300" />
                 <span>Start conversation by typing a message below.</span>
               </div>
             ) : (
@@ -269,8 +259,8 @@ export function ChatRoomClient({
                       <div
                         className={`px-4 py-2.5 rounded-2xl text-sm relative ${
                           isMe
-                            ? "bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-none shadow-md shadow-rose-500/10"
-                            : "bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200/70"
+                            ? "bg-emerald-600 text-white rounded-tr-none shadow-xs"
+                            : "bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200/70"
                         }`}
                       >
                         <p className="leading-relaxed break-words">{m.content}</p>
@@ -281,11 +271,11 @@ export function ChatRoomClient({
                             className={`mt-2 p-2 rounded-lg flex items-center gap-2 text-xs ${
                               isMe
                                 ? "bg-black/10 border border-white/20 text-white"
-                                : "bg-white border border-slate-200 text-slate-700 shadow-xs"
+                                : "bg-white border border-gray-200 text-gray-700 shadow-xs"
                             }`}
                           >
                             {att.mimeType.startsWith("image/") ? (
-                              <ImageIcon className={`w-4 h-4 shrink-0 ${isMe ? "text-rose-200" : "text-rose-600"}`} />
+                              <ImageIcon className={`w-4 h-4 shrink-0 ${isMe ? "text-emerald-200" : "text-emerald-600"}`} />
                             ) : (
                               <FileText className={`w-4 h-4 shrink-0 ${isMe ? "text-blue-200" : "text-blue-600"}`} />
                             )}
@@ -295,7 +285,7 @@ export function ChatRoomClient({
                               target="_blank"
                               rel="noreferrer"
                               className={`text-[10px] font-bold hover:underline shrink-0 ${
-                                isMe ? "text-white" : "text-rose-600"
+                                isMe ? "text-white" : "text-emerald-600"
                               }`}
                             >
                               Download
@@ -304,13 +294,13 @@ export function ChatRoomClient({
                         ))}
 
                         <div
-                          className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 shadow-md z-10 ${
+                          className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white border border-gray-200 rounded-full px-1.5 py-0.5 shadow-md z-10 ${
                             isMe ? "-left-12" : "-right-12"
                           }`}
                         >
                           <button
                             onClick={() => setActiveReactionPicker(activeReactionPicker === m.id ? null : m.id)}
-                            className="text-slate-500 hover:text-slate-900"
+                            className="text-gray-500 hover:text-gray-900"
                             type="button"
                           >
                             <SmilePlus className="w-4 h-4" />
@@ -320,7 +310,7 @@ export function ChatRoomClient({
 
                       {activeReactionPicker === m.id && (
                         <div
-                          className={`absolute -top-10 bg-white border border-slate-200 rounded-full p-1.5 flex gap-1.5 shadow-xl z-20 ${
+                          className={`absolute -top-10 bg-white border border-gray-200 rounded-full p-1.5 flex gap-1.5 shadow-xl z-20 ${
                             isMe ? "right-0" : "left-0"
                           }`}
                         >
@@ -344,7 +334,7 @@ export function ChatRoomClient({
                               <button
                                 key={emoji}
                                 onClick={() => handleAddReaction(m.id, emoji)}
-                                className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors shadow-xs"
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200 transition-colors shadow-xs"
                               >
                                 {emoji} {count}
                               </button>
@@ -354,16 +344,16 @@ export function ChatRoomClient({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 mt-1 text-[9px] text-slate-400">
+                    <div className="flex items-center gap-1 mt-1 text-[9px] text-gray-400">
                       <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                       {isMe && (
                         <span>
                           {m.readAt ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-rose-600" />
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
                           ) : m.deliveredAt ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-slate-400" />
+                            <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
                           ) : (
-                            <Check className="w-3.5 h-3.5 text-slate-400" />
+                            <Check className="w-3.5 h-3.5 text-gray-400" />
                           )}
                         </span>
                       )}
@@ -378,15 +368,15 @@ export function ChatRoomClient({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-2 text-xs text-slate-500"
+                className="flex items-center gap-2 text-xs text-gray-500"
               >
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-rose-600 border border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-emerald-600 border border-gray-200">
                   {contactName.charAt(0)}
                 </div>
-                <div className="bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-none flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-gray-100 border border-gray-200 px-4 py-2.5 rounded-2xl rounded-tl-none flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </motion.div>
             )}
@@ -395,7 +385,7 @@ export function ChatRoomClient({
         </CardContent>
 
         {selectedAttachment && (
-          <div className="px-4 py-2 border-t border-slate-100 bg-rose-50/70 flex items-center justify-between text-xs text-rose-700">
+          <div className="px-4 py-2 border-t border-gray-100 bg-emerald-50/70 flex items-center justify-between text-xs text-emerald-700">
             <div className="flex items-center gap-2">
               {selectedAttachment.type === "image" ? (
                 <ImageIcon className="w-4 h-4" />
@@ -406,36 +396,36 @@ export function ChatRoomClient({
             </div>
             <button
               onClick={() => setSelectedAttachment(null)}
-              className="text-slate-500 hover:text-slate-900"
+              className="text-gray-500 hover:text-gray-900"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        <CardFooter className="border-t border-slate-100 p-4 flex flex-col gap-2 bg-white">
+        <CardFooter className="border-t border-gray-100 p-4 flex flex-col gap-2 bg-white">
           <form onSubmit={handleSend} className="w-full flex gap-2">
             <div className="relative group">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 animate-fade-in"
+                className="border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
-              <div className="absolute bottom-12 left-0 hidden group-hover:flex flex-col bg-white border border-slate-200 rounded-xl p-1.5 shadow-xl gap-1 z-30 min-w-[150px]">
+              <div className="absolute bottom-12 left-0 hidden group-hover:flex flex-col bg-white border border-gray-200 rounded-xl p-1.5 shadow-xl gap-1 z-30 min-w-[150px]">
                 <button
                   type="button"
                   onClick={() => selectMockAttachment("image")}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-lg text-left flex items-center gap-2 whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg text-left flex items-center gap-2 whitespace-nowrap"
                 >
-                  <ImageIcon className="w-3.5 h-3.5 text-rose-600" /> Share Photo
+                  <ImageIcon className="w-3.5 h-3.5 text-emerald-600" /> Share Photo
                 </button>
                 <button
                   type="button"
                   onClick={() => selectMockAttachment("document")}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-lg text-left flex items-center gap-2 whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg text-left flex items-center gap-2 whitespace-nowrap"
                 >
                   <FileText className="w-3.5 h-3.5 text-blue-600" /> Share Document
                 </button>
@@ -447,12 +437,12 @@ export function ChatRoomClient({
               placeholder="Type message..."
               value={content}
               onChange={handleInputChange}
-              className="border-slate-200 bg-slate-50 text-slate-900 flex-grow focus-visible:ring-rose-500 placeholder:text-slate-400"
+              className="border-gray-200 bg-gray-50 text-gray-900 flex-grow focus-visible:ring-emerald-500 placeholder:text-gray-400"
             />
             <Button
               type="submit"
               disabled={sending || (!content.trim() && !selectedAttachment)}
-              className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-semibold shadow-md shadow-rose-500/20"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs"
             >
               {sending ? <Spinner className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
