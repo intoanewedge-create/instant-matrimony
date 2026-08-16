@@ -38,6 +38,7 @@ export default function RegisterPage() {
   const [countryCode, setCountryCode] = useState("+91");
   const [rawPhone, setRawPhone] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaCode, setCaptchaCode] = useState<string>("");
 
   const {
     register,
@@ -70,15 +71,15 @@ export default function RegisterPage() {
   };
 
   const onSubmit = async (data: any) => {
-    if (!captchaToken) {
-      setError("Please complete the security verification before submitting.");
+    if (!captchaToken || !captchaCode) {
+      setError("Please enter the 6-character CAPTCHA security code.");
       return;
     }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
     try {
-      const payload = { ...data, captchaToken };
+      const payload = { ...data, captchaToken, captchaCode };
       const res = await registerAction(payload);
       if (!res.success) {
         setError(res.error || "Registration failed. Please check your details.");
@@ -275,22 +276,25 @@ export default function RegisterPage() {
               {/* CAPTCHA Protection Component immediately before Submit */}
               <div className="pt-2">
                 <CaptchaWidget
-                  onVerify={(token) => {
+                  onVerify={(token, code) => {
                     setCaptchaToken(token);
-                    setError(null);
+                    setCaptchaCode(code || "");
+                    if (code && code.length === 6) setError(null);
                   }}
-                  onExpire={() => setCaptchaToken(null)}
-                  onError={() => setCaptchaToken(null)}
+                  onExpire={() => {
+                    setCaptchaToken(null);
+                    setCaptchaCode("");
+                  }}
                 />
               </div>
 
               <Button
                 type="submit"
-                disabled={loading || !captchaToken}
+                disabled={loading || !captchaToken || captchaCode.length < 6}
                 className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-semibold transition-all shadow-md shadow-rose-600/20 rounded-xl h-11 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? <Spinner className="w-5 h-5 mr-2" /> : null}
-                {loading ? "Registering..." : "Register / Create Account"}
+                {loading ? <Spinner className="w-5 h-5 mr-2 text-white" /> : null}
+                {loading ? "Creating account..." : "Register / Create Account"}
               </Button>
             </form>
             <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">

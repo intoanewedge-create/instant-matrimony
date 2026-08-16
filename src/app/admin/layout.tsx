@@ -14,6 +14,7 @@ import {
   MessageSquare,
   FileText,
   LogOut,
+  UserPlus,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -31,6 +32,7 @@ export default async function AdminLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Create Profile", href: "/admin/profiles/create", icon: UserPlus },
     { label: "Profile Approvals", href: "/admin/profiles", icon: ShieldCheck },
     { label: "Payments", href: "/admin/payments", icon: CreditCard },
     { label: "Memberships", href: "/admin/memberships", icon: ShieldCheck },

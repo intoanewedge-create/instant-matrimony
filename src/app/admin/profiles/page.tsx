@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, XCircle, AlertCircle, Users, FileEdit } from "lucide-react";
+import { ShieldCheck, XCircle, AlertCircle, Users, FileEdit, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AdminProfileTable } from "./admin-profile-table";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +72,11 @@ export default async function AdminProfilesPage({
             Review and moderate member profiles, identity details, and photos before allowing public search visibility.
           </p>
         </div>
+        <Link href="/admin/profiles/create">
+          <Button className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-xs shadow-md rounded-xl h-10 px-4 flex items-center gap-2">
+            <UserPlus className="w-4 h-4" /> Create Profile
+          </Button>
+        </Link>
       </div>
 
       {/* Metric Summary Filter Cards */}

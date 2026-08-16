@@ -29,7 +29,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 pb-12">
-      <SettingsClient initialPreferences={serializedPreferences} />
+      <SettingsClient
+        initialPreferences={serializedPreferences}
+        userEmail={session.user.email || undefined}
+      />
     </div>
   );
 }

@@ -15,12 +15,12 @@ import {
 export function QuickActionsSidebar() {
   const accountActions = [
     {
-      href: "/onboarding",
+      href: "/profile",
       icon: Edit3,
       label: "Edit profile",
     },
     {
-      href: "/onboarding?step=8",
+      href: "/profile?tab=preferences",
       icon: Sliders,
       label: "Edit preferences",
     },

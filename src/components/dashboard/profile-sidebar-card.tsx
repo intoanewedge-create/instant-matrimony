@@ -50,7 +50,7 @@ export function ProfileSidebarCard({
 
       {/* Avatar section */}
       <div className="relative -mt-10 flex flex-col items-center px-4 pb-4">
-        <Link href="/onboarding" className="relative group" aria-label="Edit profile photo">
+        <Link href="/profile" className="relative group" aria-label="Edit profile photo">
           <div
             className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden flex items-center justify-center text-white text-xl font-bold"
             style={{ background: photoUrl ? undefined : "linear-gradient(135deg, #00A76F 0%, #008F60 100%)" }}

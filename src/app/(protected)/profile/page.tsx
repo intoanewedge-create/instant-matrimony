@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { container } from "@/lib/container";
@@ -29,10 +30,12 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 pb-12">
-      <ProfileClient
-        initialProfile={serializedProfile}
-        initialCompletion={completionBreakdown}
-      />
+      <Suspense fallback={null}>
+        <ProfileClient
+          initialProfile={serializedProfile}
+          initialCompletion={completionBreakdown}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Suspense } from "react";
+import { TopNavigationProgressBar } from "@/components/ui/top-navigation-progress-bar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +59,9 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <ToastProvider>
+            <Suspense fallback={null}>
+              <TopNavigationProgressBar />
+            </Suspense>
             <ThemeStyleInjector />
             {children}
             <PwaRegister />

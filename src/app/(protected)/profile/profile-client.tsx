@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
   User,
@@ -130,9 +130,17 @@ export function ProfileClient({
     missingSections: [],
   };
 
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<
     "details" | "preferences" | "photos" | "privacy" | "preview"
   >("details");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "preferences") setActiveTab("preferences");
+    else if (tabParam === "photos") setActiveTab("photos");
+    else if (tabParam === "privacy") setActiveTab("privacy");
+  }, [searchParams]);
   const [isPending, setIsPending] = useState(false);
 
   // Photo uploading states

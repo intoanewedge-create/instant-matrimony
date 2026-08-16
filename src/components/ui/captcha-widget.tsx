@@ -1,147 +1,100 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { ShieldCheck, CheckCircle2, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShieldCheck, RefreshCw, CheckCircle2 } from "lucide-react";
+import { getCaptchaAction } from "@/lib/actions/auth.actions";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface CaptchaWidgetProps {
-  onVerify: (token: string) => void;
+  onVerify: (token: string, code?: string) => void;
   onExpire?: () => void;
   onError?: (err: string) => void;
 }
 
-export function CaptchaWidget({ onVerify, onExpire, onError }: CaptchaWidgetProps) {
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const [verified, setVerified] = useState(false);
+export function CaptchaWidget({ onVerify }: CaptchaWidgetProps) {
+  const [captchaData, setCaptchaData] = useState<{ token: string; svgDataUri: string } | null>(null);
+  const [inputCode, setInputCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Dev / Fallback interactive checkbox state when env variables are not present
-  const handleDevCheck = () => {
+  const fetchCaptcha = async () => {
     setLoading(true);
-    setTimeout(() => {
+    setInputCode("");
+    try {
+      const res = await getCaptchaAction();
+      if (res.success && res.token && res.svgDataUri) {
+        setCaptchaData({ token: res.token, svgDataUri: res.svgDataUri });
+        onVerify(res.token, "");
+      }
+    } catch {
+      // fallback
+    } finally {
       setLoading(false);
-      setVerified(true);
-      const devToken = `dev-token-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      onVerify(devToken);
-    }, 600);
-  };
-
-  const handleDevReset = () => {
-    setVerified(false);
-    setErrorMsg(null);
-    if (onExpire) onExpire();
+    }
   };
 
   useEffect(() => {
-    if (!turnstileSiteKey || typeof window === "undefined") return;
+    fetchCaptcha();
+  }, []);
 
-    let widgetId: string | null = null;
-    const scriptId = "turnstile-script";
-
-    const renderWidget = () => {
-      if ((window as any).turnstile && containerRef.current) {
-        try {
-          containerRef.current.innerHTML = "";
-          widgetId = (window as any).turnstile.render(containerRef.current, {
-            sitekey: turnstileSiteKey,
-            callback: (token: string) => {
-              setVerified(true);
-              onVerify(token);
-            },
-            "expired-callback": () => {
-              setVerified(false);
-              if (onExpire) onExpire();
-            },
-            "error-callback": (err: any) => {
-              setVerified(false);
-              setErrorMsg("CAPTCHA verification failed");
-              if (onError) onError("CAPTCHA error");
-            },
-          });
-        } catch (e) {
-          // ignore duplicate render errors
-        }
-      }
-    };
-
-    if (!(window as any).turnstile) {
-      if (!document.getElementById(scriptId)) {
-        const script = document.createElement("script");
-        script.id = scriptId;
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
-        script.async = true;
-        script.defer = true;
-        (window as any).onloadTurnstileCallback = renderWidget;
-        document.head.appendChild(script);
-      }
-    } else {
-      renderWidget();
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase().slice(0, 6);
+    setInputCode(val);
+    if (captchaData) {
+      onVerify(captchaData.token, val);
     }
+  };
 
-    return () => {
-      if (widgetId && (window as any).turnstile) {
-        try {
-          (window as any).turnstile.remove(widgetId);
-        } catch {}
-      }
-    };
-  }, [turnstileSiteKey, onVerify, onExpire, onError]);
-
-  if (turnstileSiteKey || recaptchaSiteKey) {
-    return (
-      <div className="space-y-1.5 py-1">
-        <div ref={containerRef} className="flex justify-center min-h-[65px]" />
-        {errorMsg && (
-          <p className="text-xs text-red-500 text-center">{errorMsg}</p>
-        )}
-      </div>
-    );
-  }
-
-  // Interactive local verification widget when site key is not configured in env
   return (
-    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+    <div className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl space-y-3 text-xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-rose-600" />
-          <span className="font-semibold text-slate-800">Security Verification</span>
+          <span className="font-bold text-slate-800">Security Verification (CAPTCHA)</span>
         </div>
-        <span className="text-[10px] font-mono text-slate-400">Cloudflare Turnstile</span>
+        <span className="text-[10px] font-mono text-slate-400">Human Check</span>
       </div>
 
-      {!verified ? (
+      <div className="flex items-center gap-3">
+        <div className="relative border border-slate-200 rounded-lg overflow-hidden bg-white shrink-0 shadow-sm flex items-center">
+          {captchaData ? (
+            <img
+              src={captchaData.svgDataUri}
+              alt="CAPTCHA Challenge"
+              className="h-[42px] w-[140px] object-contain"
+            />
+          ) : (
+            <div className="h-[42px] w-[140px] flex items-center justify-center bg-slate-100 text-slate-400 text-xs">
+              Loading...
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
-          onClick={handleDevCheck}
+          onClick={fetchCaptcha}
           disabled={loading}
-          className="w-full flex items-center justify-between p-2.5 bg-white border border-slate-300 hover:border-rose-400 rounded-lg text-slate-700 hover:bg-rose-50/30 transition-all text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-rose-600 transition-all focus:outline-none"
+          title="Refresh CAPTCHA"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-4 h-4 rounded border-2 border-slate-400 bg-white flex items-center justify-center">
-              {loading && <RefreshCw className="w-3 h-3 text-rose-600 animate-spin" />}
-            </div>
-            <span className="font-medium">I am not a robot</span>
-          </div>
-          <span className="text-[10px] text-slate-400">Verify identity</span>
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-rose-600" : ""}`} />
         </button>
-      ) : (
-        <div className="flex items-center justify-between p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span className="font-semibold text-xs">Verification Complete</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleDevReset}
-            className="text-[10px] text-slate-500 hover:text-slate-800 underline"
-          >
-            Reset
-          </button>
-        </div>
-      )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="captchaCode" className="text-[11px] font-semibold text-slate-600">
+          Enter CAPTCHA characters shown above *
+        </Label>
+        <Input
+          id="captchaCode"
+          name="captchaCode"
+          placeholder="Enter 6 characters"
+          maxLength={6}
+          value={inputCode}
+          onChange={handleInputChange}
+          className="bg-white border-slate-200 text-slate-900 font-mono tracking-widest text-sm font-bold uppercase h-9 focus-visible:ring-rose-500"
+        />
+      </div>
     </div>
   );
 }
