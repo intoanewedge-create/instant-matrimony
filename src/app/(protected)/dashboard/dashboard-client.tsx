@@ -227,10 +227,10 @@ export function DashboardClient({
                         size="sm"
                         disabled={processingId === intId}
                         onClick={() => handleAcceptInterest(intId)}
-                        className="text-xs h-7 px-2 shrink-0"
+                        className="text-xs h-7 px-2.5 shrink-0 font-semibold shadow-xs"
                         style={{ background: "linear-gradient(135deg, #E11D48, #F43F5E)", color: "white" }}
                       >
-                        Accept
+                        {processingId === intId ? "Accepting..." : "Accept"}
                       </Button>
                     </div>
                   );
@@ -263,8 +263,12 @@ export function DashboardClient({
                   role="tab"
                   aria-selected={activeView === view}
                   onClick={() => {
-                    if (view === "vip" && !isPremium) {
-                      router.push("/dashboard/concierge");
+                    if (view === "vip") {
+                      if (isPremium) {
+                        router.push("/dashboard/concierge");
+                      } else {
+                        router.push("/memberships");
+                      }
                       return;
                     }
                     setActiveView(view);

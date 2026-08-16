@@ -40,6 +40,35 @@ function formatRelativeTime(dateInput: string | Date): string {
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function getNotificationTargetUrl(n: NotificationItem): string {
+  const type = (n.type || n.category || "").toUpperCase();
+  const meta = n.metadata || {};
+  const targetId = n.targetId || meta.targetId || meta.senderId || meta.userId || meta.profileId;
+
+  if (type.includes("PROFILE_VIEW") || type.includes("VISIT") || (type.includes("VIEW") && targetId)) {
+    return targetId ? `/profile/${targetId}` : `/profile`;
+  }
+  if (type.includes("INTEREST")) {
+    return `/dashboard/interests`;
+  }
+  if (type.includes("MESSAGE") || type.includes("CHAT")) {
+    return meta.chatId ? `/messages/${meta.chatId}` : targetId ? `/messages/${targetId}` : `/messages`;
+  }
+  if (type.includes("PROFILE") || type.includes("APPROVAL") || type.includes("REVIEW")) {
+    return `/profile`;
+  }
+  if (type.includes("MEMBERSHIP") || type.includes("PAYMENT") || type.includes("BILLING")) {
+    return `/dashboard/billing`;
+  }
+  if (type.includes("CONCIERGE")) {
+    return `/dashboard/concierge`;
+  }
+  if (targetId) {
+    return `/profile/${targetId}`;
+  }
+  return `/dashboard`;
+}
+
 export function NotificationBell({
   initialNotifications = [],
   initialUnreadCount = 0,
@@ -238,10 +267,7 @@ export function NotificationBell({
                 ) : (
                   filteredItems.map((n) => {
                     const isUnread = !n.read;
-                    const profileLink =
-                      n.metadata?.profileId || n.targetId || n.metadata?.senderId
-                        ? `/profiles/${n.metadata?.profileId || n.targetId || n.metadata?.senderId}`
-                        : null;
+                    const targetUrl = getNotificationTargetUrl(n);
 
                     return (
                       <div
@@ -265,8 +291,15 @@ export function NotificationBell({
                           </div>
                         </div>
 
-                        {/* MIDDLE: Message & relative timestamp */}
-                        <div className="flex-1 min-w-0 pr-10">
+                        {/* MIDDLE: Message & relative timestamp with Link wrapper */}
+                        <Link
+                          href={targetUrl}
+                          onClick={() => {
+                            if (isUnread) handleMarkOne(n.id);
+                            setOpen(false);
+                          }}
+                          className="flex-1 min-w-0 pr-8 block"
+                        >
                           <p className={`text-xs ${isUnread ? "font-bold text-slate-900" : "font-medium text-slate-700"}`}>
                             {n.message || n.title}
                           </p>
@@ -274,17 +307,11 @@ export function NotificationBell({
                             <span className="text-[10px] text-slate-400 font-medium">
                               {formatRelativeTime(n.createdAt)}
                             </span>
-                            {profileLink && (
-                              <Link
-                                href={profileLink}
-                                onClick={() => setOpen(false)}
-                                className="text-[10px] font-bold text-rose-600 hover:underline border border-rose-200 bg-white px-2 py-0.5 rounded-full inline-block"
-                              >
-                                View profile
-                              </Link>
-                            )}
+                            <span className="text-[10px] font-bold text-rose-600 hover:underline border border-rose-200 bg-white px-2 py-0.5 rounded-full inline-block">
+                              View
+                            </span>
                           </div>
-                        </div>
+                        </Link>
 
                         {/* RIGHT: Three-dot Options Button */}
                         <div className="absolute right-2 top-3 flex items-center gap-1">

@@ -45,7 +45,25 @@ import {
   updatePreferencesAction,
   getProfilePrivacyAction,
   updateProfilePrivacyAction,
+  updateUserPhoneAction,
 } from "@/lib/actions/profile.actions";
+import {
+  requestOtpAction,
+  verifyOtpAction,
+} from "@/lib/actions/verification.actions";
+import {
+  EDUCATION_OPTIONS,
+  OCCUPATION_OPTIONS,
+  INCOME_CURRENCIES,
+  INCOME_AMOUNTS,
+  GOTHRAM_OPTIONS,
+  MOTHER_TONGUE_OPTIONS,
+  FAMILY_VALUE_OPTIONS,
+  FAMILY_TYPE_OPTIONS,
+  FAMILY_STATUS_OPTIONS,
+  INDIAN_STATES,
+  MAJOR_COUNTRIES,
+} from "@/lib/constants/options";
 import {
   uploadPhoto,
   deletePhoto,
@@ -163,6 +181,61 @@ export function ProfileClient({
     hideIncome: false,
     hideFamilyDetails: false,
   });
+
+  // Mobile Phone Edit Modal State
+  const [editPhoneModalOpen, setEditPhoneModalOpen] = useState(false);
+  const [newPhoneInput, setNewPhoneInput] = useState(profile.user?.phone || profile.phone || "");
+  const [phoneStepLoading, setPhoneStepLoading] = useState(false);
+  const [phoneModalError, setPhoneModalError] = useState<string | null>(null);
+  const [phoneModalSuccess, setPhoneModalSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash;
+      if (hash === "#horoscope" || hash === "#horoscope-section") {
+        setActiveTab("details");
+        setTimeout(() => {
+          document.getElementById("horoscope-section")?.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      } else if (hash === "#family" || hash === "#family-section") {
+        setActiveTab("details");
+        setTimeout(() => {
+          document.getElementById("family-section")?.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      }
+    }
+  }, []);
+
+  const handleSavePhone = async () => {
+    setPhoneModalError(null);
+    setPhoneModalSuccess(null);
+    if (!newPhoneInput.trim() || newPhoneInput.trim().length < 8) {
+      setPhoneModalError("Please enter a valid mobile number (at least 8 digits).");
+      return;
+    }
+    setPhoneStepLoading(true);
+    try {
+      const res = await updateUserPhoneAction(newPhoneInput.trim());
+      if (res.success) {
+        setPhoneModalSuccess("Mobile number updated successfully!");
+        setProfile((prev) => ({
+          ...prev,
+          phone: newPhoneInput.trim(),
+          user: { ...prev.user, phone: newPhoneInput.trim() },
+        }));
+        setTimeout(() => {
+          setEditPhoneModalOpen(false);
+        }, 1000);
+        router.refresh();
+      } else {
+        setPhoneModalError(res.error || "Failed to update mobile number.");
+      }
+    } catch (err: any) {
+      setPhoneModalError(err.message || "Error updating mobile number.");
+    } finally {
+      setPhoneStepLoading(false);
+    }
+  };
 
   // Master data lists
   const [religions, setReligions] = useState<any[]>([]);
@@ -634,7 +707,7 @@ export function ProfileClient({
                   )}
                 </div>
                 <button
-                  onClick={() => setActiveTab("details")}
+                  onClick={() => setEditPhoneModalOpen(true)}
                   className="text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1"
                 >
                   [Edit Mobile No]
@@ -821,7 +894,7 @@ export function ProfileClient({
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("religion")}
                         >
-                          <option value="">Select</option>
+                          <option value="">Select Religion</option>
                           <option value="Hindu">Hindu</option>
                           <option value="Muslim">Muslim</option>
                           <option value="Christian">Christian</option>
@@ -881,26 +954,34 @@ export function ProfileClient({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="gothram" className="text-xs font-semibold text-slate-700">Gothram</Label>
-                        <Input
+                        <select
                           id="gothram"
-                          placeholder="e.g. Kashyapa"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("gothram")}
-                        />
+                        >
+                          <option value="">Select Gothram</option>
+                          {GOTHRAM_OPTIONS.map((g) => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="motherTongue" className="text-xs font-semibold text-slate-700">Mother Tongue</Label>
-                        <Input
+                        <select
                           id="motherTongue"
-                          placeholder="e.g. Telugu"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("motherTongue")}
-                        />
+                        >
+                          <option value="">Select Mother Tongue</option>
+                          {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                            <option key={mt} value={mt}>{mt}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="horoscope" className="text-xs font-semibold text-slate-700">Horoscope / Rasi</Label>
+                        <Label htmlFor="horoscope" className="text-xs font-semibold text-slate-700">Horoscope / Rasi & Star</Label>
                         <Input
                           id="horoscope"
                           placeholder="e.g. Mesha / Aries - Bharani Star"
@@ -908,6 +989,20 @@ export function ProfileClient({
                           {...registerDetails("horoscope")}
                         />
                       </div>
+                    </div>
+
+                    {/* Dosham Text Box (Optional free form text) */}
+                    <div className="space-y-1.5 pt-1">
+                      <Label htmlFor="doshamDetails" className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>Dosham Details (Optional)</span>
+                        <span className="text-[10px] text-slate-400 font-normal">e.g., Sevvai / Kuja Dosham, Rahu-Ketu, None</span>
+                      </Label>
+                      <Input
+                        id="doshamDetails"
+                        placeholder="Enter Dosham details if applicable (or leave empty)"
+                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                        {...registerDetails("smoking")}
+                      />
                     </div>
                   </div>
 
@@ -919,22 +1014,30 @@ export function ProfileClient({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="education" className="text-xs font-semibold text-slate-700">Education Degree</Label>
-                        <Input
+                        <select
                           id="education"
-                          placeholder="e.g. B.Tech Computer Science"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("education")}
-                        />
+                        >
+                          <option value="">Select Education Degree</option>
+                          {EDUCATION_OPTIONS.map((edu) => (
+                            <option key={edu} value={edu}>{edu}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="occupation" className="text-xs font-semibold text-slate-700">Occupation / Job Title</Label>
-                        <Input
+                        <select
                           id="occupation"
-                          placeholder="e.g. Software Engineer"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("occupation")}
-                        />
+                        >
+                          <option value="">Select Occupation</option>
+                          {OCCUPATION_OPTIONS.map((occ) => (
+                            <option key={occ} value={occ}>{occ}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1.5">
@@ -978,33 +1081,85 @@ export function ProfileClient({
 
                       <div className="space-y-1.5">
                         <Label htmlFor="state" className="text-xs font-semibold text-slate-700">State</Label>
-                        <Input
+                        <select
                           id="state"
-                          placeholder="e.g. Telangana"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("state")}
-                        />
+                        >
+                          <option value="">Select State</option>
+                          {INDIAN_STATES.map((st) => (
+                            <option key={st} value={st}>{st}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="country" className="text-xs font-semibold text-slate-700">Country</Label>
-                        <Input
+                        <select
                           id="country"
-                          placeholder="e.g. India"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("country")}
-                        />
+                        >
+                          {MAJOR_COUNTRIES.map((ct) => (
+                            <option key={ct} value={ct}>{ct}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
 
-                  {/* Section E: Family & About */}
-                  <div className="space-y-4">
+                  {/* Section E: Family Background */}
+                  <div id="family-section" className="space-y-4">
                     <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider border-b border-slate-100 pb-2">
-                      5. Family & Personal Bio
+                      5. Family Background & Details
                     </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="familyValues" className="text-xs font-semibold text-slate-700">Family Values</Label>
+                        <select
+                          id="familyValues"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("familyValues")}
+                        >
+                          <option value="">Select Family Values</option>
+                          {FAMILY_VALUE_OPTIONS.map((fv) => (
+                            <option key={fv} value={fv}>{fv}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="familyType" className="text-xs font-semibold text-slate-700">Family Type</Label>
+                        <select
+                          id="familyType"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("drinking")}
+                        >
+                          <option value="">Select Family Type</option>
+                          {FAMILY_TYPE_OPTIONS.map((ft) => (
+                            <option key={ft} value={ft}>{ft}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="familyStatus" className="text-xs font-semibold text-slate-700">Family Status</Label>
+                        <select
+                          id="familyStatus"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("foodPreference")}
+                        >
+                          <option value="">Select Family Status</option>
+                          {FAMILY_STATUS_OPTIONS.map((fs) => (
+                            <option key={fs} value={fs}>{fs}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="space-y-1.5">
-                      <Label htmlFor="familyDetails" className="text-xs font-semibold text-slate-700">Family Background</Label>
+                      <Label htmlFor="familyDetails" className="text-xs font-semibold text-slate-700">Detailed Family Notes</Label>
                       <Textarea
                         id="familyDetails"
                         placeholder="Father's occupation, mother's background, siblings, hometown..."
@@ -1302,12 +1457,16 @@ export function ProfileClient({
                         </div>
                         {editingRow === "motherTongue" && (
                           <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
-                            <Input
+                            <select
                               value={prefValues.motherTongue}
-                              placeholder="e.g. Telugu"
                               onChange={(e) => setPrefValues({ ...prefValues, motherTongue: e.target.value })}
-                              className="h-9 text-xs border-slate-200"
-                            />
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Language</option>
+                              {MOTHER_TONGUE_OPTIONS.map((mt) => (
+                                <option key={mt} value={mt}>{mt}</option>
+                              ))}
+                            </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
                               <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -1342,12 +1501,16 @@ export function ProfileClient({
                         </div>
                         {editingRow === "education" && (
                           <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
-                            <Input
+                            <select
                               value={prefValues.education}
-                              placeholder="e.g. Bachelor's / Master's / Any Degree"
                               onChange={(e) => setPrefValues({ ...prefValues, education: e.target.value })}
-                              className="h-9 text-xs border-slate-200"
-                            />
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Degree / Education</option>
+                              {EDUCATION_OPTIONS.map((edu) => (
+                                <option key={edu} value={edu}>{edu}</option>
+                              ))}
+                            </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
                               <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -1382,12 +1545,16 @@ export function ProfileClient({
                         </div>
                         {editingRow === "country" && (
                           <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
-                            <Input
+                            <select
                               value={prefValues.country}
-                              placeholder="e.g. India / USA / Any"
                               onChange={(e) => setPrefValues({ ...prefValues, country: e.target.value })}
-                              className="h-9 text-xs border-slate-200"
-                            />
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Country</option>
+                              {MAJOR_COUNTRIES.map((ct) => (
+                                <option key={ct} value={ct}>{ct}</option>
+                              ))}
+                            </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
                               <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -1776,6 +1943,73 @@ export function ProfileClient({
           </Card>
         </div>
       </div>
+
+      {/* EDIT MOBILE NUMBER MODAL */}
+      {editPhoneModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <User className="w-4 h-4 text-rose-600" /> Edit Mobile Number
+              </h3>
+              <button
+                onClick={() => {
+                  setEditPhoneModalOpen(false);
+                  setPhoneModalError(null);
+                  setPhoneModalSuccess(null);
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {phoneModalError && (
+              <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs font-medium border border-red-200 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{phoneModalError}</span>
+              </div>
+            )}
+            {phoneModalSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200 flex items-center gap-2">
+                <Check className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>{phoneModalSuccess}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Mobile Number</Label>
+                <Input
+                  value={newPhoneInput}
+                  onChange={(e) => setNewPhoneInput(e.target.value)}
+                  placeholder="e.g. +91 9876543210"
+                  className="text-xs mt-1 border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditPhoneModalOpen(false)}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSavePhone}
+                  disabled={phoneStepLoading || !newPhoneInput.trim()}
+                  className="text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold h-9 px-4 rounded-xl shadow-xs"
+                >
+                  {phoneStepLoading ? <Spinner className="w-3.5 h-3.5 mr-1.5" /> : null}
+                  {phoneStepLoading ? "Saving..." : "Save Mobile Number"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

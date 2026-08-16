@@ -25,6 +25,11 @@ export async function searchMatchesAction(params: {
   }
 
   const filtersVal = params.filters || {};
+  // Enforce server-side gender isolation (MALE viewer -> FEMALE targets only; FEMALE viewer -> MALE targets only)
+  const viewerGender = profileRes.data.gender?.toUpperCase();
+  const targetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "FEMALE";
+  filtersVal.gender = targetGender;
+
   const result = searchFilterSchema.safeParse(filtersVal);
   if (!result.success) {
     return { success: false, error: result.error.issues[0].message };

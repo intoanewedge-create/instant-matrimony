@@ -7,6 +7,11 @@ import { searchMatchesAction, getRecentlyViewedProfilesAction } from "@/lib/acti
 import { sendInterestAction } from "@/lib/actions/interest.actions";
 import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
 import {
+  MOTHER_TONGUE_OPTIONS,
+  EDUCATION_OPTIONS,
+  OCCUPATION_OPTIONS,
+} from "@/lib/constants/options";
+import {
   Card,
   CardHeader,
   CardContent,
@@ -396,10 +401,14 @@ export function SearchClient({
                         <Label className="text-[11px] font-semibold text-slate-700">Looking For</Label>
                         <select
                           {...register("gender")}
-                          className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500"
+                          disabled
+                          className="w-full h-8 px-2 border border-slate-200 bg-slate-100 rounded-lg text-xs text-slate-700 font-semibold cursor-not-allowed focus:outline-none"
                         >
-                          <option value="FEMALE">Bride (Female)</option>
-                          <option value="MALE">Groom (Male)</option>
+                          {defaultGender === "FEMALE" ? (
+                            <option value="FEMALE">Bride (Female)</option>
+                          ) : (
+                            <option value="MALE">Groom (Male)</option>
+                          )}
                         </select>
                       </div>
 
@@ -480,9 +489,9 @@ export function SearchClient({
                         <Label className="text-[11px] font-semibold text-slate-700">Mother Tongue</Label>
                         <select {...register("motherTongue")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
                           <option value="">Any Mother Tongue</option>
-                          {motherTongues.map((m) => (
-                            <option key={m.id} value={m.name}>{m.name}</option>
-                          ))}
+                          {motherTongues.length > 0
+                            ? motherTongues.map((m) => <option key={m.id} value={m.name}>{m.name}</option>)
+                            : MOTHER_TONGUE_OPTIONS.map((mt) => <option key={mt} value={mt}>{mt}</option>)}
                         </select>
                       </div>
                     </div>
@@ -506,9 +515,9 @@ export function SearchClient({
                         <Label className="text-[11px] font-semibold text-slate-700">Education</Label>
                         <select {...register("education")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
                           <option value="">Any Education</option>
-                          {educations.map((e) => (
-                            <option key={e.id} value={e.name}>{e.name}</option>
-                          ))}
+                          {educations.length > 0
+                            ? educations.map((e) => <option key={e.id} value={e.name}>{e.name}</option>)
+                            : EDUCATION_OPTIONS.map((edu) => <option key={edu} value={edu}>{edu}</option>)}
                         </select>
                       </div>
 
@@ -516,9 +525,9 @@ export function SearchClient({
                         <Label className="text-[11px] font-semibold text-slate-700">Occupation</Label>
                         <select {...register("occupation")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
                           <option value="">Any Occupation</option>
-                          {occupations.map((o) => (
-                            <option key={o.id} value={o.name}>{o.name}</option>
-                          ))}
+                          {occupations.length > 0
+                            ? occupations.map((o) => <option key={o.id} value={o.name}>{o.name}</option>)
+                            : OCCUPATION_OPTIONS.map((occ) => <option key={occ} value={occ}>{occ}</option>)}
                         </select>
                       </div>
 

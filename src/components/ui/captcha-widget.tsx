@@ -10,9 +10,10 @@ interface CaptchaWidgetProps {
   onVerify: (token: string, code?: string) => void;
   onExpire?: () => void;
   onError?: (err: string) => void;
+  refreshKey?: number;
 }
 
-export function CaptchaWidget({ onVerify }: CaptchaWidgetProps) {
+export function CaptchaWidget({ onVerify, refreshKey }: CaptchaWidgetProps) {
   const [captchaData, setCaptchaData] = useState<{ token: string; svgDataUri: string } | null>(null);
   const [inputCode, setInputCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export function CaptchaWidget({ onVerify }: CaptchaWidgetProps) {
 
   useEffect(() => {
     fetchCaptcha();
-  }, []);
+  }, [refreshKey]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase().slice(0, 6);

@@ -442,4 +442,28 @@ export async function deleteUserAccountAction(reason: string) {
   }
 }
 
+export async function updateUserPhoneAction(phone: string) {
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "Unauthorized" };
+  const userId = (session.user as any).id;
+
+  if (!phone || phone.trim().length < 8) {
+    return { success: false, error: "Please enter a valid mobile number (min 8 digits)." };
+  }
+
+  try {
+    const { prisma } = await import("../prisma");
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { phone: phone.trim() },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
+    return { success: true, phone: updated.phone };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update phone number." };
+  }
+}
+
 

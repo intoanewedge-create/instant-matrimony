@@ -39,6 +39,7 @@ export default function RegisterPage() {
   const [rawPhone, setRawPhone] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaCode, setCaptchaCode] = useState<string>("");
+  const [captchaRefreshKey, setCaptchaRefreshKey] = useState<number>(0);
 
   const {
     register,
@@ -70,9 +71,16 @@ export default function RegisterPage() {
     setValue("phone", fullPhone, { shouldValidate: true });
   };
 
+  const triggerCaptchaRefresh = () => {
+    setCaptchaToken(null);
+    setCaptchaCode("");
+    setCaptchaRefreshKey((prev) => prev + 1);
+  };
+
   const onSubmit = async (data: any) => {
     if (!captchaToken || !captchaCode) {
       setError("Please enter the 6-character CAPTCHA security code.");
+      triggerCaptchaRefresh();
       return;
     }
     setLoading(true);
@@ -83,12 +91,14 @@ export default function RegisterPage() {
       const res = await registerAction(payload);
       if (!res.success) {
         setError(res.error || "Registration failed. Please check your details.");
+        triggerCaptchaRefresh();
       } else {
         setSuccessMsg("Registration successful! Redirecting to email verification...");
         router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");
+      triggerCaptchaRefresh();
     } finally {
       setLoading(false);
     }
@@ -276,6 +286,7 @@ export default function RegisterPage() {
               {/* CAPTCHA Protection Component immediately before Submit */}
               <div className="pt-2">
                 <CaptchaWidget
+                  refreshKey={captchaRefreshKey}
                   onVerify={(token, code) => {
                     setCaptchaToken(token);
                     setCaptchaCode(code || "");
