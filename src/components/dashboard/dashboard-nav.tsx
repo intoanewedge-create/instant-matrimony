@@ -39,6 +39,7 @@ interface DashboardNavProps {
   planName: string;
   isAdmin: boolean;
   notifications?: any[];
+  initialUnreadCount?: number;
   signOutAction: () => Promise<void>;
 }
 
@@ -57,10 +58,12 @@ export function DashboardNav({
   planName,
   isAdmin,
   notifications = [],
+  initialUnreadCount = 0,
   signOutAction,
 }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -68,8 +71,8 @@ export function DashboardNav({
     "all",
   );
 
-  // Real notification records (seeded from server, refreshed on open)
   const [notifItems, setNotifItems] = useState<any[]>(notifications || []);
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -84,31 +87,40 @@ export function DashboardNav({
       ) {
         setDropdownOpen(false);
       }
+
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotifOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+    };
   }, []);
 
   const refreshNotifications = useCallback(async () => {
-    const res = await getRecentNotificationsAction(15);
+    const res = await getRecentNotificationsAction(15, notifTab);
+
     if (res.success) {
       setNotifItems((res.notifications as any[]) || []);
+      setUnreadCount(res.unreadCount || 0);
     }
-  }, []);
+  }, [notifTab]);
 
   // Sync with prop updates
   useEffect(() => {
-    if (notifications && notifications.length > 0) {
+    if (notifications) {
       setNotifItems(notifications);
     }
   }, [notifications]);
 
-  // Fetch fresh state on opening dropdown
+  // Fetch fresh state on opening dropdown or tab change
   useEffect(() => {
-    if (notifOpen) refreshNotifications();
+    if (notifOpen) {
+      refreshNotifications();
+    }
   }, [notifOpen, refreshNotifications]);
 
   const initials = userName
@@ -119,21 +131,36 @@ export function DashboardNav({
     .slice(0, 2);
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+
     return pathname.startsWith(href);
   };
 
-  const unreadCount = notifItems.filter((n: any) => !n.read).length;
-
   const handleMarkRead = async (id: string) => {
-    if (busyId) return;
+    if (busyId) {
+      return;
+    }
+
     setBusyId(id);
+
     try {
       const res = await markNotificationAsReadAction(id);
+
       if (res.success) {
         setNotifItems((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+          prev.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  read: true,
+                }
+              : n,
+          ),
         );
+
+        setUnreadCount((count) => Math.max(0, count - 1));
         router.refresh();
       }
     } finally {
@@ -142,12 +169,24 @@ export function DashboardNav({
   };
 
   const handleMarkAllRead = async () => {
-    if (busyId) return;
+    if (busyId) {
+      return;
+    }
+
     setBusyId("ALL");
+
     try {
       const res = await markAllNotificationsAsReadAction();
+
       if (res.success) {
-        setNotifItems((prev) => prev.map((n) => ({ ...n, read: true })));
+        setNotifItems((prev) =>
+          prev.map((n) => ({
+            ...n,
+            read: true,
+          })),
+        );
+
+        setUnreadCount(0);
         router.refresh();
       }
     } finally {
@@ -156,12 +195,22 @@ export function DashboardNav({
   };
 
   const handleDismiss = async (id: string) => {
-    if (busyId) return;
+    if (busyId) {
+      return;
+    }
+
     setBusyId(id);
+
     try {
       const res = await dismissNotificationAction(id);
+
       if (res.success) {
         setNotifItems((prev) => prev.filter((n) => n.id !== id));
+
+        if (!notifItems.find((n) => n.id === id)?.read) {
+          setUnreadCount((count) => Math.max(0, count - 1));
+        }
+
         router.refresh();
       }
     } finally {
@@ -169,42 +218,15 @@ export function DashboardNav({
     }
   };
 
-  // Filter notifications by tab
-  const filteredNotifs = notifItems.filter((n: any) => {
-    const typeStr = (n.type || n.category || "").toString().toUpperCase();
-    const textStr = `${n.title || ""} ${n.message || ""}`.toLowerCase();
-
-    if (notifTab === "interactions") {
-      return (
-        typeStr.includes("INTEREST") ||
-        typeStr.includes("MESSAGE") ||
-        typeStr.includes("MATCH") ||
-        typeStr.includes("VIEW") ||
-        textStr.includes("interest") ||
-        textStr.includes("message") ||
-        textStr.includes("viewed")
-      );
-    }
-    if (notifTab === "urgent") {
-      return (
-        typeStr.includes("SYSTEM") ||
-        typeStr.includes("URGENT") ||
-        typeStr.includes("ALERT") ||
-        typeStr.includes("PAYMENT") ||
-        typeStr.includes("VERIF") ||
-        textStr.includes("urgent") ||
-        textStr.includes("action required") ||
-        textStr.includes("review") ||
-        textStr.includes("verification")
-      );
-    }
-    return true;
-  });
+  const filteredNotifs = notifItems;
 
   return (
     <header
       className="sticky top-0 z-40 w-full border-b shadow-xs"
-      style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderColor: "#E5E7EB",
+      }}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
         {/* LEFT — Brand Logo */}
@@ -221,6 +243,7 @@ export function DashboardNav({
               className="object-cover w-full h-full"
             />
           </div>
+
           <span
             className="text-lg font-bold tracking-tight hidden sm:block"
             style={{ color: "#1F2937" }}
@@ -239,6 +262,7 @@ export function DashboardNav({
         >
           {navLinks.map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
+
             return (
               <Link
                 key={href}
@@ -246,11 +270,14 @@ export function DashboardNav({
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all relative ${
                   active ? "font-bold" : "hover:bg-gray-50"
                 }`}
-                style={{ color: active ? "#00A76F" : "#6B7280" }}
+                style={{
+                  color: active ? "#00A76F" : "#6B7280",
+                }}
                 aria-current={active ? "page" : undefined}
               >
                 <Icon className="w-5 h-5" aria-hidden="true" />
                 <span>{label}</span>
+
                 {active && (
                   <span
                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
@@ -268,7 +295,9 @@ export function DashboardNav({
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all relative ${
                 notifOpen ? "font-bold" : "hover:bg-gray-50"
               }`}
-              style={{ color: notifOpen ? "#00A76F" : "#6B7280" }}
+              style={{
+                color: notifOpen ? "#00A76F" : "#6B7280",
+              }}
               aria-label="Open notifications dropdown"
               aria-expanded={notifOpen}
               data-testid="notification-bell-btn"
