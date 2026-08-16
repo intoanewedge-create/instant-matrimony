@@ -48,6 +48,7 @@ export default async function DashboardPage() {
       conversations={data.conversations}
       notifications={data.notifications}
       publicId={publicId}
+      currentUserId={userId}
     />
   );
 }
