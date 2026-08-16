@@ -34,6 +34,8 @@ export class SearchSpecification {
     recentlyJoined?: boolean;
     recentlyActive?: boolean;
     minCompletion?: number;
+    category?: string;
+    categoryTargetUserIds?: string[] | null;
   }) {
     const andClauses: any[] = [
       ProfileSpecification.approvedOnly(),
@@ -42,6 +44,27 @@ export class SearchSpecification {
 
     if (params.blockedUserIds && params.blockedUserIds.length > 0) {
       andClauses.push({ userId: { notIn: params.blockedUserIds } });
+    }
+
+    if (params.categoryTargetUserIds !== undefined && params.categoryTargetUserIds !== null) {
+      andClauses.push({ userId: { in: params.categoryTargetUserIds } });
+    }
+
+    if (params.category === "pref_nri") {
+      andClauses.push({
+        OR: [
+          { country: { notIn: ["India", "INDIA", "in", "In", "IN"] } },
+          { citizenship: { notIn: ["India", "INDIA", "in", "In", "IN"] } },
+        ],
+      });
+    } else if (params.category === "with_horoscope") {
+      andClauses.push({
+        OR: [{ horoscope: { not: null } }, { rasi: { not: null } }, { star: { not: null } }],
+      });
+    } else if (params.category === "star_matches") {
+      andClauses.push({ star: { not: null } });
+    } else if (params.category === "horoscope_matches") {
+      andClauses.push({ OR: [{ horoscope: { not: null } }, { rasi: { not: null } }] });
     }
 
     // Filter by public Profile ID (IM########)

@@ -183,7 +183,7 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
     setLoading(true);
     try {
       const res = await searchMatchesAction({
-        filters: cat.filter || {},
+        filters: { ...(cat.filter || {}), category: cat.id },
         page: 1,
         limit: 12,
         sortBy,
@@ -362,16 +362,39 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
               <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
                 <Users className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-gray-900">No matches found for this category</h3>
+              <h3 className="text-base font-bold text-gray-900">
+                {activeCategory === "shortlisted_by_you" || activeCategory === "viewed_you"
+                  ? "You have no matches left"
+                  : activeCategory === "shortlisted_you" || activeCategory === "viewed_by_you"
+                  ? "No matches have shortlisted your profile yet"
+                  : activeCategory === "with_horoscope"
+                  ? "You have no horoscope matches"
+                  : activeCategory === "horoscope_matches"
+                  ? "Add your horoscope to view horoscope matching profile"
+                  : "No results found"}
+              </h3>
               <p className="text-xs text-gray-500 max-w-md mx-auto">
-                Try selecting "Your Matches" or update your partner preferences to discover more candidates.
+                {activeCategory === "horoscope_matches"
+                  ? "Please complete your horoscope details to discover compatible star and horoscope matches."
+                  : "Try viewing all matches or update your partner preferences to discover more candidates."}
               </p>
-              <Link
-                href="/onboarding?step=8"
-                className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
-              >
-                Edit Preferences
-              </Link>
+              <div className="flex justify-center gap-3 pt-1">
+                {activeCategory === "horoscope_matches" ? (
+                  <Link
+                    href="/profile#horoscope"
+                    className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
+                  >
+                    Add Horoscope
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => handleCategorySelect({ id: "all", filter: {} })}
+                    className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
+                  >
+                    View All Matches
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

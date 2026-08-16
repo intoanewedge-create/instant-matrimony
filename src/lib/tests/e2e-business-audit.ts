@@ -78,7 +78,7 @@ async function runFullE2eBusinessAudit() {
     });
 
     // Fetch profile created during registration
-    let profileA = await prisma.profile.findUniqueOrThrow({
+    const profileA = await prisma.profile.findUniqueOrThrow({
       where: { userId: userA.id },
     });
 

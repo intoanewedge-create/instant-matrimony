@@ -34,10 +34,73 @@ export class PrismaSearchRepository implements ISearchRepository {
 
     const viewerProfile = await prisma.profile.findUnique({
       where: { userId: viewerId },
-      select: { gender: true },
+      select: { gender: true, city: true, state: true, country: true },
     });
     const viewerGender = viewerProfile?.gender?.toUpperCase();
     const enforcedTargetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "NONE";
+
+    const category = filters.category || (params as any).category;
+    let categoryTargetUserIds: string[] | null = null;
+
+    if (category === "shortlisted_by_you") {
+      const favs = await prisma.favorite.findMany({
+        where: { userId: viewerId },
+        select: { favoriteUserId: true },
+      });
+      categoryTargetUserIds = favs.map((f) => f.favoriteUserId);
+    } else if (category === "viewed_you") {
+      const visits = await prisma.profileVisitor.findMany({
+        where: { visitedId: viewerId },
+        select: { visitorId: true },
+      });
+      categoryTargetUserIds = visits.map((v) => v.visitorId);
+    } else if (category === "shortlisted_you") {
+      const favs = await prisma.favorite.findMany({
+        where: { favoriteUserId: viewerId },
+        select: { userId: true },
+      });
+      categoryTargetUserIds = favs.map((f) => f.userId);
+    } else if (category === "viewed_by_you") {
+      const visits = await prisma.profileVisitor.findMany({
+        where: { visitorId: viewerId },
+        select: { visitedId: true },
+      });
+      categoryTargetUserIds = visits.map((v) => v.visitedId);
+    } else if (category === "nearby") {
+      if (viewerProfile?.city) filters.city = viewerProfile.city;
+      else if (viewerProfile?.state) filters.state = viewerProfile.state;
+      else if (viewerProfile?.country) filters.country = viewerProfile.country;
+    } else if (category === "pref_education" || category === "pref_profession" || category === "pref_location") {
+      const pref = await prisma.partnerPreference.findFirst({
+        where: { profile: { userId: viewerId } },
+      });
+      if (pref) {
+        if (category === "pref_education" && pref.education) filters.education = pref.education;
+        if (category === "pref_location" && pref.country) filters.country = pref.country;
+      }
+    } else if (category === "looking_for_you") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        select: { religion: true, education: true },
+      });
+      if (vFullProf) {
+        const matchingPrefs = await prisma.partnerPreference.findMany({
+          where: {
+            OR: [
+              { religion: { equals: vFullProf.religion, mode: "insensitive" } },
+              { education: { equals: vFullProf.education, mode: "insensitive" } },
+            ],
+          },
+          select: { profileId: true },
+        });
+        const matchedProfileIds = matchingPrefs.map((p) => p.profileId);
+        const matchedProfs = await prisma.profile.findMany({
+          where: { id: { in: matchedProfileIds } },
+          select: { userId: true },
+        });
+        categoryTargetUserIds = matchedProfs.map((p) => p.userId);
+      }
+    }
 
     const where = SearchSpecification.buildWhereClause({
       viewerId,
@@ -72,6 +135,8 @@ export class PrismaSearchRepository implements ISearchRepository {
       recentlyJoined: filters.recentlyJoined,
       recentlyActive: filters.recentlyActive,
       minCompletion: filters.minCompletion,
+      category,
+      categoryTargetUserIds,
     });
 
     let orderBy: any = [];

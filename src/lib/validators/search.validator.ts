@@ -31,5 +31,7 @@ export const searchFilterSchema = z.object({
   recentlyActive: z.preprocess((val) => val === true || val === "true", z.boolean()).optional(),
   page: z.preprocess((val) => (val ? Number(val) : 1), z.number().min(1)).optional(),
   limit: z.preprocess((val) => (val ? Number(val) : 12), z.number().min(1).max(50)).optional(),
+  profilePublicId: z.string().optional(),
+  category: z.string().optional(),
   sortBy: z.enum(["bestMatch", "recentlyJoined", "recentlyActive", "age", "height"]).optional(),
 });
