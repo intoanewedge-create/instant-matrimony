@@ -46,7 +46,11 @@ export async function searchMatchesAction(params: {
     return { success: false, error: serviceResult.error };
   }
 
-  return { success: true, ...serviceResult.data };
+  const viewerHasHoroscope = !!(
+    profileRes.data?.horoscope && profileRes.data.horoscope.trim().length > 0
+  );
+
+  return { success: true, viewerHasHoroscope, ...serviceResult.data };
 }
 
 export async function getSearchSuggestionsAction(query: string) {
@@ -127,6 +131,7 @@ export async function getRecentlyViewedProfilesAction() {
         deduplicatedProfiles.push({
           profile: {
             ...visit.visited.profile,
+            name: visit.visited.name,
             user: {
               id: visit.visited.id,
               publicId: visit.visited.publicId,

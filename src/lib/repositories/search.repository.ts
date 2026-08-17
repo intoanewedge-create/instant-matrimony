@@ -34,7 +34,7 @@ export class PrismaSearchRepository implements ISearchRepository {
 
     const viewerProfile = await prisma.profile.findUnique({
       where: { userId: viewerId },
-      select: { gender: true, city: true, state: true, country: true },
+      select: { gender: true, city: true, state: true, country: true, horoscope: true, education: true, occupation: true },
     });
     const viewerGender = viewerProfile?.gender?.toUpperCase();
     const enforcedTargetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "NONE";
@@ -43,11 +43,11 @@ export class PrismaSearchRepository implements ISearchRepository {
     let categoryTargetUserIds: string[] | null = null;
 
     if (category === "shortlisted_by_you") {
-      const favs = await prisma.favorite.findMany({
-        where: { userId: viewerId },
-        select: { favoriteUserId: true },
+      const interests = await prisma.interest.findMany({
+        where: { senderId: viewerId },
+        select: { receiverId: true },
       });
-      categoryTargetUserIds = favs.map((f) => f.favoriteUserId);
+      categoryTargetUserIds = interests.map((i) => i.receiverId);
     } else if (category === "viewed_you") {
       const visits = await prisma.profileVisitor.findMany({
         where: { visitedId: viewerId },
@@ -55,41 +55,131 @@ export class PrismaSearchRepository implements ISearchRepository {
       });
       categoryTargetUserIds = visits.map((v) => v.visitorId);
     } else if (category === "shortlisted_you") {
-      const favs = await prisma.favorite.findMany({
-        where: { favoriteUserId: viewerId },
-        select: { userId: true },
+      const interests = await prisma.interest.findMany({
+        where: { receiverId: viewerId },
+        select: { senderId: true },
       });
-      categoryTargetUserIds = favs.map((f) => f.userId);
+      categoryTargetUserIds = interests.map((i) => i.senderId);
     } else if (category === "viewed_by_you") {
       const visits = await prisma.profileVisitor.findMany({
         where: { visitorId: viewerId },
         select: { visitedId: true },
       });
       categoryTargetUserIds = visits.map((v) => v.visitedId);
+    } else if (category === "newly_joined") {
+      filters.recentlyJoined = true;
     } else if (category === "nearby") {
       if (viewerProfile?.city) filters.city = viewerProfile.city;
       else if (viewerProfile?.state) filters.state = viewerProfile.state;
       else if (viewerProfile?.country) filters.country = viewerProfile.country;
-    } else if (category === "pref_education" || category === "pref_profession" || category === "pref_location") {
-      const pref = await prisma.partnerPreference.findFirst({
-        where: { profile: { userId: viewerId } },
+      else categoryTargetUserIds = [];
+    } else if (category === "with_photos") {
+      filters.hasPhoto = true;
+    } else if (category === "with_horoscope") {
+      const vHoroscope = viewerProfile?.horoscope?.trim();
+      if (!vHoroscope) {
+        categoryTargetUserIds = [];
+      }
+    } else if (category === "star_matches") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        select: { star: true },
       });
-      if (pref) {
-        if (category === "pref_education" && pref.education) filters.education = pref.education;
-        if (category === "pref_location" && pref.country) filters.country = pref.country;
+      const vStar = vFullProf?.star?.trim();
+      if (!vStar) {
+        categoryTargetUserIds = [];
+      } else {
+        const matchedProfs = await prisma.profile.findMany({
+          where: {
+            userId: { not: viewerId },
+            status: "APPROVED",
+            deletedAt: null,
+            star: { equals: vStar, mode: "insensitive" },
+          },
+          select: { userId: true },
+        });
+        categoryTargetUserIds = matchedProfs.map((p) => p.userId);
+      }
+    } else if (category === "horoscope_matches") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        include: { partnerPreference: true },
+      });
+      const vPref = vFullProf?.partnerPreference;
+      const prefStar = vPref?.star?.trim();
+      const prefRasi = vPref?.rasi?.trim();
+
+      if (!prefStar && !prefRasi) {
+        categoryTargetUserIds = [];
+      } else {
+        const matchedProfs = await prisma.profile.findMany({
+          where: {
+            userId: { not: viewerId },
+            status: "APPROVED",
+            deletedAt: null,
+            ...(prefStar ? { star: { equals: prefStar, mode: "insensitive" } } : {}),
+            ...(prefRasi ? { rasi: { equals: prefRasi, mode: "insensitive" } } : {}),
+          },
+          select: { userId: true },
+        });
+        categoryTargetUserIds = matchedProfs.map((p) => p.userId);
+      }
+    } else if (category === "pref_education") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        include: { partnerPreference: true },
+      });
+      const prefEdu = vFullProf?.partnerPreference?.education?.trim();
+      if (prefEdu && prefEdu.length > 0) {
+        filters.education = prefEdu;
+      } else {
+        categoryTargetUserIds = [];
+      }
+    } else if (category === "pref_profession") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        include: { partnerPreference: true },
+      });
+      const prefOcc = vFullProf?.partnerPreference?.occupation?.trim();
+      if (prefOcc && prefOcc.length > 0) {
+        filters.occupation = prefOcc;
+      } else {
+        categoryTargetUserIds = [];
+      }
+    } else if (category === "pref_location") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        include: { partnerPreference: true },
+      });
+      const vPref = vFullProf?.partnerPreference;
+      const prefCity = vPref?.city?.trim();
+      const prefDistrict = vPref?.district?.trim();
+      const prefState = vPref?.state?.trim();
+      const prefCountry = vPref?.country?.trim();
+
+      if (prefCity && prefCity.length > 0) {
+        filters.city = prefCity;
+      } else if (prefDistrict && prefDistrict.length > 0) {
+        filters.district = prefDistrict;
+      } else if (prefState && prefState.length > 0) {
+        filters.state = prefState;
+      } else if (prefCountry && prefCountry.length > 0) {
+        filters.country = prefCountry;
+      } else {
+        categoryTargetUserIds = [];
       }
     } else if (category === "looking_for_you") {
       const vFullProf = await prisma.profile.findUnique({
         where: { userId: viewerId },
-        select: { religion: true, education: true },
       });
       if (vFullProf) {
         const matchingPrefs = await prisma.partnerPreference.findMany({
           where: {
             OR: [
-              { religion: { equals: vFullProf.religion, mode: "insensitive" } },
-              { education: { equals: vFullProf.education, mode: "insensitive" } },
-            ],
+              vFullProf.religion ? { religion: { equals: vFullProf.religion, mode: "insensitive" } } : undefined,
+              vFullProf.education ? { education: { equals: vFullProf.education, mode: "insensitive" } } : undefined,
+              vFullProf.country ? { country: { equals: vFullProf.country, mode: "insensitive" } } : undefined,
+            ].filter(Boolean) as any[],
           },
           select: { profileId: true },
         });
@@ -99,6 +189,108 @@ export class PrismaSearchRepository implements ISearchRepository {
           select: { userId: true },
         });
         categoryTargetUserIds = matchedProfs.map((p) => p.userId);
+      } else {
+        categoryTargetUserIds = [];
+      }
+    } else if (category === "mutual_matches") {
+      const vFullProf = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        include: { partnerPreference: true },
+      });
+      if (vFullProf && vFullProf.partnerPreference) {
+        const vPref = vFullProf.partnerPreference;
+        const condA: any = {};
+        if (vPref.religion?.trim()) condA.religion = { equals: vPref.religion.trim(), mode: "insensitive" };
+        if (vPref.motherTongue?.trim()) condA.motherTongue = { equals: vPref.motherTongue.trim(), mode: "insensitive" };
+        if (vPref.maritalStatus?.trim()) condA.maritalStatus = { equals: vPref.maritalStatus.trim(), mode: "insensitive" };
+        if (vPref.education?.trim()) condA.education = { equals: vPref.education.trim(), mode: "insensitive" };
+        if (vPref.occupation?.trim()) condA.occupation = { equals: vPref.occupation.trim(), mode: "insensitive" };
+        if (vPref.country?.trim()) condA.country = { equals: vPref.country.trim(), mode: "insensitive" };
+        if (vPref.state?.trim()) condA.state = { equals: vPref.state.trim(), mode: "insensitive" };
+        if (vPref.district?.trim()) condA.district = { equals: vPref.district.trim(), mode: "insensitive" };
+        if (vPref.city?.trim()) condA.city = { equals: vPref.city.trim(), mode: "insensitive" };
+        if (vPref.star?.trim()) condA.star = { equals: vPref.star.trim(), mode: "insensitive" };
+        if (vPref.rasi?.trim()) condA.rasi = { equals: vPref.rasi.trim(), mode: "insensitive" };
+        if (vPref.minHeight || vPref.maxHeight) {
+          condA.height = {
+            ...(vPref.minHeight ? { gte: vPref.minHeight } : {}),
+            ...(vPref.maxHeight ? { lte: vPref.maxHeight } : {}),
+          };
+        }
+
+        const candidates = await prisma.profile.findMany({
+          where: {
+            userId: { not: viewerId },
+            status: "APPROVED",
+            deletedAt: null,
+            user: { isActive: true, deletedAt: null },
+            ...condA,
+          },
+          include: { partnerPreference: true },
+        });
+
+        const viewerDob = vFullProf.dateOfBirth;
+        let viewerAge: number | null = null;
+        if (viewerDob) {
+          const diffMs = Date.now() - new Date(viewerDob).getTime();
+          viewerAge = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365.25));
+        }
+
+        const mutualMatchedUserIds = candidates
+          .filter((candidate) => {
+            const cPref = candidate.partnerPreference;
+            if (!cPref) return false;
+
+            if (cPref.religion?.trim()) {
+              if (!vFullProf.religion || cPref.religion.trim().toLowerCase() !== vFullProf.religion.trim().toLowerCase()) return false;
+            }
+            if (cPref.motherTongue?.trim()) {
+              if (!vFullProf.motherTongue || cPref.motherTongue.trim().toLowerCase() !== vFullProf.motherTongue.trim().toLowerCase()) return false;
+            }
+            if (cPref.maritalStatus?.trim()) {
+              if (!vFullProf.maritalStatus || cPref.maritalStatus.trim().toLowerCase() !== vFullProf.maritalStatus.trim().toLowerCase()) return false;
+            }
+            if (cPref.education?.trim()) {
+              if (!vFullProf.education || cPref.education.trim().toLowerCase() !== vFullProf.education.trim().toLowerCase()) return false;
+            }
+            if (cPref.occupation?.trim()) {
+              if (!vFullProf.occupation || cPref.occupation.trim().toLowerCase() !== vFullProf.occupation.trim().toLowerCase()) return false;
+            }
+            if (cPref.country?.trim()) {
+              if (!vFullProf.country || cPref.country.trim().toLowerCase() !== vFullProf.country.trim().toLowerCase()) return false;
+            }
+            if (cPref.state?.trim()) {
+              if (!vFullProf.state || cPref.state.trim().toLowerCase() !== vFullProf.state.trim().toLowerCase()) return false;
+            }
+            if (cPref.district?.trim()) {
+              if (!vFullProf.district || cPref.district.trim().toLowerCase() !== vFullProf.district.trim().toLowerCase()) return false;
+            }
+            if (cPref.city?.trim()) {
+              if (!vFullProf.city || cPref.city.trim().toLowerCase() !== vFullProf.city.trim().toLowerCase()) return false;
+            }
+            if (cPref.star?.trim()) {
+              if (!vFullProf.star || cPref.star.trim().toLowerCase() !== vFullProf.star.trim().toLowerCase()) return false;
+            }
+            if (cPref.rasi?.trim()) {
+              if (!vFullProf.rasi || cPref.rasi.trim().toLowerCase() !== vFullProf.rasi.trim().toLowerCase()) return false;
+            }
+            if (cPref.minAge || cPref.maxAge) {
+              if (!viewerAge) return false;
+              if (cPref.minAge && viewerAge < cPref.minAge) return false;
+              if (cPref.maxAge && viewerAge > cPref.maxAge) return false;
+            }
+            if (cPref.minHeight || cPref.maxHeight) {
+              if (!vFullProf.height) return false;
+              if (cPref.minHeight && vFullProf.height < cPref.minHeight) return false;
+              if (cPref.maxHeight && vFullProf.height > cPref.maxHeight) return false;
+            }
+            return true;
+          })
+          .map((c) => c.userId);
+
+        categoryTargetUserIds = mutualMatchedUserIds;
+      } else {
+        categoryTargetUserIds = [];
       }
     }
 

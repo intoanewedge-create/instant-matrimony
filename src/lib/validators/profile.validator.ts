@@ -34,6 +34,8 @@ export const step3Schema = z.object({
   gothram: z.string().optional(),
   motherTongue: z.string().min(1, "Mother tongue is required"),
   horoscope: z.string().optional(),
+  star: z.string().optional(),
+  rasi: z.string().optional(),
 });
 
 export const step4Schema = z.object({
@@ -101,7 +103,13 @@ export const step8Schema = z.object({
   religion: z.string().optional(),
   motherTongue: z.string().optional(),
   education: z.string().optional(),
+  occupation: z.string().optional(),
   country: z.string().optional(),
+  state: z.string().optional(),
+  district: z.string().optional(),
+  city: z.string().optional(),
+  star: z.string().optional(),
+  rasi: z.string().optional(),
   submitForReview: z.boolean().optional(),
 });
 
@@ -155,6 +163,8 @@ export const profileUpdateSchema = z.object({
   familyValues: z.string().optional(),
   familyDetails: z.string().optional(),
   horoscope: z.string().optional(),
+  star: z.string().optional(),
+  rasi: z.string().optional(),
   smoking: z.string().optional(),
   drinking: z.string().optional(),
   foodPreference: z.string().optional(),

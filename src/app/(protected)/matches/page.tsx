@@ -5,18 +5,27 @@ import { MatchesClient } from "./matches-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function MatchesPage() {
+export default async function MatchesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ category?: string }> | { category?: string };
+}) {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
   const userId = (session.user as any).id as string;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const initialCategory = resolvedSearchParams?.category || "all";
+
+  const profileResult = await container.services.profileService.getProfileByUserId(userId);
+  const viewerHasHoroscope = !!(profileResult.success && profileResult.data?.horoscope);
 
   // Search initial matches for user
   const searchResult = await container.services.searchService
     .searchMatches(userId, {
-      filters: {},
+      filters: { category: initialCategory },
       page: 1,
       limit: 12,
       sortBy: "bestMatch",
@@ -27,5 +36,11 @@ export default async function MatchesPage() {
     ? searchResult.data
     : { data: [], totalRecords: 0, page: 1, totalPages: 1 };
 
-  return <MatchesClient initialResults={initialData} />;
+  return (
+    <MatchesClient
+      initialResults={initialData}
+      initialCategory={initialCategory}
+      viewerHasHoroscope={viewerHasHoroscope}
+    />
+  );
 }

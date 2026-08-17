@@ -52,29 +52,41 @@ export class SearchSpecification {
 
     if (params.category === "pref_nri") {
       andClauses.push({
-        OR: [
-          { country: { notIn: ["India", "INDIA", "in", "In", "IN"] } },
-          { citizenship: { notIn: ["India", "INDIA", "in", "In", "IN"] } },
-        ],
+        country: {
+          notIn: ["India", "INDIA", "in", "In", "IN", "india"],
+          not: null,
+        },
       });
     } else if (params.category === "with_horoscope") {
       andClauses.push({
-        OR: [{ horoscope: { not: null } }, { rasi: { not: null } }, { star: { not: null } }],
+        horoscope: {
+          not: null,
+        },
       });
-    } else if (params.category === "star_matches") {
-      andClauses.push({ star: { not: null } });
-    } else if (params.category === "horoscope_matches") {
-      andClauses.push({ OR: [{ horoscope: { not: null } }, { rasi: { not: null } }] });
+      andClauses.push({
+        horoscope: {
+          not: "",
+        },
+      });
     }
 
     // Filter by public Profile ID (IM########)
     if (params.profilePublicId && params.profilePublicId.trim().length > 0) {
+      const cleanId = params.profilePublicId.trim();
+      const idWithIM = cleanId.toUpperCase().startsWith("IM")
+        ? cleanId.toUpperCase()
+        : `IM${cleanId.toUpperCase()}`;
       andClauses.push({
-        user: { publicId: { equals: params.profilePublicId.trim().toUpperCase(), mode: "insensitive" } },
+        user: {
+          publicId: {
+            in: [cleanId, cleanId.toUpperCase(), idWithIM],
+            mode: "insensitive",
+          },
+        },
       });
     }
 
-    if (params.gender) {
+    if (params.gender && (!params.profilePublicId || params.profilePublicId.trim().length === 0)) {
       andClauses.push(ProfileSpecification.filterByGender(params.gender));
     }
 

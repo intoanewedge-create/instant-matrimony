@@ -28,10 +28,17 @@ interface MatchesClientProps {
     page: number;
     totalPages: number;
   };
+  initialCategory?: string;
+  viewerHasHoroscope?: boolean;
 }
 
-export function MatchesClient({ initialResults }: MatchesClientProps) {
-  const [activeCategory, setActiveCategory] = useState("all");
+export function MatchesClient({
+  initialResults,
+  initialCategory = "all",
+  viewerHasHoroscope = false,
+}: MatchesClientProps) {
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [hasHoroscope, setHasHoroscope] = useState(viewerHasHoroscope);
   const [resultsData, setResultsData] = useState<any[]>(initialResults?.data || []);
   const [totalRecords, setTotalRecords] = useState(initialResults?.totalRecords || 0);
   const [loading, setLoading] = useState(false);
@@ -180,6 +187,11 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
 
   const handleCategorySelect = async (cat: any) => {
     setActiveCategory(cat.id);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("category", cat.id);
+      window.history.pushState({}, "", url.toString());
+    }
     setLoading(true);
     try {
       const res = await searchMatchesAction({
@@ -191,6 +203,9 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
       if (res.success) {
         setResultsData(res.data || []);
         setTotalRecords(res.totalRecords || 0);
+        if (typeof (res as any).viewerHasHoroscope === "boolean") {
+          setHasHoroscope((res as any).viewerHasHoroscope);
+        }
       }
     } catch {
       // ignore
@@ -363,23 +378,17 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
                 <Users className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-gray-900">
-                {activeCategory === "shortlisted_by_you" || activeCategory === "viewed_you"
-                  ? "You have no matches left"
-                  : activeCategory === "shortlisted_you" || activeCategory === "viewed_by_you"
-                  ? "No matches have shortlisted your profile yet"
-                  : activeCategory === "with_horoscope"
-                  ? "You have no horoscope matches"
-                  : activeCategory === "horoscope_matches"
+                {(activeCategory === "with_horoscope" || activeCategory === "horoscope_matches" || activeCategory === "star_matches") && !hasHoroscope
                   ? "Add your horoscope to view horoscope matching profile"
-                  : "No results found"}
+                  : "No matches found"}
               </h3>
               <p className="text-xs text-gray-500 max-w-md mx-auto">
-                {activeCategory === "horoscope_matches"
+                {(activeCategory === "with_horoscope" || activeCategory === "horoscope_matches" || activeCategory === "star_matches") && !hasHoroscope
                   ? "Please complete your horoscope details to discover compatible star and horoscope matches."
                   : "Try viewing all matches or update your partner preferences to discover more candidates."}
               </p>
               <div className="flex justify-center gap-3 pt-1">
-                {activeCategory === "horoscope_matches" ? (
+                {(activeCategory === "with_horoscope" || activeCategory === "horoscope_matches" || activeCategory === "star_matches") && !hasHoroscope ? (
                   <Link
                     href="/profile#horoscope"
                     className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"

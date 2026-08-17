@@ -118,8 +118,13 @@ export function SearchClient({
     },
   });
 
+  const [customEducationInput, setCustomEducationInput] = useState("");
+  const [customOccupationInput, setCustomOccupationInput] = useState("");
+
   const selectedReligion = watch("religion");
   const selectedCaste = watch("caste");
+  const selectedEducation = watch("education");
+  const selectedOccupation = watch("occupation");
 
   // Fetch Master Data
   useEffect(() => {
@@ -160,7 +165,13 @@ export function SearchClient({
     try {
       const filters: any = {};
       Object.keys(formData).forEach((key) => {
-        const val = formData[key];
+        let val = formData[key];
+        if (key === "education" && val === "Others") {
+          val = customEducationInput.trim();
+        }
+        if (key === "occupation" && val === "Others") {
+          val = customOccupationInput.trim();
+        }
         if (val !== "" && val !== undefined && val !== false) {
           filters[key] = val;
         }
@@ -458,30 +469,28 @@ export function SearchClient({
 
                       <div className="space-y-1">
                         <Label className="text-[11px] font-semibold text-slate-700">Caste</Label>
-                        {castes.length > 0 ? (
-                          <select {...register("caste")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
-                            <option value="">Any Caste</option>
-                            {castes.map((c) => (
-                              <option key={c.id} value={c.name}>{c.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <Input placeholder="Enter caste" {...register("caste")} className="h-8 text-xs border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500 rounded-lg" />
-                        )}
+                        <select {...register("caste")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
+                          <option value="">Any Caste</option>
+                          {(castes.length > 0
+                            ? castes.map((c) => c.name)
+                            : ["Reddy", "Kamma", "Kapu", "Brahmin", "Arya Vysya", "Padmasali", "Yadav", "Mudiraj", "Mala", "Madiga", "Naidu", "Gowda", "Vaisya", "Velama", "Rajput", "Maratha", "Kayastha", "Agarwal", "Gupta", "Others"]
+                          ).map((cName) => (
+                            <option key={cName} value={cName}>{cName}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-1">
                         <Label className="text-[11px] font-semibold text-slate-700">Sub Caste</Label>
-                        {subCastes.length > 0 ? (
-                          <select {...register("subCaste")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
-                            <option value="">Any Sub Caste</option>
-                            {subCastes.map((sc) => (
-                              <option key={sc.id} value={sc.name}>{sc.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <Input placeholder="Enter sub caste" {...register("subCaste")} className="h-8 text-xs border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500 rounded-lg" />
-                        )}
+                        <select {...register("subCaste")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
+                          <option value="">Any Sub Caste</option>
+                          {(subCastes.length > 0
+                            ? subCastes.map((sc) => sc.name)
+                            : ["Chowdary", "Naidu", "Vaidiki", "Niyogi", "Deshastha", "Kokanastha", "Srivaishnava", "Smartha", "Velama", "Others"]
+                          ).map((scName) => (
+                            <option key={scName} value={scName}>{scName}</option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Mother Tongue */}
@@ -515,20 +524,45 @@ export function SearchClient({
                         <Label className="text-[11px] font-semibold text-slate-700">Education</Label>
                         <select {...register("education")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
                           <option value="">Any Education</option>
-                          {educations.length > 0
-                            ? educations.map((e) => <option key={e.id} value={e.name}>{e.name}</option>)
-                            : EDUCATION_OPTIONS.map((edu) => <option key={edu} value={edu}>{edu}</option>)}
+                          <option value="10th">10th</option>
+                          {(educations.length > 0
+                            ? educations.map((e) => e.name).filter((n) => n !== "10th" && n !== "Others")
+                            : EDUCATION_OPTIONS.filter((e) => e !== "10th" && e !== "Others")
+                          ).map((edu) => (
+                            <option key={edu} value={edu}>{edu}</option>
+                          ))}
+                          <option value="Others">Others</option>
                         </select>
+                        {selectedEducation === "Others" && (
+                          <Input
+                            placeholder="Enter custom education requirement"
+                            value={customEducationInput}
+                            onChange={(e) => setCustomEducationInput(e.target.value)}
+                            className="h-8 text-xs border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500 rounded-lg mt-1"
+                          />
+                        )}
                       </div>
 
                       <div className="space-y-1">
                         <Label className="text-[11px] font-semibold text-slate-700">Occupation</Label>
                         <select {...register("occupation")} className="w-full h-8 px-2 border border-slate-200 bg-slate-50 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-rose-500">
                           <option value="">Any Occupation</option>
-                          {occupations.length > 0
-                            ? occupations.map((o) => <option key={o.id} value={o.name}>{o.name}</option>)
-                            : OCCUPATION_OPTIONS.map((occ) => <option key={occ} value={occ}>{occ}</option>)}
+                          {(occupations.length > 0
+                            ? occupations.map((o) => o.name).filter((n) => n !== "Others")
+                            : OCCUPATION_OPTIONS.filter((occ) => occ !== "Others")
+                          ).map((occ) => (
+                            <option key={occ} value={occ}>{occ}</option>
+                          ))}
+                          <option value="Others">Others</option>
                         </select>
+                        {selectedOccupation === "Others" && (
+                          <Input
+                            placeholder="Enter custom occupation requirement"
+                            value={customOccupationInput}
+                            onChange={(e) => setCustomOccupationInput(e.target.value)}
+                            className="h-8 text-xs border-slate-200 bg-slate-50 text-slate-900 focus-visible:ring-rose-500 rounded-lg mt-1"
+                          />
+                        )}
                       </div>
 
                       {/* Location */}
@@ -569,7 +603,15 @@ export function SearchClient({
                 </div>
 
                 <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-xs py-2.5 shadow-md shadow-rose-500/20 rounded-xl mt-2">
-                  {loading ? <Spinner className="w-4 h-4 mr-2" /> : <Search className="w-4 h-4 mr-2" />} Apply Filters
+                  {loading ? (
+                    <>
+                      <Spinner className="w-4 h-4 mr-2" /> Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" /> Apply Filter
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -588,7 +630,7 @@ export function SearchClient({
               <div className="h-12 w-12 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mx-auto mb-3">
                 <Compass className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">No Matching Profiles Found</h3>
+              <h3 className="text-lg font-bold text-slate-900">No results found</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                 Try broadening your search criteria or resetting filters to discover more compatible profiles.
               </p>
