@@ -33,6 +33,7 @@ import {
 } from "@/lib/actions/interest.actions";
 import { sendMessageAction } from "@/lib/actions/chat.actions";
 import { unlockContactAction } from "@/lib/actions/contact-unlock.actions";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function ProfileDetailClient({
   profile,
@@ -280,6 +281,13 @@ export function ProfileDetailClient({
                 <span className="text-xs font-medium">No photos uploaded</span>
               </div>
             )}
+          </div>
+
+          {/* Profile ID directly below photo */}
+          <div className="flex items-center justify-center -mt-2">
+            <span className="text-xs font-mono font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200 shadow-xs">
+              Profile ID: {getDisplayProfileId(profile.user, profile.userId || profile.id)}
+            </span>
           </div>
 
           {/* Action buttons */}

@@ -217,8 +217,8 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs bg-slate-900 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
-            <Layers className="w-3.5 h-3.5 text-rose-400" />
+          <span className="text-xs bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
+            <Layers className="w-3.5 h-3.5 text-rose-500" />
             Total: <strong>{initialTestimonials.length}</strong> ({initialTestimonials.filter((t) => t.isApproved).length} Approved)
           </span>
         </div>
@@ -226,60 +226,60 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Create Testimonial Form */}
-        <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl lg:col-span-1 h-fit shadow-xl">
-          <CardHeader className="border-b border-slate-800/80 pb-4">
-            <CardTitle className="text-slate-100 flex items-center gap-2 text-base">
+        <Card className="border border-slate-200 bg-white lg:col-span-1 h-fit shadow-sm">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
               <Plus className="w-4 h-4 text-rose-500" /> Add Success Story
             </CardTitle>
-            <CardDescription className="text-slate-400 text-xs">
+            <CardDescription className="text-slate-500 text-xs">
               Publish a new happy couple testimonial to public pages.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-5 space-y-4">
             <form onSubmit={handleCreateTestimonial} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Couple Names / Member Name</label>
+                <label className="text-xs font-semibold text-slate-700">Couple Names / Member Name</label>
                 <Input
                   placeholder="e.g. Aarav & Priya"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Location & Date / Tagline</label>
+                <label className="text-xs font-semibold text-slate-700">Location & Date / Tagline</label>
                 <Input
                   placeholder="e.g. Hyderabad, Telangana • Married Oct 2025"
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Story / Feedback Content</label>
+                <label className="text-xs font-semibold text-slate-700">Story / Feedback Content</label>
                 <Textarea
                   placeholder="Enter their feedback or matrimonial success story..."
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   rows={4}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs leading-relaxed"
+                  className="border-slate-200 bg-white text-slate-900 text-xs leading-relaxed"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Photo Asset URL (Optional)</label>
+                <label className="text-xs font-semibold text-slate-700">Photo Asset URL (Optional)</label>
                 <Input
                   placeholder="/InstantMatrimony-Logo.jpeg or https://..."
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs font-mono"
+                  className="border-slate-200 bg-white text-slate-900 text-xs font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Rating (1 - 5 Stars)</label>
+                <label className="text-xs font-semibold text-slate-700">Rating (1 - 5 Stars)</label>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -290,18 +290,18 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                     >
                       <Star
                         className={`w-5 h-5 ${
-                          star <= newRating ? "text-amber-400 fill-amber-400" : "text-slate-600"
+                          star <= newRating ? "text-amber-400 fill-amber-400" : "text-slate-300"
                         }`}
                       />
                     </button>
                   ))}
-                  <span className="text-xs font-bold text-amber-400 ml-2">{newRating} / 5</span>
+                  <span className="text-xs font-bold text-amber-500 ml-2">{newRating} / 5</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <ArrowUpDown className="w-3 h-3 text-slate-400" /> Order Priority
                   </label>
                   <Input
@@ -309,18 +309,18 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                     min={0}
                     value={newOrder}
                     onChange={(e) => setNewOrder(Number(e.target.value))}
-                    className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                    className="border-slate-200 bg-white text-slate-900 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Approval State</label>
+                  <label className="text-xs font-semibold text-slate-700">Approval State</label>
                   <button
                     type="button"
                     onClick={() => setNewIsApproved(!newIsApproved)}
                     className={`w-full h-9 rounded-md border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       newIsApproved
-                        ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/60"
-                        : "bg-slate-950 text-slate-400 border-slate-800"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                        : "bg-white text-slate-500 border-slate-200"
                     }`}
                   >
                     {newIsApproved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
@@ -342,11 +342,11 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
         </Card>
 
         {/* Right Column: Existing Testimonials List */}
-        <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl lg:col-span-2 shadow-xl flex flex-col">
-          <CardHeader className="border-b border-slate-800/80 pb-4">
+        <Card className="border border-slate-200 bg-white lg:col-span-2 shadow-sm flex flex-col">
+          <CardHeader className="border-b border-slate-100 pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-slate-100 flex items-center gap-2 text-base">
+                <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
                   <MessageSquare className="w-4 h-4 text-rose-500" /> Published Stories ({filteredTestimonials.length})
                 </CardTitle>
                 <CardDescription className="text-slate-400 text-xs">
@@ -356,12 +356,12 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
 
               {/* Search Box */}
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                 <Input
                   placeholder="Search by couple names or city..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 bg-slate-950/60 border-slate-800 text-xs text-white h-8"
+                  className="pl-8 bg-white border-slate-200 text-xs text-slate-900 h-8"
                 />
               </div>
             </div>
@@ -382,8 +382,8 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                   key={t.id}
                   className={`p-4 rounded-xl border transition-all space-y-3 ${
                     t.isApproved
-                      ? "bg-slate-950/60 border-slate-800/80 hover:border-slate-700"
-                      : "bg-slate-950/30 border-slate-800/40 opacity-75"
+                      ? "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+                      : "bg-slate-50 border-slate-200 opacity-75"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -393,21 +393,21 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm font-bold text-slate-100">{t.name}</h3>
+                          <h3 className="text-sm font-bold text-slate-800">{t.name}</h3>
                           <span
                             className={`text-[10px] px-2 py-0.2 rounded-full font-semibold border ${
                               t.isApproved
-                                ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50"
-                                : "bg-slate-900 text-slate-400 border-slate-800"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-slate-100 text-slate-500 border-slate-200"
                             }`}
                           >
                             {t.isApproved ? "Approved" : "Under Review"}
                           </span>
-                          <span className="text-[10px] font-mono text-slate-500">
+                          <span className="text-[10px] font-mono text-slate-400">
                             Order: #{t.order}
                           </span>
                         </div>
-                        {t.role && <p className="text-xs text-slate-400">{t.role}</p>}
+                        {t.role && <p className="text-xs text-slate-500">{t.role}</p>}
                       </div>
                     </div>
 
@@ -417,16 +417,16 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                         size="sm"
                         onClick={() => handleToggleApproved(t)}
                         title={t.isApproved ? "Revoke approval" : "Approve testimonial"}
-                        className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-950/20 h-7 w-7 p-0"
+                        className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-7 w-7 p-0"
                       >
-                        {t.isApproved ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <XCircle className="w-3.5 h-3.5 text-slate-500" />}
+                        {t.isApproved ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-slate-400" />}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenEdit(t)}
                         title="Edit testimonial"
-                        className="text-slate-400 hover:text-rose-400 hover:bg-slate-800 h-7 w-7 p-0"
+                        className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-7 w-7 p-0"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </Button>
@@ -435,7 +435,7 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                         size="sm"
                         onClick={() => setDeletingTestimonial(t)}
                         title="Delete testimonial"
-                        className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 h-7 w-7 p-0"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-7 w-7 p-0"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -450,13 +450,13 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                         className={`w-3.5 h-3.5 ${
                           star <= (t.rating || 5)
                             ? "text-amber-400 fill-amber-400"
-                            : "text-slate-700"
+                            : "text-slate-300"
                         }`}
                       />
                     ))}
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed italic pl-3 border-l-2 border-rose-500/40">
+                  <p className="text-xs text-slate-600 leading-relaxed italic pl-3 border-l-2 border-rose-400">
                     "{t.content}"
                   </p>
                 </div>
@@ -468,15 +468,15 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
 
       {/* Edit Testimonial Dialog Modal */}
       {editingTestimonial && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Edit2 className="w-4 h-4 text-rose-500" /> Edit Story
               </h3>
               <button
                 onClick={() => setEditingTestimonial(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 p-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -484,35 +484,35 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Names</label>
+                <label className="font-semibold text-slate-700">Names</label>
                 <Input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Location / Date</label>
+                <label className="font-semibold text-slate-700">Location / Date</label>
                 <Input
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Story Content</label>
+                <label className="font-semibold text-slate-700">Story Content</label>
                 <Textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={4}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs leading-relaxed"
+                  className="border-slate-200 bg-white text-slate-900 text-xs leading-relaxed"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Rating</label>
+                <label className="font-semibold text-slate-700">Rating</label>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -523,35 +523,35 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                     >
                       <Star
                         className={`w-4 h-4 ${
-                          star <= editRating ? "text-amber-400 fill-amber-400" : "text-slate-600"
+                          star <= editRating ? "text-amber-400 fill-amber-400" : "text-slate-300"
                         }`}
                       />
                     </button>
                   ))}
-                  <span className="text-xs font-bold text-amber-400">{editRating} / 5</span>
+                  <span className="text-xs font-bold text-amber-500">{editRating} / 5</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-300">Display Order</label>
+                  <label className="font-semibold text-slate-700">Display Order</label>
                   <Input
                     type="number"
                     min={0}
                     value={editOrder}
                     onChange={(e) => setEditOrder(Number(e.target.value))}
-                    className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                    className="border-slate-200 bg-white text-slate-900 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-300">Status</label>
+                  <label className="font-semibold text-slate-700">Status</label>
                   <button
                     type="button"
                     onClick={() => setEditIsApproved(!editIsApproved)}
                     className={`w-full h-9 rounded-md border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       editIsApproved
-                        ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/60"
-                        : "bg-slate-950 text-slate-400 border-slate-800"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                        : "bg-white text-slate-500 border-slate-200"
                     }`}
                   >
                     {editIsApproved ? "Approved" : "Hidden"}
@@ -560,12 +560,12 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
               <Button
                 variant="ghost"
                 onClick={() => setEditingTestimonial(null)}
                 size="sm"
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </Button>
@@ -585,20 +585,20 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
 
       {/* Delete Confirmation Modal */}
       {deletingTestimonial && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-red-950/60 text-red-400 border border-red-900/50">
+              <div className="p-2 rounded-full bg-red-50 text-red-500 border border-red-200">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Delete Testimonial</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Are you sure you want to remove this story?</p>
+                <h3 className="text-base font-bold text-slate-900">Delete Testimonial</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Are you sure you want to remove this story?</p>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg text-xs space-y-1">
-              <p className="font-semibold text-slate-200">{deletingTestimonial.name}</p>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+              <p className="font-semibold text-slate-800">{deletingTestimonial.name}</p>
               <p className="text-slate-500 line-clamp-2">"{deletingTestimonial.content}"</p>
             </div>
 
@@ -607,7 +607,7 @@ export function AdminTestimonialsClient({ initialTestimonials }: { initialTestim
                 variant="ghost"
                 onClick={() => setDeletingTestimonial(null)}
                 size="sm"
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </Button>

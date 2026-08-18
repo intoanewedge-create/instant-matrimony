@@ -222,9 +222,10 @@ export function BillingClient({ plans, activeMembership, invoices = [], orders =
           <p className="text-slate-500 text-sm mt-1">Unlock matches, verify your profile, and fast-track your matchmaking</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {plans.map((plan: any) => {
-            const isCurrent = activeMembership?.planId === plan.id;
+            const isConcierge = plan.price >= 100000 || plan.name?.toLowerCase().includes("concierge");
+            const isCurrent = activeMembership?.planId === plan.id || (isConcierge && (activeMembership?.plan?.price >= 100000 || activeMembership?.plan?.name?.toLowerCase().includes("concierge")));
             const isPlanPending = payments.some((p: any) => p.planId === plan.id && p.status === "PENDING");
             return (
               <motion.div
@@ -232,13 +233,16 @@ export function BillingClient({ plans, activeMembership, invoices = [], orders =
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className={`border h-full flex flex-col justify-between overflow-hidden bg-white shadow-sm ${isCurrent ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/10' : isPlanPending ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200 hover:border-slate-300'}`}>
+                <Card className={`border h-full flex flex-col justify-between overflow-hidden bg-white shadow-sm rounded-3xl ${isCurrent ? 'border-rose-600 ring-2 ring-rose-500/20 bg-rose-50/10' : isPlanPending ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200 hover:border-slate-300'}`}>
                   <CardHeader className="p-6">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-bold uppercase tracking-wider text-rose-600">{plan.name}</span>
+                      <span className="text-sm font-bold uppercase tracking-wider text-rose-600 flex items-center gap-1.5">
+                        {plan.name}
+                        {isConcierge && <Zap className="w-4 h-4 text-amber-500" />}
+                      </span>
                       {isCurrent && (
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                          CURRENT PLAN
+                        <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 uppercase tracking-wider">
+                          SELECTED PLAN
                         </span>
                       )}
                       {isPlanPending && !isCurrent && (
@@ -250,49 +254,69 @@ export function BillingClient({ plans, activeMembership, invoices = [], orders =
                     <div className="flex items-baseline gap-1 my-3">
                       <span className="text-4xl font-extrabold text-slate-900">{formatCurrency(plan.price)}</span>
                       <span className="text-slate-500 text-sm">
-                        {plan.price >= 100000 || plan.name?.toLowerCase().includes("concierge")
+                        {isConcierge
                           ? " / Valid Until Marriage"
-                          : ` / ${plan.durationDays} days`}
+                          : ` / ${plan.durationDays || 30} days`}
                       </span>
                     </div>
                     <CardDescription className="text-xs text-slate-500 leading-relaxed mt-2">
-                      {plan.description || "Unlock high-quality premium matches and secure direct communication features."}
+                      {plan.description || (isConcierge ? "Dedicated Relationship Manager, background verification & priority introductions." : "Essential contact unlocks and unlimited messaging for verified matchmaking.")}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="px-6 pb-6 pt-0 flex-grow">
                     <ul className="space-y-2.5 text-xs text-slate-600">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-rose-600 shrink-0" />
-                        <span>Direct Messaging & Photo Sharing</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-rose-600 shrink-0" />
-                        <span>View Mutual Connection Contact Details</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-rose-600 shrink-0" />
-                        <span>Compatibility Matching score calculation</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-rose-600 shrink-0" />
-                        <span>Priority support & identity badge</span>
-                      </li>
+                      {plan.features && Array.isArray(plan.features) ? (
+                        plan.features.map((f: string, idx: number) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>{f}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>Direct Messaging & Photo Sharing</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>View Mutual Connection Contact Details</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>Compatibility Matching score calculation</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-rose-600 shrink-0" />
+                            <span>Priority support & identity badge</span>
+                          </li>
+                        </>
+                      )}
                     </ul>
                   </CardContent>
-                  <CardFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+                  <CardFooter className="p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col gap-2">
                     <Button
                       onClick={() => handleCheckout(plan.id, plan.price)}
                       disabled={loadingPlan !== null || isCurrent || isPlanPending}
                       className={`w-full font-semibold transition-all shadow-sm ${
                         isCurrent
-                          ? 'bg-slate-100 hover:bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                          ? 'bg-rose-100 text-rose-700 cursor-default border border-rose-300 font-bold'
                           : isPlanPending
                           ? 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-100 cursor-not-allowed'
                           : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white'
                       }`}
                     >
-                      {loadingPlan === plan.id ? "Initializing..." : isCurrent ? "Active Tier" : isPlanPending ? "Verification Pending" : "Upgrade Plan"}
+                      {loadingPlan === plan.id ? "Initializing..." : isCurrent ? "Selected Plan (Active)" : isPlanPending ? "Verification Pending" : "Select Plan"}
                     </Button>
+                    {isCurrent && isConcierge && (
+                      <Button
+                        onClick={() => router.push("/dashboard/concierge")}
+                        variant="outline"
+                        className="w-full text-xs font-semibold border-rose-200 text-rose-600 hover:bg-rose-50"
+                      >
+                        Open VIP Concierge Workspace →
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               </motion.div>

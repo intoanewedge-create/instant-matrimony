@@ -24,6 +24,7 @@ import {
   MessageSquare,
   Sparkles,
 } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 interface InterestsClientProps {
   receivedInterests: any[];
@@ -37,7 +38,6 @@ export function InterestsClient({
   const router = useRouter();
   const [activeDirection, setActiveDirection] = useState<"received" | "sent">("received");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [primeMode, setPrimeMode] = useState<"regular" | "prime">("regular");
   const [searchQuery, setSearchQuery] = useState("");
   const [received, setReceived] = useState(initialReceived || []);
   const [sent, setSent] = useState(initialSent || []);
@@ -225,35 +225,23 @@ export function InterestsClient({
 
         {/* ── 8B & 8C. INTEREST MAIN AREA (RIGHT 70-75%) ── */}
         <main className="space-y-4" aria-label="Interest details main view">
-          {/* Top Bar: Regular / PRIME toggle + Search */}
+          {/* Top Bar: Search */}
           <div
             className="p-4 rounded-2xl border shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4"
             style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
           >
-            {/* Regular vs PRIME toggle */}
-            <div className="flex bg-gray-100 p-1 rounded-xl w-fit border" style={{ borderColor: "#E5E7EB" }}>
-              {(["regular", "prime"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setPrimeMode(mode)}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
-                  style={
-                    primeMode === mode
-                      ? { backgroundColor: "#FFFFFF", color: "#00A76F", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }
-                      : { color: "#6B7280" }
-                  }
-                >
-                  {mode === "regular" ? "Regular" : "PRIME*"}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                {activeDirection === "received" ? "Received Requests" : "Sent Requests"}
+              </span>
             </div>
 
             {/* Search input */}
-            <div className="relative flex-1 max-w-xs">
+            <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search in Interests..."
+                placeholder="Search in Interests (Name, Profile ID)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-9 pl-9 pr-3 border rounded-xl text-xs bg-white text-gray-900 focus:outline-none focus:border-emerald-500"
@@ -307,7 +295,7 @@ export function InterestsClient({
                 const profile = member?.profile || {};
                 const photos: any[] = profile.photos || [];
                 const mainPhoto = photos.find((ph: any) => ph.isMain)?.url || photos[0]?.url;
-                const publicId = member?.publicId || profile?.publicId || null;
+                const publicId = getDisplayProfileId(member, member?.id);
 
                 return (
                   <div
@@ -354,14 +342,14 @@ export function InterestsClient({
 
                       {/* Info */}
                       <div className="space-y-1 flex-1 min-w-0">
+                        {publicId && (
+                          <span className="inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Profile ID: {publicId}
+                          </span>
+                        )}
                         <h3 className="font-bold text-gray-900 text-sm truncate">
                           {member?.name || "Anonymous Member"}
                         </h3>
-                        {publicId && (
-                          <span className="inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {publicId}
-                          </span>
-                        )}
                         <p className="text-xs text-gray-600 truncate">
                           {profile.religion || "N/A"} • {profile.caste || "General"}
                         </p>

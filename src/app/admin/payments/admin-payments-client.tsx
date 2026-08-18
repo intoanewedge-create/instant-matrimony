@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { CheckCircle, XCircle, Eye, Search, AlertTriangle, ShieldCheck, DollarSign, Clock } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[] }) {
   const router = useRouter();
@@ -72,7 +73,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
     const matchesSearch =
       !searchQuery ||
       p.utrNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.user?.publicId || `IM${p.userId?.slice(0, 8)}`).toLowerCase().includes(searchQuery.toLowerCase());
+      getDisplayProfileId(p.user, p.userId).toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesStatus && matchesSearch;
   });
@@ -179,7 +180,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4 font-semibold text-slate-900">
                       <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                        {p.user?.publicId || `IM${p.userId?.slice(0, 8)}`}
+                        {getDisplayProfileId(p.user, p.userId)}
                       </span>
                     </td>
                     <td className="p-4">
@@ -259,7 +260,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
               <AlertTriangle className="w-5 h-5 text-red-600" /> Reject Payment Verification
             </h3>
             <p className="text-xs text-slate-500">
-              Provide a mandatory rejection reason for Profile ID <strong>{rejectingPayment.user?.publicId || `IM${rejectingPayment.userId?.slice(0, 8)}`}</strong>.
+              Provide a mandatory rejection reason for Profile ID <strong>{getDisplayProfileId(rejectingPayment.user, rejectingPayment.userId)}</strong>.
             </p>
             <textarea
               rows={3}

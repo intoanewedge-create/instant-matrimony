@@ -25,6 +25,7 @@ import {
   Sparkles,
   Plus,
 } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function ConciergeDetailClient({
   caseData: initialCase,
@@ -222,7 +223,7 @@ export function ConciergeDetailClient({
           </Link>
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-              Concierge Case: <span className="text-rose-600 font-mono">{caseData.user?.publicId || `IM${caseData.userId?.slice(0, 8)}`}</span> <Sparkles className="w-5 h-5 text-amber-500" />
+              Concierge Case: <span className="text-rose-600 font-mono">{getDisplayProfileId(caseData.user, caseData.userId)}</span> <Sparkles className="w-5 h-5 text-amber-500" />
             </h1>
             <p className="text-xs text-slate-500">VIP Concierge Service Management</p>
           </div>
@@ -343,7 +344,7 @@ export function ConciergeDetailClient({
                   <Card key={s.id} className="border border-slate-200/90 bg-white p-4 space-y-2 shadow-sm rounded-2xl">
                     <div className="flex justify-between items-start text-xs">
                       <div>
-                        <h4 className="font-bold text-rose-600 font-mono text-sm">{s.targetUser?.publicId || `IM${s.targetUserId?.slice(0, 8)}`}</h4>
+                        <h4 className="font-bold text-rose-600 font-mono text-sm">{getDisplayProfileId(s.targetUser, s.targetUserId)}</h4>
                         <p className="text-slate-500 text-[11px]">Shortlisted Match Candidate</p>
                       </div>
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
@@ -358,59 +359,79 @@ export function ConciergeDetailClient({
           </div>
         )}
 
-        {/* Tab 2: Updates & Notes */}
+        {/* Tab 2: Updates & Chat */}
         {activeTab === "updates" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="border border-slate-200/90 bg-white p-6 space-y-4 shadow-sm rounded-2xl">
-              <h3 className="text-sm font-bold text-slate-900">Post Case Update</h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Send Response or Post Update</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Communicate directly with the member or log private RM notes.</p>
+              </div>
               <form onSubmit={handlePublishUpdate} className="space-y-3 text-xs">
                 <textarea
                   rows={4}
-                  placeholder="Type progress update or internal notes..."
+                  placeholder="Type message to client or internal case notes..."
                   value={newUpdate}
                   onChange={(e) => setNewUpdate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:ring-1 focus:ring-rose-500"
                   required
                 />
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200">
                   <input
                     id="isCustomerVisible"
                     type="checkbox"
                     checked={isCustomerVisible}
                     onChange={(e) => setIsCustomerVisible(e.target.checked)}
-                    className="rounded border-slate-200 bg-slate-50 text-rose-600"
+                    className="rounded border-slate-300 bg-white text-rose-600 focus:ring-rose-500"
                   />
-                  <Label htmlFor="isCustomerVisible" className="cursor-pointer text-slate-700">Publish to Customer Dashboard</Label>
+                  <Label htmlFor="isCustomerVisible" className="cursor-pointer text-slate-700 font-medium text-xs">
+                    Send to Customer Dashboard (Visible to Member)
+                  </Label>
                 </div>
-                <Button type="submit" disabled={loading} className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl">
-                  Publish Update
+                <Button type="submit" disabled={loading || !newUpdate.trim()} className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl">
+                  {loading ? "Sending..." : isCustomerVisible ? "Send Message to Client" : "Save Admin Note"}
                 </Button>
               </form>
             </Card>
 
             <div className="lg:col-span-2 space-y-3">
-              {caseData.updates?.map((u: any) => {
-                const isCustomerNote = u.authorId === caseData.userId;
-                return (
-                  <Card key={u.id} className="border border-slate-200/90 bg-white p-4 space-y-1 shadow-sm rounded-2xl">
-                    <div className="flex justify-between items-center text-xs">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isCustomerNote
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : u.isCustomerVisible
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-100 text-slate-600 border border-slate-200"
-                        }`}
-                      >
-                        {isCustomerNote ? "💬 Customer Note" : u.isCustomerVisible ? "📢 Customer Visible" : "🔒 Admin Only Note"}
-                      </span>
-                      <span className="text-slate-400 text-[10px]">{new Date(u.createdAt).toLocaleString()}</span>
-                    </div>
-                    <p className="text-xs text-slate-700 pt-1 leading-relaxed">{u.content}</p>
-                  </Card>
-                );
-              })}
+              {caseData.updates?.length === 0 ? (
+                <Card className="border border-slate-200/90 bg-white p-8 text-center text-slate-400 rounded-2xl shadow-sm">
+                  No conversation or case updates logged yet.
+                </Card>
+              ) : (
+                caseData.updates?.map((u: any) => {
+                  const isCustomerNote = u.authorId === caseData.userId;
+                  return (
+                    <Card
+                      key={u.id}
+                      className={`border p-4 space-y-2 shadow-sm rounded-2xl ${
+                        isCustomerNote
+                          ? "bg-blue-50/40 border-blue-200"
+                          : u.isCustomerVisible
+                          ? "bg-emerald-50/30 border-emerald-200"
+                          : "bg-slate-50/70 border-slate-200"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-xs">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            isCustomerNote
+                              ? "bg-blue-100 text-blue-800 border border-blue-300"
+                              : u.isCustomerVisible
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-slate-200 text-slate-700 border border-slate-300"
+                          }`}
+                        >
+                          {isCustomerNote ? "💬 Client Message" : u.isCustomerVisible ? "🧑‍💼 Manager Response (Customer Visible)" : "🔒 Internal Admin Note"}
+                        </span>
+                        <span className="text-slate-500 text-[10px] font-mono">{new Date(u.createdAt).toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-slate-800 pt-1 leading-relaxed whitespace-pre-wrap">{u.content}</p>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </div>
         )}

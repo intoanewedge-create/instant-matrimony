@@ -70,6 +70,8 @@ import {
   setPrimaryPhoto,
 } from "@/lib/actions/media.actions";
 
+import { getDisplayProfileId } from "@/lib/utils/public-id";
+
 interface ProfilePhoto {
   id: string;
   url: string;
@@ -583,7 +585,7 @@ export function ProfileClient({
   const mainPhoto = profile.photos?.find((p) => p.isMain) || profile.photos?.[0];
   const profileName = profile.user?.name || "Member Profile";
   const profileRelation = profile.profileCreatedFor || "Self";
-  const publicId = profile.user?.publicId || profile.id.slice(0, 8);
+  const publicId = getDisplayProfileId(profile.user, profile.id);
   const phoneDisplay = profile.user?.phone || profile.phone || "Not set";
   const isPhoneVerified = !!(profile.user?.identityVerification?.status === "VERIFIED" || profile.user?.phone);
 
@@ -628,8 +630,8 @@ export function ProfileClient({
       <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            {/* LEFT COLUMN: Main Avatar Box + Add/Edit Photos */}
-            <div className="md:col-span-3 flex flex-col items-center justify-center text-center space-y-3 border-r-0 md:border-r border-slate-100 pr-0 md:pr-4">
+            {/* LEFT COLUMN: Main Avatar Box + Profile ID Directly Below Photo + Add/Edit Photos */}
+            <div className="md:col-span-3 flex flex-col items-center justify-center text-center space-y-2.5 border-r-0 md:border-r border-slate-100 pr-0 md:pr-4">
               <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-rose-200 shadow-md bg-rose-50 flex items-center justify-center">
                 {mainPhoto ? (
                   <img
@@ -641,6 +643,14 @@ export function ProfileClient({
                   <User className="w-14 h-14 text-rose-300" />
                 )}
               </div>
+
+              {/* Profile ID directly below photo */}
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-mono font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                  Profile ID: {publicId}
+                </span>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -660,7 +670,6 @@ export function ProfileClient({
                     Profile Created For: {profileRelation}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">Profile ID: {publicId}</p>
               </div>
 
               {/* Key Stats */}

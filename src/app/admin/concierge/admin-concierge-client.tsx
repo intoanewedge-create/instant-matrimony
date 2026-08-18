@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Headphones, Search, Sparkles, UserCheck, ArrowRight } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminConciergeClient({
   initialCases,
@@ -37,7 +38,7 @@ export function AdminConciergeClient({
 
   const filteredCases = cases.filter((c) => {
     const matchesStatus = statusFilter === "ALL" || c.status === statusFilter;
-    const profileId = (c.user?.publicId || `IM${c.userId?.slice(0, 8)}`).toLowerCase();
+    const profileId = getDisplayProfileId(c.user, c.userId).toLowerCase();
     const matchesSearch =
       !searchQuery ||
       profileId.includes(searchQuery.toLowerCase());
@@ -132,7 +133,7 @@ export function AdminConciergeClient({
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-bold text-rose-600 text-base font-mono">
-                      {c.user?.publicId || `IM${c.userId?.slice(0, 8)}`}
+                      {getDisplayProfileId(c.user, c.userId)}
                     </h3>
                     <p className="text-xs text-slate-500 font-medium">Concierge Subscriber</p>
                   </div>

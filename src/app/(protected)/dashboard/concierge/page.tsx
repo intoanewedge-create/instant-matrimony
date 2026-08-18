@@ -15,8 +15,8 @@ export default async function UserConciergePage() {
   if (!profileResult.success) {
     redirect("/onboarding");
   }
-  if (profileResult.data.status !== "APPROVED") {
-    redirect("/dashboard");
+  if (profileResult.data.status === "DRAFT") {
+    redirect("/onboarding");
   }
 
   const caseRes = await conciergeService.getUserCase(userId);

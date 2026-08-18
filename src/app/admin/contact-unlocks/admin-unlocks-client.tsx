@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Unlock, Search, Calendar, UserCheck } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }) {
   const [unlocks] = useState(initialUnlocks || []);
@@ -12,8 +13,8 @@ export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }
   const filteredUnlocks = unlocks.filter((u) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const unlockerId = (u.user?.publicId || `IM${u.userId?.slice(0, 8)}`).toLowerCase();
-    const targetId = (u.targetUser?.publicId || `IM${u.targetUserId?.slice(0, 8)}`).toLowerCase();
+    const unlockerId = getDisplayProfileId(u.user, u.userId).toLowerCase();
+    const targetId = getDisplayProfileId(u.targetUser, u.targetUserId).toLowerCase();
     return (
       unlockerId.includes(q) ||
       targetId.includes(q) ||
@@ -89,12 +90,12 @@ export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }
                   <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4 font-semibold text-slate-900">
                       <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                        {u.user?.publicId || `IM${u.userId?.slice(0, 8)}`}
+                        {getDisplayProfileId(u.user, u.userId)}
                       </span>
                     </td>
                     <td className="p-4 font-semibold text-rose-600">
                       <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
-                        {u.targetUser?.publicId || `IM${u.targetUserId?.slice(0, 8)}`}
+                        {getDisplayProfileId(u.targetUser, u.targetUserId)}
                       </span>
                     </td>
                     <td className="p-4">

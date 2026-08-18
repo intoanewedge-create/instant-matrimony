@@ -21,8 +21,8 @@ export default async function AdminUnlocksPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Contact Unlock Audit Logs</h1>
-        <p className="text-xs text-slate-400 mt-1">Audit log of all permanent contact unlocks performed across the platform.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Contact Unlock Audit Logs</h1>
+        <p className="text-xs text-slate-600 mt-1">Audit log of all permanent contact unlocks performed across the platform.</p>
       </div>
 
       <AdminUnlocksClient initialUnlocks={JSON.parse(JSON.stringify(unlocks))} />

@@ -61,6 +61,7 @@ async function testPartnerPreferenceFlow() {
   const regRes = await authService.register({
     name: "Pref Test User",
     email: testEmail,
+    phone: `+9198${(Date.now() % 100000000).toString().padStart(8, "0")}`,
     password: "Password@123",
   });
   assert.ok(regRes.success, "Test user registration must succeed");

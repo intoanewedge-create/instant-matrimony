@@ -226,44 +226,44 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Create Banner Form */}
-        <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl lg:col-span-1 h-fit shadow-xl">
-          <CardHeader className="border-b border-slate-800/80 pb-4">
-            <CardTitle className="text-slate-100 flex items-center gap-2 text-base">
+        <Card className="border border-slate-200 bg-white lg:col-span-1 h-fit shadow-sm">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
               <Plus className="w-4 h-4 text-rose-500" /> Create Banner
             </CardTitle>
-            <CardDescription className="text-slate-400 text-xs">
+            <CardDescription className="text-slate-500 text-xs">
               Add a new slider or campaign promotion.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-5 space-y-4">
             <form onSubmit={handleCreateBanner} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Banner Headline</label>
+                <label className="text-xs font-semibold text-slate-700">Banner Headline</label>
                 <Input
                   placeholder="e.g. Find Your Perfect Life Partner"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Subtitle / Tagline</label>
+                <label className="text-xs font-semibold text-slate-700">Subtitle / Tagline</label>
                 <Input
                   placeholder="e.g. Join thousands of verified brides and grooms across AP & TS"
                   value={newSubtitle}
                   onChange={(e) => setNewSubtitle(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Image Asset URL</label>
+                <label className="text-xs font-semibold text-slate-700">Image Asset URL</label>
                 <Input
                   placeholder="/InstantMatrimony-Logo.jpeg or https://..."
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs font-mono"
+                  className="border-slate-200 bg-white text-slate-900 text-xs font-mono"
                 />
                 <div className="flex gap-1.5 mt-1">
                   {IMAGE_PRESETS.map((preset) => (
@@ -273,8 +273,8 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                       onClick={() => setNewImageUrl(preset.url)}
                       className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
                         newImageUrl === preset.url
-                          ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                          : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700"
+                          ? "bg-rose-50 text-rose-600 border-rose-300"
+                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       {preset.label}
@@ -284,18 +284,18 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Destination Link URL</label>
+                <label className="text-xs font-semibold text-slate-700">Destination Link URL</label>
                 <Input
                   placeholder="e.g. /register, /membership, /pricing"
                   value={newLinkUrl}
                   onChange={(e) => setNewLinkUrl(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs font-mono"
+                  className="border-slate-200 bg-white text-slate-900 text-xs font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                     <ArrowUpDown className="w-3 h-3 text-slate-400" /> Display Order
                   </label>
                   <Input
@@ -303,18 +303,18 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                     min={0}
                     value={newOrder}
                     onChange={(e) => setNewOrder(Number(e.target.value))}
-                    className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                    className="border-slate-200 bg-white text-slate-900 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Status</label>
+                  <label className="text-xs font-semibold text-slate-700">Status</label>
                   <button
                     type="button"
                     onClick={() => setNewIsActive(!newIsActive)}
                     className={`w-full h-9 rounded-md border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       newIsActive
-                        ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/60"
-                        : "bg-slate-950 text-slate-400 border-slate-800"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                        : "bg-white text-slate-500 border-slate-200"
                     }`}
                   >
                     {newIsActive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
@@ -328,9 +328,9 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                 <label className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 mb-1.5">
                   <Eye className="w-3 h-3 text-rose-400" /> Live Preview
                 </label>
-                <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/80 space-y-2">
+                <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 shrink-0 relative">
+                    <div className="h-10 w-10 rounded-lg overflow-hidden border border-slate-200 bg-white shrink-0 relative">
                       <Image
                         src={newImageUrl || "/InstantMatrimony-Logo.jpeg"}
                         alt="Preview"
@@ -340,12 +340,12 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-200 truncate">{newTitle || "Banner Headline"}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{newSubtitle || "Subtitle description"}</p>
+                      <p className="text-xs font-bold text-slate-800 truncate">{newTitle || "Banner Headline"}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{newSubtitle || "Subtitle description"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-900">
-                    <span className="font-mono text-rose-400">{newLinkUrl || "/register"}</span>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200">
+                    <span className="font-mono text-rose-500">{newLinkUrl || "/register"}</span>
                     <span>Order: #{newOrder}</span>
                   </div>
                 </div>
@@ -364,26 +364,26 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
         </Card>
 
         {/* Right Column: Existing Banners List */}
-        <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl lg:col-span-2 shadow-xl flex flex-col">
-          <CardHeader className="border-b border-slate-800/80 pb-4">
+        <Card className="border border-slate-200 bg-white lg:col-span-2 shadow-sm flex flex-col">
+          <CardHeader className="border-b border-slate-100 pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="text-slate-100 flex items-center gap-2 text-base">
+                <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
                   <ImageIcon className="w-4 h-4 text-rose-500" /> Active Banners ({filteredBanners.length})
                 </CardTitle>
-                <CardDescription className="text-slate-400 text-xs">
+                <CardDescription className="text-slate-500 text-xs">
                   Promotional items in member and guest banner rotations.
                 </CardDescription>
               </div>
 
               {/* Search Box */}
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
                 <Input
                   placeholder="Search banners by title or link..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 bg-slate-950/60 border-slate-800 text-xs text-white h-8"
+                  className="pl-8 bg-white border-slate-200 text-xs text-slate-900 h-8"
                 />
               </div>
             </div>
@@ -404,12 +404,12 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                   key={banner.id}
                   className={`p-4 rounded-xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
                     banner.isActive
-                      ? "bg-slate-950/60 border-slate-800/80 hover:border-slate-700"
-                      : "bg-slate-950/30 border-slate-800/40 opacity-75"
+                      ? "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+                      : "bg-slate-50 border-slate-200 opacity-75"
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shrink-0">
+                    <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-slate-200 bg-white shrink-0">
                       <Image
                         src={banner.imageUrl || "/InstantMatrimony-Logo.jpeg"}
                         alt={banner.title}
@@ -420,25 +420,25 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                     </div>
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-slate-100 truncate">{banner.title}</h3>
+                        <h3 className="text-sm font-semibold text-slate-800 truncate">{banner.title}</h3>
                         <span
                           className={`text-[10px] px-2 py-0.2 rounded-full font-semibold border ${
                             banner.isActive
-                              ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50"
-                              : "bg-slate-900 text-slate-400 border-slate-800"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
                           }`}
                         >
                           {banner.isActive ? "Active" : "Inactive"}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span className="text-[10px] font-mono text-slate-400">
                           Priority #{banner.order}
                         </span>
                       </div>
                       {banner.subtitle && (
-                        <p className="text-xs text-slate-400 line-clamp-1">{banner.subtitle}</p>
+                        <p className="text-xs text-slate-500 line-clamp-1">{banner.subtitle}</p>
                       )}
                       {banner.linkUrl && (
-                        <p className="text-[11px] text-rose-400/90 font-mono flex items-center gap-1">
+                        <p className="text-[11px] text-rose-500 font-mono flex items-center gap-1">
                           <ExternalLink className="w-3 h-3" /> {banner.linkUrl}
                         </p>
                       )}
@@ -451,16 +451,16 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                       size="sm"
                       onClick={() => handleToggleActive(banner)}
                       title={banner.isActive ? "Deactivate banner" : "Activate banner"}
-                      className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-950/20 h-8 w-8 p-0"
+                      className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-8 w-8 p-0"
                     >
-                      {banner.isActive ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-slate-500" />}
+                      {banner.isActive ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-slate-400" />}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenEdit(banner)}
                       title="Edit banner"
-                      className="text-slate-400 hover:text-rose-400 hover:bg-slate-800 h-8 w-8 p-0"
+                      className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 p-0"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -469,7 +469,7 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                       size="sm"
                       onClick={() => setDeletingBanner(banner)}
                       title="Delete banner"
-                      className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 h-8 w-8 p-0"
+                      className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -483,15 +483,15 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
 
       {/* Edit Banner Dialog Modal */}
       {editingBanner && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Edit2 className="w-4 h-4 text-rose-500" /> Edit Banner
               </h3>
               <button
                 onClick={() => setEditingBanner(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-700 p-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -499,61 +499,61 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Headline</label>
+                <label className="font-semibold text-slate-700">Headline</label>
                 <Input
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Subtitle / Description</label>
+                <label className="font-semibold text-slate-700">Subtitle / Description</label>
                 <Input
                   value={editSubtitle}
                   onChange={(e) => setEditSubtitle(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                  className="border-slate-200 bg-white text-slate-900 text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Image URL</label>
+                <label className="font-semibold text-slate-700">Image URL</label>
                 <Input
                   value={editImageUrl}
                   onChange={(e) => setEditImageUrl(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs font-mono"
+                  className="border-slate-200 bg-white text-slate-900 text-xs font-mono"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-semibold text-slate-300">Destination Link</label>
+                <label className="font-semibold text-slate-700">Destination Link</label>
                 <Input
                   value={editLinkUrl}
                   onChange={(e) => setEditLinkUrl(e.target.value)}
-                  className="border-slate-800 bg-slate-950/60 text-white text-xs font-mono"
+                  className="border-slate-200 bg-white text-slate-900 text-xs font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-300">Display Order</label>
+                  <label className="font-semibold text-slate-700">Display Order</label>
                   <Input
                     type="number"
                     min={0}
                     value={editOrder}
                     onChange={(e) => setEditOrder(Number(e.target.value))}
-                    className="border-slate-800 bg-slate-950/60 text-white text-xs"
+                    className="border-slate-200 bg-white text-slate-900 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-300">Status</label>
+                  <label className="font-semibold text-slate-700">Status</label>
                   <button
                     type="button"
                     onClick={() => setEditIsActive(!editIsActive)}
                     className={`w-full h-9 rounded-md border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       editIsActive
-                        ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/60"
-                        : "bg-slate-950 text-slate-400 border-slate-800"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                        : "bg-white text-slate-500 border-slate-200"
                     }`}
                   >
                     {editIsActive ? "Active" : "Inactive"}
@@ -562,12 +562,12 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
               <Button
                 variant="ghost"
                 onClick={() => setEditingBanner(null)}
                 size="sm"
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </Button>
@@ -587,20 +587,20 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
 
       {/* Delete Confirmation Modal */}
       {deletingBanner && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-red-950/60 text-red-400 border border-red-900/50">
+              <div className="p-2 rounded-full bg-red-50 text-red-500 border border-red-200">
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-100">Delete Banner</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Are you sure you want to delete this promotional banner?</p>
+                <h3 className="text-base font-bold text-slate-900">Delete Banner</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Are you sure you want to delete this promotional banner?</p>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-lg text-xs space-y-1">
-              <p className="font-semibold text-slate-200">{deletingBanner.title}</p>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+              <p className="font-semibold text-slate-800">{deletingBanner.title}</p>
               <p className="text-slate-500 truncate">{deletingBanner.subtitle || deletingBanner.linkUrl}</p>
             </div>
 
@@ -609,7 +609,7 @@ export function AdminBannersClient({ initialBanners }: { initialBanners: any[] }
                 variant="ghost"
                 onClick={() => setDeletingBanner(null)}
                 size="sm"
-                className="text-slate-400 hover:text-white"
+                className="text-slate-500 hover:text-slate-900"
               >
                 Cancel
               </Button>

@@ -37,7 +37,7 @@ export default async function ProfileDetailPage({
       privacy: true,
       partnerPreference: true,
       user: {
-        select: { id: true, name: true, email: true, phone: true, isActive: true, identityVerification: true },
+        select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, identityVerification: true },
       },
     },
   });

@@ -102,6 +102,7 @@ async function runProductionTests() {
     const regRes = await authService.register({
       name: "Email Test User",
       email: testEmail,
+      phone: `+9198${(Date.now() % 100000000).toString().padStart(8, "0")}`,
       password: "TestPassword@123",
     });
     if (!regRes.success || !regRes.data.verificationToken) {

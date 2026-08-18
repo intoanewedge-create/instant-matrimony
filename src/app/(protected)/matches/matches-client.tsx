@@ -20,6 +20,7 @@ import {
 import { searchMatchesAction } from "@/lib/actions/search.actions";
 import { sendInterestAction } from "@/lib/actions/interest.actions";
 import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 interface MatchesClientProps {
   initialResults: {
@@ -409,7 +410,7 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
                 const education = p?.education || item?.education || "Graduate";
                 const occupation = p?.occupation || item?.occupation || "Professional";
                 const city = p?.city || item?.city || "Location not specified";
-                const publicId = p?.publicId || item?.publicId || null;
+                const publicId = getDisplayProfileId(p?.user || item?.user || p, userId);
                 const matchScore = item?.rankingScore || item?.compatibility?.score;
                 const isVerified = item?.user?.identityVerification?.status === "APPROVED";
                 const photos: any[] = p?.photos || [];
@@ -461,19 +462,19 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
 
                       {/* Info column */}
                       <div className="flex-1 space-y-1 min-w-0">
-                        <div className="flex items-center gap-1">
+                        {/* Profile ID */}
+                        {publicId && (
+                          <span className="inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Profile ID: {publicId}
+                          </span>
+                        )}
+
+                        <div className="flex items-center gap-1 pt-0.5">
                           <h2 className="text-base font-bold text-gray-900 truncate">{name}</h2>
                           {isVerified && (
                             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" aria-label="Verified" />
                           )}
                         </div>
-
-                        {/* Profile ID */}
-                        {publicId && (
-                          <span className="inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {publicId}
-                          </span>
-                        )}
 
                         <p className="text-xs text-gray-600 pt-1">
                           {age ? `${age} yrs` : ""} {age && height ? "•" : ""} {height ? formatHeight(height) : ""}

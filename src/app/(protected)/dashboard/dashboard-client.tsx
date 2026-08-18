@@ -424,11 +424,7 @@ export function DashboardClient({
                   aria-selected={activeView === view}
                   onClick={() => {
                     if (view === "vip") {
-                      if (isPremium) {
-                        router.push("/dashboard/concierge");
-                      } else {
-                        router.push("/memberships");
-                      }
+                      router.push("/dashboard/concierge");
                       return;
                     }
                     setActiveView(view);
