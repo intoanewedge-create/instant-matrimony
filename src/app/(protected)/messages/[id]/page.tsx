@@ -10,7 +10,7 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
     redirect("/login");
   }
   const userId = (session.user as any).id;
-  const { id: contactId } = await params;
+  const { id: paramId } = await params;
 
   const profileResult = await container.services.profileService.getProfileByUserId(userId);
   if (!profileResult.success) {
@@ -18,6 +18,20 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
   }
   if (profileResult.data.status !== "APPROVED") {
     redirect("/dashboard");
+  }
+
+  // Resolve whether paramId is a contactId (user ID) or a conversationId
+  let contactId = paramId;
+  const resolvedConversation = await container.repositories.conversationRepository.findById(paramId);
+  if (resolvedConversation && (resolvedConversation as any).participants) {
+    const isParticipant = (resolvedConversation as any).participants.some((p: any) => p.userId === userId);
+    if (!isParticipant) {
+      redirect("/messages?error=unauthorized");
+    }
+    const otherParticipant = (resolvedConversation as any).participants.find((p: any) => p.userId !== userId);
+    if (otherParticipant) {
+      contactId = otherParticipant.userId;
+    }
   }
 
   const allowed = await container.services.permissionService.canChat(userId, contactId);

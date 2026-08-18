@@ -145,24 +145,47 @@ export class MessagingService extends BaseService {
     }
   }
 
-  async markAsRead(userId: string, conversationId: string): Promise<Result<boolean>> {
+  async markAsRead(userId: string, targetId: string): Promise<Result<boolean>> {
     try {
-      const participant = await this.participantRepo.findParticipant(conversationId, userId);
+      let conversationId = targetId;
+      let otherUserId: string | null = null;
+
+      // 1. Try resolving targetId directly as a conversation
+      let participant = await this.participantRepo.findParticipant(conversationId, userId);
       if (!participant) {
-        return this.returnFailure("Participant record not found.", "PARTICIPANT_NOT_FOUND");
+        // targetId might be contactId. Look up conversation between userId and contactId
+        const conversation = await this.conversationRepo.findByParticipants([userId, targetId]);
+        if (conversation) {
+          conversationId = conversation.id;
+          otherUserId = targetId;
+          participant = await this.participantRepo.findParticipant(conversationId, userId);
+        } else {
+          // If no conversation record yet, still mark any direct messages as read
+          await this.messageRepository.markAsRead(targetId, userId);
+          return this.returnSuccess(true);
+        }
       }
 
-      await this.participantRepo.resetUnreadCount(conversationId, userId);
+      if (participant) {
+        await this.participantRepo.resetUnreadCount(conversationId, userId);
+      }
 
-      const conversation = (await this.conversationRepo.findById(conversationId)) as any;
-      if (conversation) {
-        const otherParticipant = conversation.participants.find((p: any) => p.userId !== userId);
-        if (otherParticipant) {
-          await this.messageRepository.markAsRead(otherParticipant.userId, userId);
-          const lastMsg = conversation.messages[0];
-          if (lastMsg) {
-            await this.realtimeProvider.emitReadReceipt(conversationId, userId, lastMsg.id);
+      if (!otherUserId) {
+        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
+        if (conversation && conversation.participants) {
+          const otherParticipant = conversation.participants.find((p: any) => p.userId !== userId);
+          if (otherParticipant) {
+            otherUserId = otherParticipant.userId;
           }
+        }
+      }
+
+      if (otherUserId) {
+        await this.messageRepository.markAsRead(otherUserId, userId);
+        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
+        const lastMsg = conversation?.messages?.[0];
+        if (lastMsg) {
+          await this.realtimeProvider.emitReadReceipt(conversationId, userId, lastMsg.id);
         }
       }
 

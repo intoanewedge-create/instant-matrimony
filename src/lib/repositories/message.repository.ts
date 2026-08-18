@@ -122,7 +122,7 @@ export class PrismaMessageRepository implements IMessageRepository {
   async softDelete(id: string): Promise<Message> {
     return prisma.message.update({
       where: { id },
-      data: { isDeleted: true },
+      data: { isDeleted: true, deletedAt: new Date() },
     }) as any;
   }
 

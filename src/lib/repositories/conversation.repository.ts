@@ -25,6 +25,7 @@ export class PrismaConversationRepository implements IConversationRepository {
           },
         },
         messages: {
+          where: { isDeleted: false },
           orderBy: { createdAt: "desc" },
           take: 1,
         },
@@ -49,6 +50,29 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findUserConversations(userId: string): Promise<any[]> {
+    // Check for any accepted interests for this user to ensure conversations exist
+    try {
+      const acceptedInterests = await prisma.interest.findMany({
+        where: {
+          OR: [
+            { senderId: userId, status: "ACCEPTED" },
+            { receiverId: userId, status: "ACCEPTED" },
+          ],
+        },
+        select: { senderId: true, receiverId: true },
+      });
+
+      for (const interest of acceptedInterests) {
+        const otherUserId = interest.senderId === userId ? interest.receiverId : interest.senderId;
+        const existingConv = await this.findByParticipants([userId, otherUserId]);
+        if (!existingConv) {
+          await this.create([userId, otherUserId]);
+        }
+      }
+    } catch {
+      // Ignore background sync errors to not block main query
+    }
+
     const participantEntries = await prisma.conversationParticipant.findMany({
       where: {
         userId,
@@ -68,6 +92,7 @@ export class PrismaConversationRepository implements IConversationRepository {
               },
             },
             messages: {
+              where: { isDeleted: false },
               orderBy: { createdAt: "desc" },
               take: 1,
             },
@@ -112,3 +137,4 @@ export class PrismaConversationRepository implements IConversationRepository {
     });
   }
 }
+
