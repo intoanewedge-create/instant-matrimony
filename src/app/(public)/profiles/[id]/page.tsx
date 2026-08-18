@@ -14,11 +14,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getPublicProfileById, PUBLIC_PROFILES } from "@/lib/mock-profiles";
-
-export function generateStaticParams() {
-  return PUBLIC_PROFILES.map((p) => ({ id: p.id }));
-}
+import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata({
   params,
@@ -26,11 +22,11 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const profile = getPublicProfileById(id);
+  const profile = await prisma.profile.findUnique({ where: { id }, include: { user: true }});
   if (!profile) return { title: "Profile Not Found | InstantMatrimony" };
   return {
-    title: `${profile.name}, ${profile.age} · ${profile.profession} | InstantMatrimony`,
-    description: `${profile.religion} ${profile.community} profile from ${profile.city}, ${profile.state}. Register free to view full details and connect.`,
+    title: `${profile.user?.name || 'Member'}, ${profile.dateOfBirth ? new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear() : 'N/A'} · ${profile.occupation || 'N/A'} | InstantMatrimony`,
+    description: `${profile.religion || ''} ${profile.caste || ''} profile from ${profile.city || ''}, ${profile.state || ''}. Register free to view full details and connect.`,
   };
 }
 
@@ -40,24 +36,42 @@ export default async function PublicProfilePreview({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const profile = getPublicProfileById(id);
-  if (!profile) notFound();
+  const dbProfile = await prisma.profile.findUnique({ where: { id }, include: { user: true }});
+  if (!dbProfile) notFound();
+
+  // Map DB profile to view structure
+  const name = dbProfile.user?.name || "Member";
+  const profile: any = {
+    ...dbProfile,
+    name,
+    age: dbProfile.dateOfBirth ? new Date().getFullYear() - new Date(dbProfile.dateOfBirth).getFullYear() : "N/A",
+    profession: dbProfile.occupation || "N/A",
+    community: dbProfile.caste || "N/A",
+    height: dbProfile.height ? `${Math.floor(dbProfile.height / 12)}'${dbProfile.height % 12}"` : "N/A",
+    image: "/placeholder-avatar.jpg", // Needs real photo logic
+    tone: "from-rose-500 to-pink-500",
+    initials: name.substring(0, 2).toUpperCase(),
+    premium: false,
+    verified: false,
+    lastActive: "Recently",
+    about: dbProfile.bio || "No description provided.",
+  };
 
   const facts = [
     { icon: Ruler, label: "Height", value: profile.height },
     {
       icon: HeartHandshake,
       label: "Marital Status",
-      value: profile.maritalStatus,
+      value: profile.maritalStatus || "N/A",
     },
-    { icon: Languages, label: "Mother Tongue", value: profile.motherTongue },
+    { icon: Languages, label: "Mother Tongue", value: profile.motherTongue || "N/A" },
     {
       icon: Sparkles,
       label: "Community",
-      value: `${profile.religion} · ${profile.community}`,
+      value: `${profile.religion || "N/A"} · ${profile.community}`,
     },
-    { icon: GraduationCap, label: "Education", value: profile.education },
-    { icon: Briefcase, label: "Profession", value: profile.profession },
+    { icon: GraduationCap, label: "Education", value: profile.education || "N/A" },
+    { icon: Briefcase, label: "Profession", value: profile.profession || "N/A" },
   ];
 
   return (

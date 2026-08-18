@@ -1,8 +1,8 @@
 import { loggerService } from "./logger.service";
 import { Result, returnSuccess, returnFailure } from "../result";
 
-export type SmsProviderName = "msg91" | "textlocal" | "twilio" | "mock";
-export type WhatsAppProviderName = "whatsapp_business_api" | "twilio_whatsapp" | "mock";
+export type SmsProviderName = "msg91" | "textlocal" | "twilio";
+export type WhatsAppProviderName = "whatsapp_business_api" | "twilio_whatsapp";
 
 export interface SmsMessage {
   to: string;
@@ -18,8 +18,8 @@ export interface WhatsAppMessage {
 }
 
 export class SmsWhatsappProvider {
-  private activeSmsProvider: SmsProviderName = "mock";
-  private activeWhatsAppProvider: WhatsAppProviderName = "mock";
+  private activeSmsProvider: SmsProviderName = "twilio";
+  private activeWhatsAppProvider: WhatsAppProviderName = "twilio_whatsapp";
 
   setProviders(sms: SmsProviderName, whatsapp: WhatsAppProviderName) {
     this.activeSmsProvider = sms;
@@ -40,10 +40,8 @@ export class SmsWhatsappProvider {
         case "twilio":
           // Twilio REST API integration point
           break;
-        case "mock":
         default:
-          // Mock logger fallback
-          break;
+          throw new Error("SMS provider not configured correctly.");
       }
       return returnSuccess(undefined);
     } catch (e: any) {
@@ -62,10 +60,8 @@ export class SmsWhatsappProvider {
         case "twilio_whatsapp":
           // Twilio WhatsApp API integration point
           break;
-        case "mock":
         default:
-          // Mock logger fallback
-          break;
+          throw new Error("WhatsApp provider not configured correctly.");
       }
       return returnSuccess(undefined);
     } catch (e: any) {

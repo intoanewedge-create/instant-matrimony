@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Users2, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProfileCard } from "@/components/profile-card";
-import { PUBLIC_PROFILES } from "@/lib/mock-profiles";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Browse Verified Profiles | InstantMatrimony",
@@ -11,7 +11,16 @@ export const metadata: Metadata = {
     "Explore a preview of verified matrimony profiles across communities, religions and regions. Register free to connect and view full details.",
 };
 
-export default function BrowseProfiles() {
+export default async function BrowseProfiles() {
+  const profiles = await prisma.profile.findMany({
+    where: { status: "APPROVED", deletedAt: null },
+    take: 24,
+    include: {
+      user: { select: { name: true, publicId: true } },
+      photos: { where: { deletedAt: null } }
+    }
+  });
+
   return (
     <div className="flex flex-col w-full">
       {/* Header */}
@@ -49,7 +58,7 @@ export default function BrowseProfiles() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <p className="text-sm font-medium text-muted-foreground">
-              Showing {PUBLIC_PROFILES.length} sample profiles
+              Showing {profiles.length} sample profiles
             </p>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
               <ShieldCheck className="h-4 w-4" /> Identity checked
@@ -60,7 +69,7 @@ export default function BrowseProfiles() {
             data-testid="browse-grid"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           >
-            {PUBLIC_PROFILES.map((profile) => (
+            {profiles.map((profile) => (
               <ProfileCard key={profile.id} profile={profile} />
             ))}
           </div>
