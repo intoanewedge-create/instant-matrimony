@@ -139,9 +139,15 @@ export class ProfileService extends BaseService {
     stepData: any,
   ): Promise<Result<any>> {
     try {
-      const profile = await this.profileRepository.findByUserId(userId);
-      if (!profile)
-        return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      let profile = await this.profileRepository.findByUserId(userId);
+      if (!profile) {
+        // Auto-create a DRAFT profile if one doesn't exist yet
+        profile = await this.profileRepository.create({
+          userId,
+          status: "DRAFT",
+          completionPercent: 0,
+        });
+      }
 
       // Step 1: User name and phone
       if (step === 1) {
