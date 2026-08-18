@@ -202,9 +202,14 @@ export function AdminProfileTable({
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">
-                      {p.user?.publicId ? `${p.user.publicId} — ${p.user.name || "Member"}` : (p.user?.name || "Member")}
+                      {p.user?.name || "Member"}
                     </div>
-                    <div className="text-xs text-slate-500 font-mono">Profile ID — Profile Name</div>
+                    <div className="text-xs text-slate-500 truncate max-w-[200px]" title={p.user?.email || ""}>
+                      {p.user?.email || "No email"}
+                    </div>
+                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      {p.user?.phone || "No phone"}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs text-slate-700">
@@ -231,6 +236,8 @@ export function AdminProfileTable({
                           ? "bg-red-50 text-red-700 border border-red-200"
                           : p.status === "DRAFT"
                           ? "bg-sky-50 text-sky-700 border border-sky-200"
+                          : p.status === "NOT_ONBOARDED"
+                          ? "bg-gray-50 text-gray-700 border border-gray-200"
                           : p.status === "DELETED"
                           ? "bg-zinc-100 text-zinc-600 border border-zinc-200"
                           : "bg-purple-50 text-purple-700 border border-purple-200"

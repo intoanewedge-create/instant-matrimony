@@ -16,34 +16,63 @@ export default async function AdminProfilesPage({
   const statusFilter = resolvedParams.status || "ALL";
   const searchQuery = resolvedParams.search || "";
 
-  const whereClause: any = { deletedAt: null };
-  if (statusFilter !== "ALL") {
-    whereClause.status = statusFilter;
-  }
-  if (searchQuery) {
-    whereClause.OR = [
-      { user: { name: { contains: searchQuery, mode: "insensitive" } } },
-      { user: { email: { contains: searchQuery, mode: "insensitive" } } },
-      { user: { phone: { contains: searchQuery, mode: "insensitive" } } },
-      { user: { publicId: { contains: searchQuery, mode: "insensitive" } } },
-      { city: { contains: searchQuery, mode: "insensitive" } },
-      { caste: { contains: searchQuery, mode: "insensitive" } },
-    ];
-  }
+  let profiles: any[] = [];
 
-  const profiles = await prisma.profile.findMany({
-    where: whereClause,
-    take: 100,
-    orderBy: { updatedAt: "desc" },
-    include: {
-      user: {
-        select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, createdAt: true },
+  if (statusFilter === "NOT_ONBOARDED") {
+    const userWhere: any = { profile: null, deletedAt: null };
+    if (searchQuery) {
+      userWhere.OR = [
+        { name: { contains: searchQuery, mode: "insensitive" } },
+        { email: { contains: searchQuery, mode: "insensitive" } },
+        { phone: { contains: searchQuery, mode: "insensitive" } },
+        { publicId: { contains: searchQuery, mode: "insensitive" } },
+      ];
+    }
+    const users = await prisma.user.findMany({
+      where: userWhere,
+      take: 100,
+      orderBy: { createdAt: "desc" },
+    });
+    profiles = users.map(user => ({
+      id: `no-profile-${user.id}`,
+      status: "NOT_ONBOARDED",
+      user: user,
+      photos: [],
+      gender: null,
+      religion: null,
+      caste: null,
+      city: null,
+    }));
+  } else {
+    const whereClause: any = { deletedAt: null };
+    if (statusFilter !== "ALL") {
+      whereClause.status = statusFilter;
+    }
+    if (searchQuery) {
+      whereClause.OR = [
+        { user: { name: { contains: searchQuery, mode: "insensitive" } } },
+        { user: { email: { contains: searchQuery, mode: "insensitive" } } },
+        { user: { phone: { contains: searchQuery, mode: "insensitive" } } },
+        { user: { publicId: { contains: searchQuery, mode: "insensitive" } } },
+        { city: { contains: searchQuery, mode: "insensitive" } },
+        { caste: { contains: searchQuery, mode: "insensitive" } },
+      ];
+    }
+
+    profiles = await prisma.profile.findMany({
+      where: whereClause,
+      take: 100,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, createdAt: true },
+        },
+        photos: {
+          where: { deletedAt: null },
+        },
       },
-      photos: {
-        where: { deletedAt: null },
-      },
-    },
-  });
+    });
+  }
 
   const [
     allCount,
@@ -52,6 +81,7 @@ export default async function AdminProfilesPage({
     rejectedCount,
     suspendedCount,
     draftCount,
+    notOnboardedCount,
   ] = await Promise.all([
     prisma.profile.count({ where: { deletedAt: null } }),
     prisma.profile.count({ where: { status: "PENDING", deletedAt: null } }),
@@ -59,6 +89,7 @@ export default async function AdminProfilesPage({
     prisma.profile.count({ where: { status: "REJECTED", deletedAt: null } }),
     prisma.profile.count({ where: { status: "SUSPENDED", deletedAt: null } }),
     prisma.profile.count({ where: { status: "DRAFT", deletedAt: null } }),
+    prisma.user.count({ where: { profile: null, deletedAt: null } }),
   ]);
 
   return (
@@ -80,7 +111,7 @@ export default async function AdminProfilesPage({
       </div>
 
       {/* Metric Summary Filter Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         <Link href="/admin/profiles?status=ALL">
           <Card className={`border rounded-2xl ${statusFilter === "ALL" ? "border-rose-500 bg-rose-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-rose-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
@@ -97,7 +128,7 @@ export default async function AdminProfilesPage({
           <Card className={`border rounded-2xl ${statusFilter === "PENDING" ? "border-amber-500 bg-amber-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-amber-300 transition-all cursor-pointer shadow-sm`}>
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
-                <p className="text-[11px] text-amber-700 font-medium">Pending Review</p>
+                <p className="text-[11px] text-amber-700 font-medium">Pending</p>
                 <p className="text-xl font-bold text-amber-800">{pendingCount}</p>
               </div>
               <ShieldCheck className="w-5 h-5 text-amber-500" />
@@ -149,6 +180,18 @@ export default async function AdminProfilesPage({
                 <p className="text-xl font-bold text-sky-800">{draftCount}</p>
               </div>
               <FileEdit className="w-5 h-5 text-sky-500" />
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/profiles?status=NOT_ONBOARDED">
+          <Card className={`border rounded-2xl ${statusFilter === "NOT_ONBOARDED" ? "border-gray-500 bg-gray-50/80 shadow-sm" : "border-slate-200/90 bg-white"} hover:border-gray-300 transition-all cursor-pointer shadow-sm`}>
+            <CardContent className="p-3.5 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-gray-700 font-medium">Not Onboarded</p>
+                <p className="text-xl font-bold text-gray-800">{notOnboardedCount}</p>
+              </div>
+              <AlertCircle className="w-5 h-5 text-gray-500" />
             </CardContent>
           </Card>
         </Link>
