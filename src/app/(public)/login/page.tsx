@@ -106,7 +106,8 @@ function LoginForm() {
           setError("Invalid email or password. Please check your credentials and try again.");
         }
       } else {
-        window.location.href = res?.url || "/dashboard";
+        const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+        window.location.href = callbackUrl;
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");

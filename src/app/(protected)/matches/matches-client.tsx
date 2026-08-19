@@ -506,7 +506,7 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
 
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/messages`}
+                          href={`/messages/${userId}`}
                           className="flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline"
                         >
                           <MessageSquare className="w-3.5 h-3.5" /> Chat

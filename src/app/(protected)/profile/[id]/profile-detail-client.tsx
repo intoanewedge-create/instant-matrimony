@@ -173,13 +173,15 @@ export function ProfileDetailClient({
     if (!chatMessage.trim()) return;
     setIsSendingMessage(true);
     try {
-      const res = await sendMessageAction(profile.userId, chatMessage);
+      const res = await sendMessageAction(profile.userId || profile.id, chatMessage);
       if (res.success) {
         setShowChatModal(false);
-        router.push("/messages");
+        router.push(`/messages/${profile.userId || profile.id}`);
+      } else {
+        alert(res.error || "Could not send message. You must have a mutual connection and active membership.");
       }
     } catch {
-      // ignore
+      alert("An unexpected error occurred while sending the message.");
     } finally {
       setIsSendingMessage(false);
     }
@@ -335,7 +337,7 @@ export function ProfileDetailClient({
             <Button
               onClick={() => {
                 if (conversationId) {
-                  router.push("/messages");
+                  router.push(`/messages/${profile.userId || profile.id}`);
                 } else {
                   setShowChatModal(true);
                 }
