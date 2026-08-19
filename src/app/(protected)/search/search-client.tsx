@@ -57,6 +57,7 @@ import {
 export function SearchClient({
   initialResults,
   defaultGender,
+  initialError,
 }: {
   initialResults: {
     data: any[];
@@ -65,6 +66,7 @@ export function SearchClient({
     totalPages: number;
   };
   defaultGender: string;
+  initialError?: string;
 }) {
   const [resultsData, setResultsData] = useState(initialResults?.data || []);
   const [pagination, setPagination] = useState({
@@ -73,7 +75,7 @@ export function SearchClient({
     totalRecords: initialResults?.totalRecords || 0,
   });
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<"quick" | "advanced" | "profileId" | "recentlyViewed">("quick");
