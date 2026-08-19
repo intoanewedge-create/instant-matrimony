@@ -46,9 +46,20 @@ export class SearchService extends BaseService {
           ...parsedFilters,
           ...extractedFilters,
         };
+      }
 
-        // Save query to history
-        await this.searchRepository.saveSearchHistory(viewerUserId, params.queryText, parsedFilters);
+      // Save query/filters to history safely
+      try {
+        if (params.queryText || (params.filters && Object.keys(params.filters).length > 0)) {
+          await this.searchRepository.saveSearchHistory(
+            viewerUserId,
+            params.queryText || undefined,
+            parsedFilters
+          );
+        }
+      } catch (historyErr) {
+        // Safe fallback without breaking search execution
+        console.warn("Search history record warning:", historyErr);
       }
 
       const pageVal = params.page || 1;

@@ -10,17 +10,42 @@ import {
   Sparkles,
   MapPin,
   ShieldCheck,
-  MessageSquare,
   Compass,
   Filter,
   CheckCircle2,
   Calendar,
-  BookOpen,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  X,
+  UserCheck,
+  Globe,
+  Briefcase,
+  GraduationCap,
+  Moon,
+  Zap,
 } from "lucide-react";
 import { searchMatchesAction } from "@/lib/actions/search.actions";
 import { sendInterestAction } from "@/lib/actions/interest.actions";
 import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
-import { getDisplayProfileId } from "@/lib/utils/public-id";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { motion } from "framer-motion";
+
+interface SidebarSectionItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon?: any;
+  filter?: Record<string, any>;
+}
+
+interface SidebarSection {
+  title: string;
+  items: SidebarSectionItem[];
+}
 
 interface MatchesClientProps {
   initialResults: {
@@ -34,116 +59,137 @@ interface MatchesClientProps {
 export function MatchesClient({ initialResults }: MatchesClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [resultsData, setResultsData] = useState<any[]>(initialResults?.data || []);
-  const [totalRecords, setTotalRecords] = useState(initialResults?.totalRecords || 0);
+  const [pagination, setPagination] = useState({
+    page: initialResults?.page || 1,
+    totalPages: initialResults?.totalPages || 1,
+    totalRecords: initialResults?.totalRecords || 0,
+  });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const sidebarSections = [
+  const sidebarSections: SidebarSection[] = [
     {
       title: "ALL MATCHES",
       items: [
         {
           id: "all",
-          title: "Your Matches",
-          subtitle: "View all profiles matching your preferences",
+          title: "Best Matches",
+          subtitle: "Profiles matching your partner preferences",
+          icon: Sparkles,
           filter: {},
+        },
+        {
+          id: "new_matches",
+          title: "New Matches",
+          subtitle: "Newly registered member profiles",
+          icon: Zap,
+          filter: { recentlyJoined: true },
+        },
+        {
+          id: "recently_joined",
+          title: "Recently Joined",
+          subtitle: "Members who joined within 30 days",
+          icon: Calendar,
+          filter: { recentlyJoined: true },
         },
       ],
     },
     {
-      title: "BASED ON ACTIVITY",
+      title: "ACTIVITY & INTERACTIONS",
       items: [
         {
           id: "shortlisted_by_you",
-          title: "Shortlisted by you",
-          subtitle: "Matches you have shortlisted",
+          title: "Shortlisted by You",
+          subtitle: "Profiles you have saved to shortlist",
+          icon: Heart,
           filter: {},
         },
         {
           id: "viewed_you",
-          title: "Viewed you",
-          subtitle: "Matches who have viewed your profile",
+          title: "Viewed You",
+          subtitle: "Members who visited your profile",
+          icon: Eye,
           filter: {},
         },
         {
           id: "shortlisted_you",
-          title: "Shortlisted you",
-          subtitle: "Matches who have shortlisted your profile",
+          title: "Shortlisted You",
+          subtitle: "Members who favorited your profile",
+          icon: Star,
           filter: {},
         },
         {
           id: "viewed_by_you",
-          title: "Viewed by you",
-          subtitle: "Matches you have viewed",
+          title: "Viewed by You",
+          subtitle: "Profiles you have previously viewed",
+          icon: Users,
           filter: {},
         },
       ],
     },
     {
-      title: "RECENTLY JOINED & NEARBY",
+      title: "LOCATION & DEMOGRAPHICS",
       items: [
         {
-          id: "newly_joined",
-          title: "Newly Joined",
-          subtitle: "Matches who joined within the last 30 days",
-          filter: { recentlyJoined: true },
+          id: "nearby",
+          title: "Nearby Matches",
+          subtitle: "Profiles in your city / district / state",
+          icon: MapPin,
+          filter: {},
         },
         {
-          id: "nearby",
-          title: "Nearby matches",
-          subtitle: "Matches near your location",
+          id: "pref_location",
+          title: "Location Preference",
+          subtitle: "Profiles in your preferred locations",
+          icon: Globe,
+          filter: {},
+        },
+        {
+          id: "pref_nri",
+          title: "NRI Matches",
+          subtitle: "Non-Resident Indian member profiles",
+          icon: Compass,
           filter: {},
         },
       ],
     },
     {
-      title: "PROFILE DETAILS",
+      title: "VERIFICATION & MEDIA",
       items: [
         {
           id: "with_photos",
-          title: "Matches with photos",
-          subtitle: "Matches that have added photos",
+          title: "Matches with Photos",
+          subtitle: "Profiles with verified active photos",
+          icon: UserCheck,
           filter: { hasPhoto: true },
         },
         {
           id: "with_horoscope",
-          title: "Matches with horoscope",
-          subtitle: "Matches that have added horoscope",
+          title: "With Horoscope",
+          subtitle: "Profiles with horoscope details",
+          icon: Moon,
           filter: {},
         },
       ],
     },
     {
-      title: "ASTROLOGY",
-      items: [
-        {
-          id: "star_matches",
-          title: "Star matches",
-          subtitle: "Matches with compatible star sign",
-          filter: {},
-        },
-        {
-          id: "horoscope_matches",
-          title: "Horoscope matches",
-          subtitle: "Matches with horoscope matching yours",
-          filter: {},
-        },
-      ],
-    },
-    {
-      title: "MUTUAL",
+      title: "MUTUAL & COMPATIBILITY",
       items: [
         {
           id: "mutual_matches",
-          title: "Mutual matches",
-          subtitle: "Matches whose profile match your preferences and vice versa",
+          title: "Mutual Matches",
+          subtitle: "Reciprocal shortlists & mutual interests",
+          icon: Heart,
           filter: {},
         },
         {
           id: "looking_for_you",
-          title: "Looking for you",
-          subtitle: "Matches whose preferences match your profile",
+          title: "Looking for You",
+          subtitle: "Members whose preferences match you",
+          icon: Sparkles,
           filter: {},
         },
       ],
@@ -153,83 +199,80 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
       items: [
         {
           id: "pref_education",
-          title: "Education preference",
+          title: "Education Preference",
           subtitle: "Matches matching your education criteria",
+          icon: GraduationCap,
           filter: {},
         },
         {
           id: "pref_profession",
-          title: "Professional preference",
-          subtitle: "Matches matching your career criteria",
-          filter: {},
-        },
-        {
-          id: "pref_location",
-          title: "City / location preference",
-          subtitle: "Matches in your preferred cities",
-          filter: {},
-        },
-        {
-          id: "pref_nri",
-          title: "NRI matches",
-          subtitle: "Non-resident Indian profiles",
+          title: "Profession Preference",
+          subtitle: "Matches based on career preference",
+          icon: Briefcase,
           filter: {},
         },
       ],
     },
   ];
 
-  const handleCategorySelect = async (cat: any) => {
-    setActiveCategory(cat.id);
+  const fetchMatches = async (categoryId: string, targetPage: number = 1, targetSort: string = sortBy) => {
     setLoading(true);
+    setErrorMessage(null);
     try {
+      const allItems: SidebarSectionItem[] = sidebarSections.flatMap((s) => s.items);
+      const sectionItem = allItems.find((i) => i.id === categoryId);
+
       const res = await searchMatchesAction({
-        filters: { ...(cat.filter || {}), category: cat.id },
-        page: 1,
+        filters: { ...(sectionItem?.filter || {}), category: categoryId },
+        page: targetPage,
         limit: 12,
-        sortBy,
+        sortBy: targetSort,
       });
+
       if (res.success) {
         setResultsData(res.data || []);
-        setTotalRecords(res.totalRecords || 0);
+        setPagination({
+          page: res.page || 1,
+          totalPages: res.totalPages || 1,
+          totalRecords: res.totalRecords || 0,
+        });
+      } else {
+        setErrorMessage(res.error || "Unable to fetch matches for this category.");
       }
     } catch {
-      // ignore
+      setErrorMessage("An unexpected error occurred while loading matches. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSortChange = async (newSort: string) => {
+  const handleCategorySelect = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    setMobileMenuOpen(false);
+    fetchMatches(categoryId, 1, sortBy);
+  };
+
+  const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
-    setLoading(true);
-    try {
-      const res = await searchMatchesAction({
-        filters: {},
-        page: 1,
-        limit: 12,
-        sortBy: newSort,
-      });
-      if (res.success) {
-        setResultsData(res.data || []);
-        setTotalRecords(res.totalRecords || 0);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
+    fetchMatches(activeCategory, 1, newSort);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      fetchMatches(activeCategory, newPage, sortBy);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const handleSendInterest = async (userId: string) => {
-    setProcessingId(userId);
+  const handleSendInterest = async (targetUserId: string) => {
+    setProcessingId(targetUserId);
     try {
-      const res = await sendInterestAction(userId);
+      const res = await sendInterestAction(targetUserId);
       if (res.success) {
         setResultsData((prev) =>
           prev.map((item) => {
             const uId = item?.profile?.userId || item?.userId;
-            return uId === userId ? { ...item, interestSent: true } : item;
+            return uId === targetUserId ? { ...item, interestSent: true } : item;
           })
         );
       }
@@ -240,14 +283,14 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
     }
   };
 
-  const handleToggleFavorite = async (userId: string) => {
+  const handleToggleFavorite = async (targetUserId: string) => {
     try {
-      const res = await toggleFavoriteAction(userId);
+      const res = await toggleFavoriteAction(targetUserId);
       if (res.success) {
         setResultsData((prev) =>
           prev.map((item) => {
             const uId = item?.profile?.userId || item?.userId;
-            return uId === userId ? { ...item, favorited: !item.favorited } : item;
+            return uId === targetUserId ? { ...item, favorited: !item.favorited } : item;
           })
         );
       }
@@ -256,58 +299,158 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
     }
   };
 
-  const formatHeight = (cm: number | null) => {
-    if (!cm) return null;
-    const totalInches = Math.round(cm / 2.54);
-    return `${Math.floor(totalInches / 12)}'${totalInches % 12}"`;
+  const allCategoryItems: SidebarSectionItem[] = sidebarSections.flatMap((s) => s.items);
+  const activeCategoryItem = allCategoryItems.find((i) => i.id === activeCategory);
+
+  const getEmptyStateDescription = (catId: string) => {
+    switch (catId) {
+      case "shortlisted_by_you":
+        return "You have not shortlisted any profiles yet. Browse matches and click the heart icon to save favorites.";
+      case "viewed_you":
+        return "No members have viewed your profile yet. Completing your profile and adding photos increases visibility.";
+      case "shortlisted_you":
+        return "No members have shortlisted your profile yet. Keep your profile updated to attract more interest.";
+      case "viewed_by_you":
+        return "You have not viewed any profiles yet. Explore matches to build your browsing history.";
+      case "mutual_matches":
+        return "No mutual matches found yet. Mutual matches occur when both members shortlist or accept interest with each other.";
+      case "looking_for_you":
+        return "No members currently have preferences matching your exact profile attributes. Try updating your profile details.";
+      case "pref_profession":
+        return "Partner Preference for Profession is not configured in the database schema. Update your partner preferences or use Search filters.";
+      case "pref_education":
+        return "No profiles match your specific education preference criteria. Consider broadening your partner preferences.";
+      case "pref_location":
+        return "No profiles match your preferred location. Check your partner preference settings.";
+      case "pref_nri":
+        return "No Non-Resident Indian (NRI) profiles found matching your active criteria.";
+      case "with_horoscope":
+        return "No active profiles with horoscope details found.";
+      case "with_photos":
+        return "No active profiles with photos found matching your criteria.";
+      default:
+        return "No matching profiles found in this category. Check other categories or adjust your partner preferences.";
+    }
   };
 
   return (
-    <div className="space-y-6" style={{ color: "#1F2937" }}>
-      {/* ── TWO-COLUMN GRID ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
+    <div className="container mx-auto px-4 py-8 space-y-6 text-slate-900">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
+            <Sparkles className="w-7 h-7 text-rose-600 shrink-0" /> Matrimonial Matches
+          </h1>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">
+            Discover compatible profiles curated across 16 personalized matrimonial categories.
+          </p>
+        </div>
 
-        {/* ── 7A. MATCHES SIDEBAR (LEFT 28-30%) ── */}
-        <aside className="space-y-4" aria-label="Matches category sidebar">
-          <div
-            className="rounded-2xl border shadow-xs overflow-hidden"
-            style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
+        {/* Sort By Dropdown */}
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <label htmlFor="matchesSortSelect" className="text-xs font-semibold text-slate-600 shrink-0">
+            Sort By:
+          </label>
+          <select
+            id="matchesSortSelect"
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="h-9 px-3 border border-slate-200 bg-white rounded-xl text-xs text-slate-800 shadow-xs focus:border-rose-500 focus:outline-none"
           >
-            <div className="p-4 border-b flex items-center gap-2" style={{ borderColor: "#F3F4F6", backgroundColor: "#FAFAFA" }}>
-              <Filter className="w-4 h-4 text-emerald-600" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700">Filter Matches</h2>
+            <option value="bestMatch">Best Match (Compatibility)</option>
+            <option value="recentlyJoined">Recently Joined</option>
+            <option value="recentlyActive">Recently Active</option>
+            <option value="age">Age (Youngest First)</option>
+            <option value="height">Height (Tallest First)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center justify-between text-red-800 text-xs shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span className="font-medium">{errorMessage}</span>
+          </div>
+          <button onClick={() => setErrorMessage(null)} className="text-red-500 hover:text-red-700 p-1">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Category Title Bar & Mobile Drawer Toggle */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-xs"
+          >
+            <Filter className="w-3.5 h-3.5 text-rose-600" />
+            <span>{mobileMenuOpen ? "Hide Categories" : "Categories"}</span>
+          </button>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">
+              {activeCategoryItem?.title || "Your Matches"}
+            </h2>
+            <p className="text-xs text-slate-500 hidden sm:block">
+              {activeCategoryItem?.subtitle}
+            </p>
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold shadow-xs shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+          <span>{pagination.totalRecords} Profiles Found</span>
+        </div>
+      </div>
+
+      {/* Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
+        {/* MATCHES SIDEBAR (LEFT) */}
+        <aside
+          className={`space-y-4 ${mobileMenuOpen ? "block" : "hidden lg:block"}`}
+          aria-label="Matches category sidebar"
+        >
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden sticky top-20">
+            <div className="p-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-rose-600" />
+                <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
+                  Match Categories
+                </h2>
+              </div>
+              <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
+                16 Feeds
+              </span>
             </div>
 
-            <div className="p-2 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-2 space-y-3 max-h-[75vh] overflow-y-auto">
               {sidebarSections.map((section) => (
                 <div key={section.title} className="space-y-1">
-                  <h3 className="px-3 pt-2 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
+                  <h3 className="px-3 pt-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                     {section.title}
                   </h3>
                   {section.items.map((item) => {
                     const selected = activeCategory === item.id;
+                    const ItemIcon = item.icon || Sparkles;
                     return (
                       <button
                         key={item.id}
-                        onClick={() => handleCategorySelect(item)}
-                        className={`w-full text-left px-3 py-2 rounded-xl transition-all ${
-                          selected ? "border" : "hover:bg-gray-50"
-                        }`}
-                        style={
+                        onClick={() => handleCategorySelect(item.id)}
+                        className={`w-full text-left px-3 py-2 rounded-xl transition-all flex items-center justify-between text-xs ${
                           selected
-                            ? { backgroundColor: "#E6F4EA", borderColor: "#A7F3D0" }
-                            : { backgroundColor: "transparent" }
-                        }
+                            ? "bg-rose-50 border border-rose-200 text-rose-700 font-bold shadow-2xs"
+                            : "text-slate-700 hover:bg-slate-50 font-medium"
+                        }`}
                       >
-                        <p
-                          className="text-xs font-bold"
-                          style={{ color: selected ? "#00A76F" : "#1F2937" }}
-                        >
-                          {item.title}
-                        </p>
-                        <p className="text-[11px] leading-tight" style={{ color: "#6B7280" }}>
-                          {item.subtitle}
-                        </p>
+                        <div className="flex items-center gap-2.5 truncate">
+                          <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${selected ? "text-rose-600" : "text-slate-400"}`} />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        {selected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-600 shrink-0"></span>
+                        )}
                       </button>
                     );
                   })}
@@ -317,218 +460,220 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
           </div>
         </aside>
 
-        {/* ── 7B & 7C. MATCH RESULTS (RIGHT 70-75%) ── */}
-        <main className="space-y-4" aria-label="Match results list">
-          {/* Header Bar */}
-          <div
-            className="p-4 rounded-2xl border shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-            style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
-          >
-            <div>
-              <h1 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-emerald-600" />
-                <span>{totalRecords} Matches based on your preferences</span>
-              </h1>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Profiles recommended by InstantMatrimony recommendation algorithm.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <label htmlFor="sort-select" className="text-xs font-semibold text-gray-600">Sort:</label>
-              <select
-                id="sort-select"
-                value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="h-9 px-3 border rounded-xl text-xs font-semibold bg-white text-gray-800 focus:outline-none focus:border-emerald-500"
-                style={{ borderColor: "#E5E7EB" }}
-              >
-                <option value="bestMatch">Relevance (Best Match)</option>
-                <option value="age">Age</option>
-                <option value="recentlyJoined">Recent</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Results Grid */}
+        {/* RESULTS SECTION (RIGHT) */}
+        <div className="space-y-6">
+          {/* Loading Indicator */}
           {loading ? (
-            <div className="py-16 text-center text-gray-400 font-medium text-sm">
-              Loading matches...
-            </div>
+            <Card className="border border-slate-200 bg-white p-12 text-center shadow-xs rounded-2xl">
+              <Spinner className="w-8 h-8 text-rose-600 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-900">Searching matches…</h3>
+              <p className="text-xs text-slate-500 mt-1">Retrieving matching member profiles from the database.</p>
+            </Card>
           ) : resultsData.length === 0 ? (
-            <div
-              className="p-12 text-center rounded-2xl border bg-white shadow-xs space-y-3"
-              style={{ borderColor: "#E5E7EB" }}
-            >
-              <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-                <Users className="w-8 h-8" />
+            /* Empty Results State */
+            <Card className="border border-slate-200 bg-white p-12 text-center shadow-xs rounded-2xl">
+              <div className="h-14 w-14 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mx-auto mb-3">
+                <Compass className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-bold text-gray-900">
-                {activeCategory === "shortlisted_by_you" || activeCategory === "viewed_you"
-                  ? "You have no matches left"
-                  : activeCategory === "shortlisted_you" || activeCategory === "viewed_by_you"
-                  ? "No matches have shortlisted your profile yet"
-                  : activeCategory === "with_horoscope"
-                  ? "You have no horoscope matches"
-                  : activeCategory === "horoscope_matches"
-                  ? "Add your horoscope to view horoscope matching profile"
-                  : "No results found"}
-              </h3>
-              <p className="text-xs text-gray-500 max-w-md mx-auto">
-                {activeCategory === "horoscope_matches"
-                  ? "Please complete your horoscope details to discover compatible star and horoscope matches."
-                  : "Try viewing all matches or update your partner preferences to discover more candidates."}
+              <h3 className="text-base font-bold text-slate-900">No Matching Profiles Found</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                {getEmptyStateDescription(activeCategory)}
               </p>
-              <div className="flex justify-center gap-3 pt-1">
-                {activeCategory === "horoscope_matches" ? (
-                  <Link
-                    href="/profile#horoscope"
-                    className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
-                  >
-                    Add Horoscope
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => handleCategorySelect({ id: "all", filter: {} })}
-                    className="inline-block text-xs font-bold px-4 py-2 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
-                  >
-                    View All Matches
-                  </button>
-                )}
+              <div className="mt-5 flex justify-center gap-3">
+                <Button
+                  size="sm"
+                  onClick={() => handleCategorySelect("all")}
+                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1" /> View All Best Matches
+                </Button>
+                <Link
+                  href="/search"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs px-4 py-2 font-semibold transition-colors shadow-xs"
+                >
+                  <Compass className="w-3.5 h-3.5 mr-1" /> Custom Search
+                </Link>
               </div>
-            </div>
+            </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {resultsData.map((item: any, idx: number) => {
-                const p = item?.profile || item;
-                const userId = p?.userId || item?.userId || `match-${idx}`;
-                const name = p?.name || item?.name || "Member";
-                const age = p?.age ?? item?.age;
-                const height = p?.height ?? item?.height;
-                const religion = p?.religion || item?.religion || "Not specified";
-                const caste = p?.caste || item?.caste || "Not specified";
-                const education = p?.education || item?.education || "Graduate";
-                const occupation = p?.occupation || item?.occupation || "Professional";
-                const city = p?.city || item?.city || "Location not specified";
-                const publicId = getDisplayProfileId(p?.user || item?.user || p, userId);
-                const matchScore = item?.rankingScore || item?.compatibility?.score;
-                const isVerified = item?.user?.identityVerification?.status === "APPROVED";
-                const photos: any[] = p?.photos || [];
-                const photoCount = photos.length || 1;
-                const mainPhoto = photos.find((ph: any) => ph.isMain)?.url || photos[0]?.url;
+            /* Results Card Grid */
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {resultsData.map((res: any) => {
+                const profile = res.profile || res;
+                if (!profile) return null;
+
+                const isBlur = res.privacy?.blurPhotos && !res.isUnlocked;
+                const activePhotos = Array.isArray(profile.photos)
+                  ? profile.photos.filter((p: any) => !p.deletedAt)
+                  : [];
+                const mainPhotoUrl =
+                  activePhotos.find((p: any) => p.isMain)?.url ||
+                  activePhotos[0]?.url ||
+                  "/placeholder-avatar.png";
+
+                let displayAge = profile.age;
+                if (!displayAge && profile.dateOfBirth) {
+                  const dob = new Date(profile.dateOfBirth);
+                  const diffMs = Date.now() - dob.getTime();
+                  displayAge = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365.25));
+                }
+
+                const targetUserId = profile.userId || profile.user?.id || profile.id;
+                const displayName = profile.name || profile.user?.name || "Matrimonial Member";
+                const displayPublicId = profile.user?.publicId || "";
 
                 return (
-                  <div
-                    key={userId}
-                    className="rounded-2xl border shadow-xs hover:shadow-md transition-all overflow-hidden bg-white flex flex-col justify-between"
-                    style={{ borderColor: "#E5E7EB" }}
+                  <motion.div
+                    key={profile.id || targetUserId}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
                   >
-                    {/* Upper content */}
-                    <div className="p-4 flex gap-4">
-                      {/* Photo column */}
-                      <div className="relative w-28 h-36 shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                        {mainPhoto ? (
+                    <Card className="border border-slate-200 bg-white shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between h-full group overflow-hidden rounded-2xl">
+                      <div>
+                        {/* Image Preview Container */}
+                        <div className="relative aspect-square overflow-hidden bg-slate-100">
                           <img
-                            src={mainPhoto}
-                            alt={`${name}'s photo`}
-                            className="w-full h-full object-cover"
+                            src={mainPhotoUrl}
+                            alt={displayName}
+                            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                              isBlur ? "blur-md scale-110" : ""
+                            }`}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl font-bold bg-emerald-50 text-emerald-600">
-                            {name.charAt(0)}
-                          </div>
-                        )}
+                          {isBlur && (
+                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 text-center">
+                              <div className="p-2 bg-white/90 rounded-lg border border-slate-200 text-slate-800 shadow-md flex flex-col items-center gap-1">
+                                <Lock className="w-5 h-5 text-rose-600" />
+                                <span className="text-[10px] font-bold">Photo Blur Enabled</span>
+                              </div>
+                            </div>
+                          )}
 
-                        {/* Photo count badge */}
-                        <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/60 text-white">
-                          1/{photoCount}
-                        </span>
+                          {/* Score Badge */}
+                          {res.rankingScore > 0 && (
+                            <span className="absolute top-3 left-3 bg-rose-600/90 backdrop-blur-md text-white text-xs font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" /> {res.rankingScore}% Match
+                            </span>
+                          )}
 
-                        {/* Favorite button */}
-                        <button
-                          onClick={() => handleToggleFavorite(userId)}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 shadow-xs flex items-center justify-center"
-                          aria-label={`Favorite ${name}`}
-                        >
-                          <Heart
-                            className="w-3.5 h-3.5"
-                            style={{
-                              color: item?.favorited ? "#00A76F" : "#9CA3AF",
-                              fill: item?.favorited ? "#00A76F" : "none",
-                            }}
-                          />
-                        </button>
-                      </div>
+                          {/* Favorite Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFavorite(targetUserId)}
+                            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-md text-slate-600 hover:text-rose-600 transition-colors shadow-xs"
+                            aria-label="Shortlist profile"
+                          >
+                            <Heart
+                              className={`w-4 h-4 ${
+                                res.favorited ? "fill-rose-600 text-rose-600" : ""
+                              }`}
+                            />
+                          </button>
 
-                      {/* Info column */}
-                      <div className="flex-1 space-y-1 min-w-0">
-                        {/* Profile ID */}
-                        {publicId && (
-                          <span className="inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Profile ID: {publicId}
-                          </span>
-                        )}
-
-                        <div className="flex items-center gap-1 pt-0.5">
-                          <h2 className="text-base font-bold text-gray-900 truncate">{name}</h2>
-                          {isVerified && (
-                            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" aria-label="Verified" />
+                          {/* Profile ID Pill */}
+                          {displayPublicId && (
+                            <span className="absolute bottom-2 left-2 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-mono px-2 py-0.5 rounded-md">
+                              {displayPublicId}
+                            </span>
                           )}
                         </div>
 
-                        <p className="text-xs text-gray-600 pt-1">
-                          {age ? `${age} yrs` : ""} {age && height ? "•" : ""} {height ? formatHeight(height) : ""}
-                        </p>
+                        {/* Content */}
+                        <div className="p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-base truncate">
+                              <span>{displayName}</span>
+                              {res.user?.identityVerification?.status === "APPROVED" && (
+                                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                              )}
+                            </h3>
+                            {displayAge ? (
+                              <span className="text-xs font-semibold text-slate-500 shrink-0">
+                                {displayAge} yrs
+                              </span>
+                            ) : null}
+                          </div>
 
-                        <p className="text-xs text-gray-600 truncate">
-                          {religion} {religion && caste ? `, ${caste}` : ""}
-                        </p>
-
-                        <p className="text-xs text-gray-600 truncate">
-                          {education} • {occupation}
-                        </p>
-
-                        <p className="text-xs text-gray-500 flex items-center gap-1 truncate pt-0.5">
-                          <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                          <span>{city}</span>
-                        </p>
+                          <div className="text-xs text-slate-500 space-y-1">
+                            <p className="flex items-center gap-1 text-slate-700 font-medium">
+                              <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                              {profile.city
+                                ? `${profile.city}${profile.state ? `, ${profile.state}` : ""}`
+                                : profile.state || profile.country || "India"}
+                            </p>
+                            <p>
+                              {profile.religion || "Community"}
+                              {profile.caste ? ` • ${profile.caste}` : ""}
+                              {profile.gothram ? ` (${profile.gothram})` : ""}
+                            </p>
+                            <p className="text-slate-500 truncate">
+                              {profile.education || "Graduate"}
+                              {profile.occupation ? ` • ${profile.occupation}` : ""}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Bottom actions bar */}
-                    <div className="px-4 py-3 bg-gray-50 border-t flex items-center justify-between gap-2" style={{ borderColor: "#F3F4F6" }}>
-                      <Link
-                        href={`/profile/${userId}`}
-                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-emerald-600"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> View Profile
-                      </Link>
-
-                      <div className="flex items-center gap-2">
+                      {/* Footer Actions */}
+                      <div className="p-4 pt-0 flex gap-2 border-t border-slate-100 mt-2 pt-3">
                         <Link
-                          href={`/messages/${userId}`}
-                          className="flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline"
+                          href={`/profile/${targetUserId}`}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs w-1/2 py-2 font-semibold transition-colors shadow-xs"
                         >
-                          <MessageSquare className="w-3.5 h-3.5" /> Chat
+                          <Eye className="w-3.5 h-3.5 mr-1 text-slate-500" /> View Profile
                         </Link>
 
-                        <button
-                          disabled={item?.interestSent || processingId === userId}
-                          onClick={() => handleSendInterest(userId)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all shadow-xs"
-                          style={{ backgroundColor: item?.interestSent ? "#9CA3AF" : "#00A76F" }}
+                        <Button
+                          size="sm"
+                          disabled={res.interestSent || processingId === targetUserId}
+                          onClick={() => handleSendInterest(targetUserId)}
+                          className="w-1/2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white text-xs font-semibold shadow-md shadow-rose-500/20 rounded-xl"
                         >
-                          <Heart className="w-3.5 h-3.5" />
-                          <span>{processingId === userId ? "..." : item?.interestSent ? "Sent" : "Send Interest"}</span>
-                        </button>
+                          {processingId === targetUserId ? (
+                            <Spinner className="w-3.5 h-3.5 mr-1 text-white" />
+                          ) : res.interestSent ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                          ) : (
+                            <Heart className="w-3.5 h-3.5 mr-1" />
+                          )}
+                          {res.interestSent ? "Interest Sent" : "Send Interest"}
+                        </Button>
                       </div>
-                    </div>
-                  </div>
+                    </Card>
+                  </motion.div>
                 );
               })}
             </div>
           )}
-        </main>
+
+          {/* Server-side Pagination Bar */}
+          {pagination.totalPages > 1 && (
+            <div className="flex justify-between items-center border-t border-slate-200 pt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.page <= 1 || loading}
+                onClick={() => handlePageChange(pagination.page - 1)}
+                className="border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+              </Button>
+
+              <span className="text-xs font-medium text-slate-500">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pagination.page >= pagination.totalPages || loading}
+                onClick={() => handlePageChange(pagination.page + 1)}
+                className="border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-semibold"
+              >
+                Next <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

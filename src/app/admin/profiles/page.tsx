@@ -7,90 +7,107 @@ import { AdminProfileTable } from "./admin-profile-table";
 
 export const dynamic = "force-dynamic";
 
+const VALID_STATUSES = ["ALL", "PENDING", "APPROVED", "REJECTED", "SUSPENDED", "DRAFT", "NOT_ONBOARDED"];
+
 export default async function AdminProfilesPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string; search?: string }>;
 }) {
   const resolvedParams = await searchParams;
-  const statusFilter = resolvedParams.status || "ALL";
-  const searchQuery = resolvedParams.search || "";
+  const rawStatus = resolvedParams?.status || "ALL";
+  const statusFilter = VALID_STATUSES.includes(rawStatus) ? rawStatus : "ALL";
+  const searchQuery = (resolvedParams?.search || "").trim();
 
   let profiles: any[] = [];
+  let allCount = 0;
+  let pendingCount = 0;
+  let approvedCount = 0;
+  let rejectedCount = 0;
+  let suspendedCount = 0;
+  let draftCount = 0;
+  let notOnboardedCount = 0;
 
-  if (statusFilter === "NOT_ONBOARDED") {
-    const userWhere: any = { profile: null, deletedAt: null };
-    if (searchQuery) {
-      userWhere.OR = [
-        { name: { contains: searchQuery, mode: "insensitive" } },
-        { email: { contains: searchQuery, mode: "insensitive" } },
-        { phone: { contains: searchQuery, mode: "insensitive" } },
-        { publicId: { contains: searchQuery, mode: "insensitive" } },
-      ];
-    }
-    const users = await prisma.user.findMany({
-      where: userWhere,
-      take: 100,
-      orderBy: { createdAt: "desc" },
-    });
-    profiles = users.map(user => ({
-      id: `no-profile-${user.id}`,
-      status: "NOT_ONBOARDED",
-      user: user,
-      photos: [],
-      gender: null,
-      religion: null,
-      caste: null,
-      city: null,
-    }));
-  } else {
-    const whereClause: any = { deletedAt: null };
-    if (statusFilter !== "ALL") {
-      whereClause.status = statusFilter;
-    }
-    if (searchQuery) {
-      whereClause.OR = [
-        { user: { name: { contains: searchQuery, mode: "insensitive" } } },
-        { user: { email: { contains: searchQuery, mode: "insensitive" } } },
-        { user: { phone: { contains: searchQuery, mode: "insensitive" } } },
-        { user: { publicId: { contains: searchQuery, mode: "insensitive" } } },
-        { city: { contains: searchQuery, mode: "insensitive" } },
-        { caste: { contains: searchQuery, mode: "insensitive" } },
-      ];
+  try {
+    if (statusFilter === "NOT_ONBOARDED") {
+      const userWhere: any = { profile: null, deletedAt: null };
+      if (searchQuery) {
+        userWhere.OR = [
+          { name: { contains: searchQuery, mode: "insensitive" } },
+          { email: { contains: searchQuery, mode: "insensitive" } },
+          { phone: { contains: searchQuery, mode: "insensitive" } },
+          { publicId: { contains: searchQuery, mode: "insensitive" } },
+        ];
+      }
+      const users = await prisma.user.findMany({
+        where: userWhere,
+        take: 100,
+        orderBy: { createdAt: "desc" },
+      });
+      profiles = users.map((user) => ({
+        id: `no-profile-${user.id}`,
+        status: "NOT_ONBOARDED",
+        user: user,
+        photos: [],
+        gender: null,
+        religion: null,
+        caste: null,
+        city: null,
+      }));
+    } else {
+      const whereClause: any = { deletedAt: null };
+      if (statusFilter !== "ALL") {
+        whereClause.status = statusFilter;
+      }
+      if (searchQuery) {
+        whereClause.OR = [
+          { user: { name: { contains: searchQuery, mode: "insensitive" } } },
+          { user: { email: { contains: searchQuery, mode: "insensitive" } } },
+          { user: { phone: { contains: searchQuery, mode: "insensitive" } } },
+          { user: { publicId: { contains: searchQuery, mode: "insensitive" } } },
+          { city: { contains: searchQuery, mode: "insensitive" } },
+          { caste: { contains: searchQuery, mode: "insensitive" } },
+        ];
+      }
+
+      profiles = await prisma.profile.findMany({
+        where: whereClause,
+        take: 100,
+        orderBy: { updatedAt: "desc" },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, createdAt: true },
+          },
+          photos: {
+            where: { deletedAt: null },
+          },
+        },
+      });
     }
 
-    profiles = await prisma.profile.findMany({
-      where: whereClause,
-      take: 100,
-      orderBy: { updatedAt: "desc" },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, createdAt: true },
-        },
-        photos: {
-          where: { deletedAt: null },
-        },
-      },
-    });
+    const counts = await Promise.all([
+      prisma.profile.count({ where: { deletedAt: null } }),
+      prisma.profile.count({ where: { status: "PENDING", deletedAt: null } }),
+      prisma.profile.count({ where: { status: "APPROVED", deletedAt: null } }),
+      prisma.profile.count({ where: { status: "REJECTED", deletedAt: null } }),
+      prisma.profile.count({ where: { status: "SUSPENDED", deletedAt: null } }),
+      prisma.profile.count({ where: { status: "DRAFT", deletedAt: null } }),
+      prisma.user.count({ where: { profile: null, deletedAt: null } }),
+    ]);
+
+    allCount = counts[0];
+    pendingCount = counts[1];
+    approvedCount = counts[2];
+    rejectedCount = counts[3];
+    suspendedCount = counts[4];
+    draftCount = counts[5];
+    notOnboardedCount = counts[6];
+  } catch (err) {
+    console.error("AdminProfilesPage query error:", err);
   }
 
-  const [
-    allCount,
-    pendingCount,
-    approvedCount,
-    rejectedCount,
-    suspendedCount,
-    draftCount,
-    notOnboardedCount,
-  ] = await Promise.all([
-    prisma.profile.count({ where: { deletedAt: null } }),
-    prisma.profile.count({ where: { status: "PENDING", deletedAt: null } }),
-    prisma.profile.count({ where: { status: "APPROVED", deletedAt: null } }),
-    prisma.profile.count({ where: { status: "REJECTED", deletedAt: null } }),
-    prisma.profile.count({ where: { status: "SUSPENDED", deletedAt: null } }),
-    prisma.profile.count({ where: { status: "DRAFT", deletedAt: null } }),
-    prisma.user.count({ where: { profile: null, deletedAt: null } }),
-  ]);
+  // Ensure plain JSON serialization across server/client boundary
+  const serializedProfiles = JSON.parse(JSON.stringify(profiles));
 
   return (
     <div className="space-y-6">
@@ -198,7 +215,7 @@ export default async function AdminProfilesPage({
       </div>
 
       {/* Profiles Table Component */}
-      <AdminProfileTable profiles={profiles} currentFilter={statusFilter} initialSearch={searchQuery} />
+      <AdminProfileTable profiles={serializedProfiles} currentFilter={statusFilter} initialSearch={searchQuery} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { MediaType, DocumentType } from "@prisma/client";
 import { storageConfig } from "@/config/storage.config";
 import { verifyActionPermission } from "./action-utils";
 import { returnFailure } from "../result";
+import { prisma } from "../prisma";
 
 export async function uploadPhoto(formData: FormData) {
   const session = await auth();
@@ -209,34 +210,71 @@ export async function deletePhoto(photoId: string) {
   const userId = session.user.id;
 
   try {
-    const photo = await container.repositories.photoRepository.findById(photoId);
+    const photo = await prisma.photo.findUnique({
+      where: { id: photoId },
+      include: { profile: true },
+    });
     if (!photo) {
       return { success: false, error: "Photo not found" };
     }
 
-    const profile = await container.repositories.profileRepository.findByUserId(userId);
-    if (!profile || photo.profileId !== profile.id) {
+    const isAdmin = (session.user as any).role === "ADMIN";
+    if (photo.profile.userId !== userId && !isAdmin) {
       return { success: false, error: "Unauthorized photo deletion" };
     }
 
     if (photo.mediaId) {
-      await container.services.storageService.deleteFile(photo.mediaId);
+      try {
+        await container.services.storageService.deleteFile(photo.mediaId);
+      } catch (err) {
+        console.warn("Storage deletion warning (safe fallback):", err);
+      }
     }
 
-    await container.repositories.photoRepository.softDelete(photoId);
-
-    await eventDispatcher.publish("PhotoDeleted", {
-      photoId,
-      userId,
-      profileId: profile.id,
+    // Soft delete photo record and reset isMain
+    await prisma.photo.update({
+      where: { id: photoId },
+      data: {
+        deletedAt: new Date(),
+        isMain: false,
+      },
     });
+
+    // If deleting the main photo, automatically promote the next active photo to main
+    if (photo.isMain) {
+      const nextActivePhoto = await prisma.photo.findFirst({
+        where: {
+          profileId: photo.profileId,
+          deletedAt: null,
+          id: { not: photoId },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+      if (nextActivePhoto) {
+        await prisma.photo.update({
+          where: { id: nextActivePhoto.id },
+          data: { isMain: true },
+        });
+      }
+    }
+
+    try {
+      await eventDispatcher.publish("PhotoDeleted", {
+        photoId,
+        userId,
+        profileId: photo.profileId,
+      });
+    } catch (eventErr) {
+      console.warn("Event dispatch warning for PhotoDeleted:", eventErr);
+    }
 
     revalidatePath("/profile");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message };
+    console.error("deletePhoto error:", e);
+    return { success: false, error: e.message || "Failed to delete photo" };
   }
 }
 

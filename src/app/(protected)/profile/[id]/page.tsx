@@ -13,7 +13,7 @@ export default async function ProfileDetailPage({
     redirect("/login");
   }
   const selfUserId = (session.user as any).id;
-  const targetUserId = (await params).id;
+  const rawId = (await params).id;
 
   const selfProfile = await prisma.profile.findUnique({
     where: { userId: selfUserId },
@@ -24,14 +24,16 @@ export default async function ProfileDetailPage({
     redirect("/dashboard");
   }
 
-  // If viewing self, redirect to profile workspace
-  if (selfUserId === targetUserId) {
-    redirect("/profile");
-  }
-
-  // Fetch target profile with privacy settings
-  const targetProfile = await prisma.profile.findUnique({
-    where: { userId: targetUserId },
+  // Fetch target profile with multi-identifier support (userId, profile.id, or user.publicId)
+  const targetProfile = await prisma.profile.findFirst({
+    where: {
+      OR: [
+        { userId: rawId },
+        { id: rawId },
+        { user: { publicId: rawId } },
+      ],
+      deletedAt: null,
+    },
     include: {
       photos: { where: { deletedAt: null } },
       privacy: true,
@@ -50,6 +52,13 @@ export default async function ProfileDetailPage({
     (!isAdmin && targetProfile.status !== "APPROVED")
   ) {
     redirect("/dashboard");
+  }
+
+  const targetUserId = targetProfile.userId;
+
+  // If viewing self, redirect to profile workspace
+  if (selfUserId === targetUserId) {
+    redirect("/profile");
   }
 
   if (!isAdmin) {

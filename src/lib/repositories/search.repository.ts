@@ -34,12 +34,13 @@ export class PrismaSearchRepository implements ISearchRepository {
 
     const viewerProfile = await prisma.profile.findUnique({
       where: { userId: viewerId },
-      select: { gender: true, city: true, state: true, country: true },
+      select: { gender: true, city: true, district: true, state: true, country: true },
     });
     const viewerGender = viewerProfile?.gender?.toUpperCase();
     const enforcedTargetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "NONE";
 
-    const category = filters.category || (params as any).category;
+    const rawCategory = filters.category || (params as any).category;
+    const category = rawCategory?.toLowerCase();
     let categoryTargetUserIds: string[] | null = null;
 
     if (category === "shortlisted_by_you") {
@@ -66,39 +67,146 @@ export class PrismaSearchRepository implements ISearchRepository {
         select: { visitedId: true },
       });
       categoryTargetUserIds = visits.map((v) => v.visitedId);
+    } else if (
+      category === "new_matches" ||
+      category === "newly_joined" ||
+      category === "recently_joined"
+    ) {
+      filters.recentlyJoined = true;
+    } else if (category === "with_photos" || category === "matches_with_photos") {
+      filters.hasPhoto = true;
     } else if (category === "nearby") {
       if (viewerProfile?.city) filters.city = viewerProfile.city;
+      else if (viewerProfile?.district) filters.district = viewerProfile.district;
       else if (viewerProfile?.state) filters.state = viewerProfile.state;
       else if (viewerProfile?.country) filters.country = viewerProfile.country;
-    } else if (category === "pref_education" || category === "pref_profession" || category === "pref_location") {
+    } else if (category === "mutual_matches") {
+      // Reciprocal Shortlists (A favorited B and B favorited A)
+      const myFavs = await prisma.favorite.findMany({
+        where: { userId: viewerId },
+        select: { favoriteUserId: true },
+      });
+      const myFavIds = myFavs.map((f) => f.favoriteUserId);
+
+      const mutualFavs = await prisma.favorite.findMany({
+        where: {
+          userId: { in: myFavIds },
+          favoriteUserId: viewerId,
+        },
+        select: { userId: true },
+      });
+      const mutualFavUserIds = mutualFavs.map((f) => f.userId);
+
+      // Mutual / Reciprocal Interests
+      const mySentInterests = await prisma.interest.findMany({
+        where: { senderId: viewerId },
+        select: { receiverId: true },
+      });
+      const mySentIds = mySentInterests.map((i) => i.receiverId);
+
+      const reciprocalInterests = await prisma.interest.findMany({
+        where: {
+          senderId: { in: mySentIds },
+          receiverId: viewerId,
+        },
+        select: { senderId: true },
+      });
+      const mutualInterestUserIds = reciprocalInterests.map((i) => i.senderId);
+
+      const acceptedInterests = await prisma.interest.findMany({
+        where: {
+          OR: [
+            { senderId: viewerId, status: "ACCEPTED" },
+            { receiverId: viewerId, status: "ACCEPTED" },
+          ],
+        },
+        select: { senderId: true, receiverId: true },
+      });
+      const acceptedUserIds = acceptedInterests.map((i) =>
+        i.senderId === viewerId ? i.receiverId : i.senderId
+      );
+
+      categoryTargetUserIds = Array.from(
+        new Set([...mutualFavUserIds, ...mutualInterestUserIds, ...acceptedUserIds])
+      );
+    } else if (category === "looking_for_you") {
+      const viewerFull = await prisma.profile.findUnique({
+        where: { userId: viewerId },
+        select: {
+          dateOfBirth: true,
+          height: true,
+          maritalStatus: true,
+          religion: true,
+          motherTongue: true,
+          education: true,
+          country: true,
+        },
+      });
+
+      if (viewerFull) {
+        const prefConditions: any[] = [];
+        if (viewerFull.religion) {
+          prefConditions.push({
+            religion: { equals: viewerFull.religion, mode: "insensitive" },
+          });
+        }
+        if (viewerFull.motherTongue) {
+          prefConditions.push({
+            motherTongue: { equals: viewerFull.motherTongue, mode: "insensitive" },
+          });
+        }
+        if (viewerFull.education) {
+          prefConditions.push({
+            education: { contains: viewerFull.education, mode: "insensitive" },
+          });
+        }
+        if (viewerFull.maritalStatus) {
+          prefConditions.push({
+            maritalStatus: { equals: viewerFull.maritalStatus, mode: "insensitive" },
+          });
+        }
+        if (viewerFull.country) {
+          prefConditions.push({
+            country: { equals: viewerFull.country, mode: "insensitive" },
+          });
+        }
+
+        const matchingPrefs = await prisma.partnerPreference.findMany({
+          where: {
+            OR: prefConditions.length > 0 ? prefConditions : undefined,
+          },
+          select: { profile: { select: { userId: true } } },
+        });
+        categoryTargetUserIds = matchingPrefs.map((p) => p.profile.userId);
+      }
+    } else if (
+      category === "pref_education" ||
+      category === "education_preference" ||
+      category === "pref_profession" ||
+      category === "profession_preference" ||
+      category === "pref_location" ||
+      category === "location_preference"
+    ) {
       const pref = await prisma.partnerPreference.findFirst({
         where: { profile: { userId: viewerId } },
       });
-      if (pref) {
-        if (category === "pref_education" && pref.education) filters.education = pref.education;
-        if (category === "pref_location" && pref.country) filters.country = pref.country;
-      }
-    } else if (category === "looking_for_you") {
-      const vFullProf = await prisma.profile.findUnique({
-        where: { userId: viewerId },
-        select: { religion: true, education: true },
-      });
-      if (vFullProf) {
-        const matchingPrefs = await prisma.partnerPreference.findMany({
-          where: {
-            OR: [
-              { religion: { equals: vFullProf.religion, mode: "insensitive" } },
-              { education: { equals: vFullProf.education, mode: "insensitive" } },
-            ],
-          },
-          select: { profileId: true },
-        });
-        const matchedProfileIds = matchingPrefs.map((p) => p.profileId);
-        const matchedProfs = await prisma.profile.findMany({
-          where: { id: { in: matchedProfileIds } },
-          select: { userId: true },
-        });
-        categoryTargetUserIds = matchedProfs.map((p) => p.userId);
+      if (category === "pref_education" || category === "education_preference") {
+        if (pref?.education) {
+          filters.education = pref.education;
+        } else {
+          categoryTargetUserIds = [];
+        }
+      } else if (category === "pref_profession" || category === "profession_preference") {
+        // PartnerPreference has no occupation field in database schema
+        categoryTargetUserIds = [];
+      } else if (category === "pref_location" || category === "location_preference") {
+        if (pref?.country) {
+          filters.country = pref.country;
+        } else if (viewerProfile?.country) {
+          filters.country = viewerProfile.country;
+        } else {
+          categoryTargetUserIds = [];
+        }
       }
     }
 

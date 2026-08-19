@@ -31,6 +31,15 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
+import {
+  GOTHRAM_OPTIONS,
+  RASHI_OPTIONS,
+  NAKSHATRA_OPTIONS,
+  PARTNER_RELIGION_OPTIONS,
+  PARTNER_MOTHER_TONGUE_OPTIONS,
+  PARTNER_EDUCATION_OPTIONS,
+  PARTNER_COUNTRY_OPTIONS,
+} from "@/lib/constants/options";
 
 interface StepMeta {
   number: number;
@@ -96,6 +105,8 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       subCaste: initialProfile?.subCaste || "",
       gothram: initialProfile?.gothram || "",
       motherTongue: initialProfile?.motherTongue || "",
+      rashi: "",
+      star: "",
       horoscope: initialProfile?.horoscope || "",
       education: initialProfile?.education || "",
       occupation: initialProfile?.occupation || "",
@@ -331,13 +342,18 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         maritalStatus: data.maritalStatus,
       };
     } else if (currentStep === 3) {
+      const horoscopeCombined = [
+        data.rashi ? `Rashi: ${data.rashi}` : "",
+        data.star ? `Star: ${data.star}` : "",
+      ].filter(Boolean).join(" · ") || data.horoscope || undefined;
+
       stepData = {
         religion: data.religion,
         caste: data.caste || undefined,
         subCaste: data.subCaste || undefined,
         gothram: data.gothram || undefined,
         motherTongue: data.motherTongue,
-        horoscope: data.horoscope || undefined,
+        horoscope: horoscopeCombined,
       };
     } else if (currentStep === 4) {
       stepData = {
@@ -697,13 +713,16 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="gothram" className="text-slate-700 font-medium text-xs">Gothram</Label>
-                        <Input
+                        <select
                           id="gothram"
-                          type="text"
-                          placeholder="e.g. Kasyapa, Bharadwaja, Vasishta"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("gothram")}
-                        />
+                        >
+                          <option value="">Select Gothram</option>
+                          {GOTHRAM_OPTIONS.map((g) => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
@@ -737,15 +756,34 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="horoscope" className="text-slate-700 font-medium text-xs">Horoscope / Rashi / Star (Optional)</Label>
-                      <Input
-                        id="horoscope"
-                        type="text"
-                        placeholder="e.g. Mesha (Aries) / Krittika / Dosham: None"
-                        className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                        {...register("horoscope")}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="rashi" className="text-slate-700 font-medium text-xs">Rashi / Moon Sign</Label>
+                        <select
+                          id="rashi"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("rashi")}
+                        >
+                          <option value="">Select Rashi</option>
+                          {RASHI_OPTIONS.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="star" className="text-slate-700 font-medium text-xs">Star / Nakshatra</Label>
+                        <select
+                          id="star"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("star")}
+                        >
+                          <option value="">Select Star / Nakshatra</option>
+                          {NAKSHATRA_OPTIONS.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1071,48 +1109,56 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="partnerReligion" className="text-slate-700 font-medium text-xs">Preferred Religion</Label>
-                        <Input
+                        <select
                           id="partnerReligion"
-                          type="text"
-                          placeholder="e.g. Hindu, Any"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("partnerReligion")}
-                        />
+                        >
+                          {PARTNER_RELIGION_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="partnerMotherTongue" className="text-slate-700 font-medium text-xs">Preferred Mother Tongue</Label>
-                        <Input
+                        <select
                           id="partnerMotherTongue"
-                          type="text"
-                          placeholder="e.g. Telugu, Any"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("partnerMotherTongue")}
-                        />
+                        >
+                          {PARTNER_MOTHER_TONGUE_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="partnerEducation" className="text-slate-700 font-medium text-xs">Preferred Education</Label>
-                        <Input
+                        <select
                           id="partnerEducation"
-                          type="text"
-                          placeholder="e.g. Graduate, B.Tech, Master, Any"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("partnerEducation")}
-                        />
+                        >
+                          {PARTNER_EDUCATION_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="partnerCountry" className="text-slate-700 font-medium text-xs">Preferred Country</Label>
-                        <Input
+                        <select
                           id="partnerCountry"
-                          type="text"
-                          placeholder="e.g. India, USA, Any"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("partnerCountry")}
-                        />
+                        >
+                          {PARTNER_COUNTRY_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>

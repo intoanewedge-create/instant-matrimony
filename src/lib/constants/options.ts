@@ -1,4 +1,7 @@
 export const EDUCATION_OPTIONS = [
+  "10th",
+  "Higher Secondary / 12th",
+  "Diploma / Polytechnic",
   "Bachelor's - Engineering / Computer Science",
   "Master's - Engineering / Computer Science",
   "Bachelor's - Arts / Science / Commerce",
@@ -14,9 +17,27 @@ export const EDUCATION_OPTIONS = [
   "Finance - ICWAI / CA / CS / CFA",
   "Civil Services",
   "Doctorates",
-  "Diploma/Polytechnic",
-  "Higher Secondary / Secondary",
   "Others",
+];
+
+export const MARITAL_STATUS_OPTIONS = [
+  "Never Married",
+  "Divorced",
+  "Widowed",
+  "Awaiting Divorce",
+  "Annulled",
+];
+
+export const SMOKING_OPTIONS = ["No", "Yes", "Occasionally"];
+
+export const DRINKING_OPTIONS = ["No", "Yes", "Socially"];
+
+export const DIET_OPTIONS = [
+  "Vegetarian",
+  "Non-Vegetarian",
+  "Eggetarian",
+  "Vegan",
+  "Jain",
 ];
 
 export const OCCUPATION_OPTIONS = [
@@ -64,7 +85,7 @@ export const INCOME_AMOUNTS = [
 ];
 
 export const GOTHRAM_OPTIONS = [
-  "Kashyapa",
+  "Kasyapa",
   "Bharadwaja",
   "Vasishta",
   "Vishwamitra",
@@ -77,6 +98,51 @@ export const GOTHRAM_OPTIONS = [
   "Koundinya",
   "Shandilya",
   "Others",
+];
+
+export const RASHI_OPTIONS = [
+  "Mesha (Aries)",
+  "Vrishabha (Taurus)",
+  "Mithuna (Gemini)",
+  "Karka (Cancer)",
+  "Simha (Leo)",
+  "Kanya (Virgo)",
+  "Tula (Libra)",
+  "Vrischika (Scorpio)",
+  "Dhanu (Sagittarius)",
+  "Makara (Capricorn)",
+  "Kumbha (Aquarius)",
+  "Meena (Pisces)",
+];
+
+export const NAKSHATRA_OPTIONS = [
+  "Ashwini",
+  "Bharani",
+  "Krittika",
+  "Rohini",
+  "Mrigashira",
+  "Ardra",
+  "Punarvasu",
+  "Pushya",
+  "Ashlesha",
+  "Magha",
+  "Purva Phalguni",
+  "Uttara Phalguni",
+  "Hasta",
+  "Chitra",
+  "Swati",
+  "Vishakha",
+  "Anuradha",
+  "Jyeshtha",
+  "Mula",
+  "Purva Ashadha",
+  "Uttara Ashadha",
+  "Shravana",
+  "Dhanishta",
+  "Shatabhisha",
+  "Purva Bhadrapada",
+  "Uttara Bhadrapada",
+  "Revati",
 ];
 
 export const MOTHER_TONGUE_OPTIONS = [
@@ -101,6 +167,93 @@ export const MOTHER_TONGUE_OPTIONS = [
 export const FAMILY_VALUE_OPTIONS = ["Orthodox", "Traditional", "Moderate", "Liberal"];
 export const FAMILY_TYPE_OPTIONS = ["Joint Family", "Nuclear Family", "Others"];
 export const FAMILY_STATUS_OPTIONS = ["Middle Class", "Upper Middle Class", "High class", "Rich/Affluent"];
+
+export const FATHER_OCCUPATION_OPTIONS = [
+  "- Select -",
+  "Employed",
+  "Business Man",
+  "Professional",
+  "Retired",
+  "Not Employed",
+  "Passed Away",
+];
+
+export const MOTHER_OCCUPATION_OPTIONS = [
+  "- Select -",
+  "Homemaker",
+  "Employed",
+  "Business Woman",
+  "Professional",
+  "Retired",
+  "Passed Away",
+];
+
+export const SIBLINGS_COUNT_OPTIONS = [
+  "- Select -",
+  "none",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "5+",
+];
+
+export const PARTNER_RELIGION_OPTIONS = [
+  "Any",
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Sikh",
+  "Jain",
+  "Buddhist",
+  "Others",
+];
+
+export const PARTNER_MOTHER_TONGUE_OPTIONS = [
+  "Any",
+  "Telugu",
+  "Tamil",
+  "Hindi",
+  "Kannada",
+  "Malayalam",
+  "English",
+  "Bengali",
+  "Marathi",
+  "Gujarati",
+  "Punjabi",
+  "Odia",
+  "Urdu",
+  "Others",
+];
+
+export const PARTNER_EDUCATION_OPTIONS = [
+  "Any",
+  "10th",
+  "12th",
+  "Diploma",
+  "Graduate",
+  "B.Tech / B.E.",
+  "M.Tech",
+  "MBA",
+  "Master's",
+  "MBBS",
+  "Doctorate",
+  "Others",
+];
+
+export const PARTNER_COUNTRY_OPTIONS = [
+  "Any",
+  "India",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "United Arab Emirates",
+  "Singapore",
+  "Germany",
+  "Others",
+];
 
 export const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -129,3 +282,91 @@ export const MAJOR_COUNTRIES = [
   "Germany",
   "Others",
 ];
+
+export const HOBBIES_CATEGORIES: Record<string, string[]> = {
+  "Hobbies & Interests": [
+    "Acting",
+    "Art / Handicraft",
+    "Bike / Car enthusiast",
+    "Board games",
+    "Clubbing",
+    "Adventure sports",
+    "Astrology",
+    "Bird watching",
+    "Book clubs",
+    "Collectibles",
+    "Blogging / Video blogging",
+    "Calligraphy",
+    "Cooking",
+  ],
+  Music: [
+    "Classical",
+    "Carnatic",
+    "Hindustani",
+    "Devotional",
+    "Bollywood",
+    "Telugu",
+    "Instrumental",
+    "Singing",
+    "Playing instruments",
+  ],
+  Reading: [
+    "Fiction",
+    "Non-fiction",
+    "Novels",
+    "Poetry",
+    "Spiritual",
+    "Technology",
+    "Biography",
+    "Self-help",
+  ],
+  "Movie and TV shows": [
+    "Movies",
+    "Web series",
+    "Drama",
+    "Comedy",
+    "Action",
+    "Thriller",
+    "Documentaries",
+    "Telugu movies",
+    "Bollywood",
+  ],
+  "Sports and Fitness": [
+    "Cricket",
+    "Football",
+    "Badminton",
+    "Tennis",
+    "Gym",
+    "Yoga",
+    "Running",
+    "Walking",
+    "Swimming",
+    "Adventure sports",
+  ],
+  Food: [
+    "Vegetarian",
+    "Non-Vegetarian",
+    "Vegan",
+    "Baking",
+    "Cooking",
+    "Dining out",
+    "Food exploration",
+  ],
+  "Spoken languages": [
+    "Telugu",
+    "Hindi",
+    "English",
+    "Tamil",
+    "Kannada",
+    "Malayalam",
+    "Marathi",
+    "Gujarati",
+    "Bengali",
+    "Punjabi",
+    "Urdu",
+    "Odia",
+    "Spanish",
+    "French",
+    "German",
+  ],
+};
