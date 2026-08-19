@@ -16,7 +16,7 @@ export default async function SearchPage() {
 
   const profileResult =
     await container.services.profileService.getProfileByUserId(userId);
-  if (!profileResult.success) {
+  if (!profileResult.success || !profileResult.data) {
     redirect("/onboarding");
   }
   const profile = profileResult.data;

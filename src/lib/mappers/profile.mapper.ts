@@ -12,7 +12,11 @@ export class ProfileMapper {
       publicId: (profile as any).user?.publicId || null,
       gender: profile.gender,
       age: profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : null,
-      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,
+      dateOfBirth: profile.dateOfBirth
+        ? profile.dateOfBirth instanceof Date
+          ? profile.dateOfBirth.toISOString()
+          : new Date(profile.dateOfBirth).toISOString()
+        : null,
       religion: profile.religion,
       motherTongue: profile.motherTongue,
       caste: profile.caste,
