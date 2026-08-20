@@ -15,7 +15,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   if (!profileResult.success) {
     redirect("/onboarding");
   }
-  if (profileResult.data.status !== "APPROVED") {
+  if (profileResult.data?.status !== "APPROVED") {
     redirect("/dashboard");
   }
 
@@ -40,7 +40,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         {/* Desktop 2-column layout */}
         <div className="hidden md:grid md:grid-cols-12 gap-6">
           <div className="md:col-span-5 lg:col-span-4">
-            <ChatListClient conversations={conversations} currentUserId={userId} />
+            <ChatListClient conversations={conversations as any[]} currentUserId={userId} />
           </div>
           <div className="md:col-span-7 lg:col-span-8 flex flex-col items-center justify-center border border-gray-200 bg-white rounded-2xl p-12 text-center shadow-xs min-h-[500px]">
             <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
@@ -55,7 +55,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
 
         {/* Mobile single-column view */}
         <div className="md:hidden">
-          <ChatListClient conversations={conversations} currentUserId={userId} />
+          <ChatListClient conversations={conversations as any[]} currentUserId={userId} />
         </div>
       </div>
     </div>

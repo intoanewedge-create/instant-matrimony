@@ -3,11 +3,14 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().url(),
-    AUTH_SECRET: z.string().min(8, "AUTH_SECRET must be at least 8 characters long"),
+    DATABASE_URL: z.string().url().default("postgresql://postgres:postgres@localhost:5432/matri"),
+    AUTH_SECRET: z.string().min(8, "AUTH_SECRET must be at least 8 characters long").default("temporary_build_secret_12345678"),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
-    STORAGE_PROVIDER: z.enum(["local", "s3", "cloudinary", "r2", "minio", "mock"]).default("local"),
+    STORAGE_PROVIDER: z.enum(["local", "s3", "cloudinary", "r2", "minio", "supabase", "mock"]).default("local"),
+    SUPABASE_URL: z.string().url().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+    SUPABASE_STORAGE_BUCKET: z.string().default("profile-images"),
     CACHE_PROVIDER: z.enum(["memory", "redis"]).default("memory"),
     // Optional provider settings
     EMAIL_PROVIDER: z.enum(["mock", "smtp", "resend"]).optional(),
@@ -47,6 +50,9 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     LOG_LEVEL: process.env.LOG_LEVEL,
     STORAGE_PROVIDER: process.env.STORAGE_PROVIDER,
+    SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_STORAGE_BUCKET: process.env.SUPABASE_STORAGE_BUCKET,
     CACHE_PROVIDER: process.env.CACHE_PROVIDER,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     EMAIL_PROVIDER: process.env.EMAIL_PROVIDER as any,

@@ -69,8 +69,9 @@ export async function uploadPhoto(formData: FormData) {
       return { success: false, error: "This image is already in your photo gallery." };
     }
 
+    const objectName = `profile-images/${profile.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
     const uploadRes = await container.services.storageService.uploadFile(
-      { name: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}.webp`, buffer: processedBuffer, mimeType },
+      { name: objectName, buffer: processedBuffer, mimeType },
       MediaType.PHOTO,
       userId
     );
@@ -80,35 +81,65 @@ export async function uploadPhoto(formData: FormData) {
 
     const media = uploadRes.data;
 
-    const isMain = existingPhotos.length === 0;
-    const photo = await container.repositories.photoRepository.create({
-      profileId: profile.id,
-      mediaId: media.id,
-      url: media.url,
-      isMain,
-      isApproved: false,
-    });
+    let photo: any;
+    try {
+      const isMain = existingPhotos.length === 0;
+      photo = await container.repositories.photoRepository.create({
+        profileId: profile.id,
+        mediaId: media.id,
+        url: media.url,
+        isMain,
+        isApproved: false,
+      });
 
-    await container.repositories.imageMetadataRepository.create({
-      photoId: photo.id,
-      fileSize: media.fileSize,
-      mimeType: media.mimeType,
-      width,
-      height,
-      originalName: file.name,
-      storageProvider: storageConfig.provider,
-      checksum,
-    });
+      await container.repositories.imageMetadataRepository.create({
+        photoId: photo.id,
+        fileSize: media.fileSize,
+        mimeType: media.mimeType,
+        width,
+        height,
+        originalName: file.name,
+        storageProvider: storageConfig.provider,
+        checksum,
+      });
 
-    await eventDispatcher.publish("PhotoUploaded", {
-      photoId: photo.id,
-      userId,
-      profileId: profile.id,
-    });
+      // Update profile completion percentage
+      const fullProfile = await prisma.profile.findFirst({
+        where: { id: profile.id },
+        include: { photos: { where: { deletedAt: null } }, partnerPreference: true },
+      });
+      if (fullProfile) {
+        const completionPercent = container.services.completionService.calculate(fullProfile);
+        await prisma.profile.update({
+          where: { id: profile.id },
+          data: { completionPercent },
+        });
+      }
+    } catch (dbErr: any) {
+      // Rollback newly uploaded storage file to prevent orphaned storage objects
+      try {
+        await container.services.storageService.deleteFile(media.id);
+      } catch (cleanupErr) {
+        console.warn("Storage cleanup warning during rollback:", cleanupErr);
+      }
+      return { success: false, error: `Failed to save photo record: ${dbErr.message}` };
+    }
 
+    try {
+      await eventDispatcher.publish("PhotoUploaded", {
+        photoId: photo.id,
+        userId,
+        profileId: profile.id,
+      });
+    } catch (eventErr) {
+      console.warn("Event dispatch warning for PhotoUploaded:", eventErr);
+    }
+
+    revalidatePath("/onboarding");
     revalidatePath("/profile");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
+    revalidatePath("/matches");
     return {
       success: true,
       photoId: photo.id,
@@ -149,7 +180,15 @@ export async function replacePhoto(photoId: string, formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const validateRes = await container.services.imageService.validateImage(buffer, file.name, file.type);
+    let detectedMime = (file.type || "").toLowerCase();
+    if (!detectedMime || detectedMime === "application/octet-stream") {
+      const ext = file.name.toLowerCase().split(".").pop();
+      if (ext === "jpg" || ext === "jpeg") detectedMime = "image/jpeg";
+      else if (ext === "png") detectedMime = "image/png";
+      else if (ext === "webp") detectedMime = "image/webp";
+    }
+
+    const validateRes = await container.services.imageService.validateImage(buffer, file.name, detectedMime || file.type);
     if (!validateRes.success) {
       return { success: false, error: validateRes.error };
     }
@@ -161,12 +200,11 @@ export async function replacePhoto(photoId: string, formData: FormData) {
 
     const { processedBuffer, checksum, width, height, mimeType } = processRes.data;
 
-    if (photo.mediaId) {
-      await container.services.storageService.deleteFile(photo.mediaId);
-    }
+    const oldMediaId = photo.mediaId;
+    const objectName = `profile-images/${profile.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
 
     const uploadRes = await container.services.storageService.uploadFile(
-      { name: `${Date.now()}-${file.name.replace(/\.[^/.]+$/, "")}.webp`, buffer: processedBuffer, mimeType },
+      { name: objectName, buffer: processedBuffer, mimeType },
       MediaType.PHOTO,
       userId
     );
@@ -176,38 +214,59 @@ export async function replacePhoto(photoId: string, formData: FormData) {
 
     const media = uploadRes.data;
 
-    await container.repositories.photoRepository.update(photoId, {
-      mediaId: media.id,
-      url: media.url,
-      isApproved: false,
-    });
+    try {
+      await container.repositories.photoRepository.update(photoId, {
+        mediaId: media.id,
+        url: media.url,
+        isApproved: false,
+      });
 
-    const existingMeta = await container.repositories.imageMetadataRepository.findByPhotoId(photoId);
-    if (existingMeta) {
-      await container.repositories.imageMetadataRepository.update(existingMeta.id, {
-        fileSize: media.fileSize,
-        mimeType: media.mimeType,
-        width,
-        height,
-        originalName: file.name,
-        checksum,
-      });
-    } else {
-      await container.repositories.imageMetadataRepository.create({
-        photoId,
-        fileSize: media.fileSize,
-        mimeType: media.mimeType,
-        width,
-        height,
-        originalName: file.name,
-        storageProvider: storageConfig.provider,
-        checksum,
-      });
+      const existingMeta = await container.repositories.imageMetadataRepository.findByPhotoId(photoId);
+      if (existingMeta) {
+        await container.repositories.imageMetadataRepository.update(existingMeta.id, {
+          fileSize: media.fileSize,
+          mimeType: media.mimeType,
+          width,
+          height,
+          originalName: file.name,
+          checksum,
+        });
+      } else {
+        await container.repositories.imageMetadataRepository.create({
+          photoId,
+          fileSize: media.fileSize,
+          mimeType: media.mimeType,
+          width,
+          height,
+          originalName: file.name,
+          storageProvider: storageConfig.provider,
+          checksum,
+        });
+      }
+
+      // Safe cleanup of old storage object after successful replacement
+      if (oldMediaId) {
+        try {
+          await container.services.storageService.deleteFile(oldMediaId);
+        } catch (delErr) {
+          console.warn("Old media deletion warning:", delErr);
+        }
+      }
+    } catch (dbErr: any) {
+      // Rollback newly uploaded replacement file
+      try {
+        await container.services.storageService.deleteFile(media.id);
+      } catch (rollbackErr) {
+        console.warn("Storage cleanup rollback warning:", rollbackErr);
+      }
+      return { success: false, error: `Failed to update photo record: ${dbErr.message}` };
     }
 
+    revalidatePath("/onboarding");
     revalidatePath("/profile");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
+    revalidatePath("/matches");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -270,6 +329,19 @@ export async function deletePhoto(photoId: string) {
       }
     }
 
+    // Update completion percent
+    const fullProfile = await prisma.profile.findFirst({
+      where: { id: photo.profileId },
+      include: { photos: { where: { deletedAt: null } }, partnerPreference: true },
+    });
+    if (fullProfile) {
+      const completionPercent = container.services.completionService.calculate(fullProfile);
+      await prisma.profile.update({
+        where: { id: photo.profileId },
+        data: { completionPercent },
+      });
+    }
+
     try {
       await eventDispatcher.publish("PhotoDeleted", {
         photoId,
@@ -280,9 +352,11 @@ export async function deletePhoto(photoId: string) {
       console.warn("Event dispatch warning for PhotoDeleted:", eventErr);
     }
 
+    revalidatePath("/onboarding");
     revalidatePath("/profile");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
+    revalidatePath("/matches");
     return { success: true };
   } catch (e: any) {
     console.error("deletePhoto error:", e);
@@ -320,9 +394,11 @@ export async function setPrimaryPhoto(photoId: string) {
       profileId: profile.id,
     });
 
+    revalidatePath("/onboarding");
     revalidatePath("/profile");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/verification");
+    revalidatePath("/matches");
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };

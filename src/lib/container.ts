@@ -85,6 +85,7 @@ import { CloudinaryStorageProvider } from "./storage/cloudinary-provider";
 import { S3StorageProvider } from "./storage/s3-provider";
 import { R2StorageProvider } from "./storage/r2-provider";
 import { MinioStorageProvider } from "./storage/minio-provider";
+import { SupabaseStorageProvider } from "./storage/supabase-provider";
 
 import { StorageProvider } from "./storage/storage-provider";
 
@@ -202,7 +203,9 @@ const smsOtpProvider =
   smsConfig.provider === "twilio" ? new SmsOtpProvider() : emailOtpProvider;
 
 let storageProvider: StorageProvider;
-if (storageConfig.provider === "local") {
+if (storageConfig.provider === "supabase" || (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && storageConfig.provider !== "local")) {
+  storageProvider = new SupabaseStorageProvider();
+} else if (storageConfig.provider === "local") {
   storageProvider = new LocalStorageProvider();
 } else if (storageConfig.provider === "cloudinary") {
   storageProvider = new CloudinaryStorageProvider();

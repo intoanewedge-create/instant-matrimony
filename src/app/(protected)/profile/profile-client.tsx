@@ -91,9 +91,13 @@ interface PartnerPreference {
   maxHeight?: number;
   maritalStatus?: string;
   religion?: string;
+  caste?: string;
   motherTongue?: string;
   education?: string;
+  occupation?: string;
   country?: string;
+  state?: string;
+  city?: string;
   bio?: string;
 }
 
@@ -404,9 +408,13 @@ export function ProfileClient({
     maxHeight: profile.partnerPreference?.maxHeight || 220,
     maritalStatus: profile.partnerPreference?.maritalStatus || "Never Married",
     religion: profile.partnerPreference?.religion || "",
+    caste: (profile.partnerPreference as any)?.caste || "",
     motherTongue: profile.partnerPreference?.motherTongue || "",
     education: profile.partnerPreference?.education || "",
+    occupation: (profile.partnerPreference as any)?.occupation || "",
     country: profile.partnerPreference?.country || "India",
+    state: (profile.partnerPreference as any)?.state || "",
+    city: (profile.partnerPreference as any)?.city || "",
     bio: profile.partnerPreference?.bio || "",
   });
 
@@ -1938,7 +1946,40 @@ export function ProfileClient({
                         )}
                       </div>
 
-                      {/* Row 5: Mother Tongue */}
+                      {/* Row 5: Caste */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Caste</span>
+                            <span className="text-xs text-slate-500">{prefValues.caste || "Any Caste"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "caste" ? null : "caste")}
+                            aria-label="Edit Caste Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "caste" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.caste}
+                              placeholder="e.g. Reddy, Kamma, Brahmin, Kapu, Any"
+                              onChange={(e) => setPrefValues({ ...prefValues, caste: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ caste: prefValues.caste })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 6: Mother Tongue */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1982,7 +2023,7 @@ export function ProfileClient({
                         3. Professional Criteria
                       </h3>
 
-                      {/* Row 6: Education */}
+                      {/* Row 7: Education */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -2018,6 +2059,43 @@ export function ProfileClient({
                           </div>
                         )}
                       </div>
+
+                      {/* Row 8: Occupation */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Occupation / Profession</span>
+                            <span className="text-xs text-slate-500">{prefValues.occupation || "Any Occupation"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "occupation" ? null : "occupation")}
+                            aria-label="Edit Occupation Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "occupation" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.occupation}
+                              onChange={(e) => setPrefValues({ ...prefValues, occupation: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Occupation</option>
+                              {OCCUPATION_OPTIONS.map((occ) => (
+                                <option key={occ} value={occ}>{occ}</option>
+                              ))}
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ occupation: prefValues.occupation })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* SECTION 4: LOCATION */}
@@ -2026,7 +2104,7 @@ export function ProfileClient({
                         4. Location Criteria
                       </h3>
 
-                      {/* Row 7: Country */}
+                      {/* Row 9: Country */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -2056,6 +2134,76 @@ export function ProfileClient({
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
                               <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 10: State */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred State</span>
+                            <span className="text-xs text-slate-500">{prefValues.state || "Any State"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "state" ? null : "state")}
+                            aria-label="Edit State Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "state" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.state}
+                              onChange={(e) => setPrefValues({ ...prefValues, state: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any State</option>
+                              {INDIAN_STATES.map((st) => (
+                                <option key={st} value={st}>{st}</option>
+                              ))}
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ state: prefValues.state })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 11: City */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred City / District</span>
+                            <span className="text-xs text-slate-500">{prefValues.city || "Any City / District"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "city" ? null : "city")}
+                            aria-label="Edit City Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "city" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.city}
+                              placeholder="e.g. Hyderabad, Visakhapatnam, Bangalore, Any"
+                              onChange={(e) => setPrefValues({ ...prefValues, city: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ city: prefValues.city })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                                 {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>

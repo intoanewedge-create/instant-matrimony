@@ -37,6 +37,35 @@ export class SearchSpecification {
     category?: string;
     categoryTargetUserIds?: string[] | null;
   }) {
+    // Filter by Profile ID (publicId IM########, Profile UUID, or User ID)
+    // When Search by Profile ID is active, return ONLY that exact profile without demographic filters
+    if (
+      params.profilePublicId &&
+      params.profilePublicId.trim().length > 0
+    ) {
+      const rawId = params.profilePublicId.trim();
+      return {
+        AND: [
+          { userId: { not: params.viewerId } },
+          ...(params.blockedUserIds && params.blockedUserIds.length > 0 ? [{ userId: { notIn: params.blockedUserIds } }] : []),
+          {
+            OR: [
+              { id: rawId },
+              { userId: rawId },
+              {
+                user: {
+                  publicId: {
+                    equals: rawId.toUpperCase(),
+                    mode: "insensitive",
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      };
+    }
+
     const andClauses: any[] = [
       ProfileSpecification.approvedOnly(),
       { userId: { not: params.viewerId } },
@@ -55,11 +84,11 @@ export class SearchSpecification {
       });
     }
 
-    // The current Prisma Profile schema only stores country and horoscope
-    // for these categories. Do not reference fields that are not part of
-    // the schema: Prisma would reject the query at runtime and turn a
-    // search into a 500 response.
-    if (params.category === "pref_nri") {
+    if (
+      params.category === "pref_nri" ||
+      params.category === "nri" ||
+      params.category === "nri_matches"
+    ) {
       andClauses.push({
         country: {
           notIn: ["India", "INDIA", "in", "In", "IN"],
@@ -67,18 +96,26 @@ export class SearchSpecification {
       });
     } else if (
       params.category === "with_horoscope" ||
-      params.category === "horoscope_matches"
+      params.category === "horoscope_matches" ||
+      params.category === "matches_with_horoscope"
     ) {
       andClauses.push({
         horoscope: {
           not: null,
         },
       });
+    } else if (
+      params.category === "with_photos" ||
+      params.category === "matches_with_photos"
+    ) {
+      andClauses.push({
+        photos: {
+          some: {
+            deletedAt: null,
+          },
+        },
+      });
     } else if (params.category === "star_matches") {
-      // There is no star/rasi field in the current schema. Returning no
-      // results is safer than treating every horoscope as a star match or
-      // issuing an invalid Prisma query. This category can be implemented
-      // properly if a future schema explicitly stores star information.
       andClauses.push({
         id: {
           in: [],
@@ -86,29 +123,7 @@ export class SearchSpecification {
       });
     }
 
-    // Filter by Profile ID (publicId IM########, Profile UUID, or User ID)
-    if (
-      params.profilePublicId &&
-      params.profilePublicId.trim().length > 0
-    ) {
-      const rawId = params.profilePublicId.trim();
-      andClauses.push({
-        OR: [
-          { id: rawId },
-          { userId: rawId },
-          {
-            user: {
-              publicId: {
-                equals: rawId.toUpperCase(),
-                mode: "insensitive",
-              },
-            },
-          },
-        ],
-      });
-    }
-
-    if (!params.profilePublicId && params.gender) {
+    if (params.gender) {
       andClauses.push(
         ProfileSpecification.filterByGender(params.gender)
       );

@@ -24,14 +24,16 @@ export default async function ProfileDetailPage({
     redirect("/dashboard");
   }
 
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawId);
+  const orConditions: any[] = [{ user: { publicId: rawId } }];
+  if (isUuid) {
+    orConditions.push({ userId: rawId }, { id: rawId });
+  }
+
   // Fetch target profile with multi-identifier support (userId, profile.id, or user.publicId)
   const targetProfile = await prisma.profile.findFirst({
     where: {
-      OR: [
-        { userId: rawId },
-        { id: rawId },
-        { user: { publicId: rawId } },
-      ],
+      OR: orConditions,
       deletedAt: null,
     },
     include: {

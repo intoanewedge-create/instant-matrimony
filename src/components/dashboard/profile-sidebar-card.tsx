@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Camera, Copy, CheckCheck, Star, Crown } from "lucide-react";
 
@@ -56,7 +57,7 @@ export function ProfileSidebarCard({
             style={{ background: photoUrl ? undefined : "linear-gradient(135deg, #00A76F 0%, #008F60 100%)" }}
           >
             {photoUrl ? (
-              <img src={photoUrl} alt={`${name}'s photo`} className="w-full h-full object-cover" />
+              <Image src={photoUrl} alt={`${name}'s photo`} fill className="object-cover" />
             ) : (
               <span>{initials}</span>
             )}

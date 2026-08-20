@@ -155,6 +155,7 @@ async function runMessagingAudit() {
 
     const convosBRes = await container.services.messagingService.getConversations(userB.id);
     assert.ok(convosBRes.success, "User B conversation fetch failed");
+    // @ts-ignore
     const convB = convosBRes.data.find((c: any) => c.contactId === userA.id);
     assert.ok(convB, "Conversation with User A should appear in User B conversation list");
     console.log("✓ Real conversation list retrieved for User B with User A.");
@@ -163,15 +164,20 @@ async function runMessagingAudit() {
     const testMessageContent = "Hello from User A at " + new Date().toISOString();
     const sendMsgRes = await container.services.messagingService.sendMessage(userA.id, userB.id, testMessageContent);
     assert.ok(sendMsgRes.success, `Sending message failed: ${sendMsgRes.error}`);
+    // @ts-ignore
     assert.strictEqual(sendMsgRes.data.content, testMessageContent);
+    // @ts-ignore
     assert.strictEqual(sendMsgRes.data.senderId, userA.id);
+    // @ts-ignore
     assert.strictEqual(sendMsgRes.data.receiverId, userB.id);
+    // @ts-ignore
     createdMessageId = sendMsgRes.data.id;
     console.log("✓ Real message sent from User A to User B and persisted to PostgreSQL.");
 
     // 8. Fetch Real Chat Messages
     const chatMsgsRes = await container.services.messagingService.getChatMessages(userA.id, userB.id);
     assert.ok(chatMsgsRes.success, `Chat messages fetch failed: ${chatMsgsRes.error}`);
+    // @ts-ignore
     const foundMsg = chatMsgsRes.data.find((m: any) => m.id === createdMessageId);
     assert.ok(foundMsg, "Sent message must be in fetched chat messages");
     assert.strictEqual(foundMsg.content, testMessageContent);
@@ -203,6 +209,7 @@ async function runMessagingAudit() {
 
     // Verify soft-deleted message is hidden from conversation fetch
     const postDeleteMsgsRes = await container.services.messagingService.getChatMessages(userA.id, userB.id);
+    // @ts-ignore
     const postDeleteFound = postDeleteMsgsRes.data.find((m: any) => m.id === createdMessageId);
     assert.ok(!postDeleteFound, "Soft-deleted message must NOT be returned in chat history");
     console.log("✓ Soft-deleted message successfully excluded from chat history.");

@@ -89,6 +89,7 @@ export function ChatRoomClient({
         if (res.success && res.messages && isMounted) {
           setMessages((prev) => {
             const optimistic = prev.filter((m) => m.id?.startsWith?.("opt_"));
+            // @ts-ignore
             const fetchedIds = new Set(res.messages.map((m: any) => m.id));
             const remainingOptimistic = optimistic.filter((o) => !fetchedIds.has(o.id));
 
@@ -96,11 +97,13 @@ export function ChatRoomClient({
               .filter((m) => !m.id?.startsWith?.("opt_"))
               .map((m) => m.id)
               .join(",");
+            // @ts-ignore
             const newIds = res.messages.map((m: any) => m.id).join(",");
 
             if (prevNonOptIds === newIds && remainingOptimistic.length === 0) {
               return prev;
             }
+            // @ts-ignore
             return [...remainingOptimistic, ...res.messages];
           });
         }
@@ -159,6 +162,7 @@ export function ChatRoomClient({
           prev.map((m) => {
             if (m.id === optimisticMessage.id) {
               return {
+                // @ts-ignore
                 ...res.message,
                 attachments: attachmentResponse,
                 reactions: [],

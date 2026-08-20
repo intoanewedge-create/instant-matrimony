@@ -5,12 +5,18 @@ import crypto from "crypto";
 
 // Lazy-load sharp to avoid crashing serverless environments (Vercel)
 // where the native libvips binary is not available at module load time.
-let _sharp: typeof import("sharp") | null = null;
+let _sharp: any = null;
 async function getSharp() {
   if (!_sharp) {
-    _sharp = (await import("sharp")).default as any;
+    try {
+      const mod: any = await import("sharp");
+      _sharp = typeof mod.default === "function" ? mod.default : typeof mod === "function" ? mod : (mod.default?.default || mod);
+    } catch (err) {
+      console.warn("Sharp load warning:", err);
+      _sharp = null;
+    }
   }
-  return _sharp as unknown as typeof import("sharp").default;
+  return _sharp;
 }
 
 export class ImageService extends BaseService {

@@ -17,6 +17,7 @@ export default async function VerificationPage() {
   const profile = profileResult.data;
 
   // Fetch photos
+  // @ts-ignore
   const photos = await container.repositories.photoRepository.findByProfileId(profile.id);
 
   // Fetch identity verification

@@ -303,6 +303,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
     if (!files || files.length === 0) return;
     if (photos.length >= 4) {
       setPhotoError("Maximum 4 profile photos allowed.");
+      e.target.value = "";
       return;
     }
 
@@ -322,6 +323,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       setPhotoError("Network error while uploading photo.");
     } finally {
       setUploadingPhoto(false);
+      e.target.value = "";
     }
   };
 
@@ -940,108 +942,126 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                 )}
 
                 {/* STEP 5: Location Details (Hierarchical Cascading Dropdowns) */}
-                {currentStep === 5 && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="country" className="text-slate-700 font-medium text-xs">Country <span className="text-rose-600">*</span></Label>
-                        <select
-                          id="country"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("country", { required: "Country is required" })}
-                        >
-                          <option value="India">India</option>
-                          <option value="USA">United States (USA)</option>
-                          <option value="UK">United Kingdom (UK)</option>
-                          <option value="Canada">Canada</option>
-                          <option value="Australia">Australia</option>
-                          <option value="UAE">United Arab Emirates (UAE)</option>
-                          <option value="Singapore">Singapore</option>
-                          <option value="Germany">Germany</option>
-                        </select>
-                        {errors.country && <p className="text-xs text-red-600">{errors.country.message as string}</p>}
+                {currentStep === 5 && (() => {
+                  const stateDistricts = (selectedState && INDIAN_LOCATION_DATA[selectedState]) ? Object.keys(INDIAN_LOCATION_DATA[selectedState]) : [];
+                  const resolvedDistricts = districts.length > 0 ? districts.map((d: any) => d.name || d) : stateDistricts;
+
+                  const districtCities = (selectedState && selectedDistrict && INDIAN_LOCATION_DATA[selectedState]?.[selectedDistrict]) ? INDIAN_LOCATION_DATA[selectedState][selectedDistrict] : [];
+                  const resolvedCities = cities.length > 0 ? cities.map((c: any) => c.name || c) : districtCities;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="country" className="text-slate-700 font-medium text-xs">Country <span className="text-rose-600">*</span></Label>
+                          <select
+                            id="country"
+                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                            {...register("country", {
+                              required: "Country is required",
+                              onChange: () => {
+                                setValue("state", "");
+                                setValue("district", "");
+                                setValue("city", "");
+                              }
+                            })}
+                          >
+                            <option value="India">India</option>
+                            <option value="United States">United States (USA)</option>
+                            <option value="United Kingdom">United Kingdom (UK)</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="United Arab Emirates">United Arab Emirates (UAE)</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Others">Others</option>
+                          </select>
+                          {errors.country && <p className="text-xs text-red-600">{errors.country.message as string}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="state" className="text-slate-700 font-medium text-xs">State <span className="text-rose-600">*</span></Label>
+                          <select
+                            id="state"
+                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                            {...register("state", {
+                              required: "State is required",
+                              onChange: () => {
+                                setValue("district", "");
+                                setValue("city", "");
+                              }
+                            })}
+                          >
+                            <option value="">Select State</option>
+                            {states.length > 0
+                              ? states.map((s: any) => (
+                                  <option key={s.id || s.name || s} value={s.name || s}>
+                                    {s.name || s}
+                                  </option>
+                                ))
+                              : Object.keys(INDIAN_LOCATION_DATA).map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                          </select>
+                          {errors.state && <p className="text-xs text-red-600">{errors.state.message as string}</p>}
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="state" className="text-slate-700 font-medium text-xs">State <span className="text-rose-600">*</span></Label>
-                        <select
-                          id="state"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("state", { required: "State is required" })}
-                        >
-                          <option value="">Select State</option>
-                          {states.length > 0
-                            ? states.map((s) => (
-                                <option key={s.id} value={s.name}>
-                                  {s.name}
-                                </option>
-                              ))
-                            : Object.keys(INDIAN_LOCATION_DATA).map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                        </select>
-                        {errors.state && <p className="text-xs text-red-600">{errors.state.message as string}</p>}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="district" className="text-slate-700 font-medium text-xs">District</Label>
-                        {districts.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="district" className="text-slate-700 font-medium text-xs">
+                            District <span className="text-rose-600">*</span>
+                          </Label>
                           <select
                             id="district"
                             className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                            {...register("district")}
+                            disabled={!selectedState}
+                            {...register("district", {
+                              required: "District is required",
+                              onChange: () => {
+                                setValue("city", "");
+                              }
+                            })}
                           >
-                            <option value="">Select District</option>
-                            {districts.map((d) => (
-                              <option key={d.id} value={d.name}>
-                                {d.name}
+                            <option value="">
+                              {!selectedState ? "— Select State First —" : "Select District"}
+                            </option>
+                            {resolvedDistricts.map((d: string) => (
+                              <option key={d} value={d}>
+                                {d}
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <Input
-                            id="district"
-                            type="text"
-                            placeholder="e.g. Visakhapatnam, Hyderabad, Bangalore"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("district")}
-                          />
-                        )}
-                      </div>
+                          {errors.district && <p className="text-xs text-red-600">{errors.district.message as string}</p>}
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="city" className="text-slate-700 font-medium text-xs">City / Town <span className="text-rose-600">*</span></Label>
-                        {cities.length > 0 ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="city" className="text-slate-700 font-medium text-xs">
+                            City / Town <span className="text-rose-600">*</span>
+                          </Label>
                           <select
                             id="city"
                             className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                            disabled={!selectedDistrict}
                             {...register("city", { required: "City is required" })}
                           >
-                            <option value="">Select City / Town</option>
-                            {cities.map((c) => (
-                              <option key={c.id} value={c.name}>
-                                {c.name}
+                            <option value="">
+                              {!selectedDistrict ? "— Select District First —" : "Select City / Town"}
+                            </option>
+                            {resolvedCities.map((c: string) => (
+                              <option key={c} value={c}>
+                                {c}
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <Input
-                            id="city"
-                            type="text"
-                            placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("city", { required: "City is required" })}
-                          />
-                        )}
-                        {errors.city && <p className="text-xs text-red-600">{errors.city.message as string}</p>}
+                          {errors.city && <p className="text-xs text-red-600">{errors.city.message as string}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* STEP 6: Family Details (Screenshot 1 Implementation) */}
                 {currentStep === 6 && (

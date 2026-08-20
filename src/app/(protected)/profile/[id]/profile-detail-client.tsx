@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Heart,
@@ -60,6 +60,7 @@ export function ProfileDetailClient({
   const [sentInterest, setSentInterest] = useState(initialSentInterest);
   const [receivedInterest, setReceivedInterest] = useState(initialReceivedInterest);
   const [interestLoading, setInterestLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Unlock state
   const [unlockedState, setUnlockedState] = useState<boolean>(isUnlocked);
@@ -122,51 +123,58 @@ export function ProfileDetailClient({
     fetchAiInsights();
   }, [profile.userId]);
 
-  const handleSendInterest = async () => {
+  const handleSendInterest = () => {
+    if (interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await sendInterestAction(profile.userId);
-      if (res.success) {
-        setSentInterest(res.interest);
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await sendInterestAction(profile.userId);
+        if (res.success) {
+          setSentInterest(res.interest);
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
-  const handleAcceptInterest = async () => {
-    if (!receivedInterest) return;
+  const handleAcceptInterest = () => {
+    if (!receivedInterest || interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await acceptInterestAction(receivedInterest.id);
-      if (res.success) {
-        setReceivedInterest((prev: any) => ({ ...prev, status: "ACCEPTED" }));
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await acceptInterestAction(receivedInterest.id);
+        if (res.success) {
+          setReceivedInterest((prev: any) => ({ ...prev, status: "ACCEPTED" }));
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
-  const handleDeclineInterest = async () => {
-    if (!receivedInterest) return;
+  const handleDeclineInterest = () => {
+    if (!receivedInterest || interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await declineInterestAction(receivedInterest.id);
-      if (res.success) {
-        setReceivedInterest((prev: any) => ({ ...prev, status: "DECLINED" }));
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await declineInterestAction(receivedInterest.id);
+        if (res.success) {
+          setReceivedInterest((prev: any) => ({ ...prev, status: "DECLINED" }));
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
   const handleInitiateChat = async () => {

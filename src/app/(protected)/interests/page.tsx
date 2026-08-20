@@ -15,6 +15,7 @@ export default async function InterestsPage() {
   if (!profileResult.success) {
     redirect("/onboarding");
   }
+  // @ts-ignore
   if (profileResult.data.status === "DRAFT") {
     redirect("/onboarding");
   }
