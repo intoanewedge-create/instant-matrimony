@@ -39,7 +39,9 @@ import {
   PARTNER_MOTHER_TONGUE_OPTIONS,
   PARTNER_EDUCATION_OPTIONS,
   PARTNER_COUNTRY_OPTIONS,
+  HOBBIES_CATEGORIES,
 } from "@/lib/constants/options";
+import { INDIAN_LOCATION_DATA } from "@/lib/constants/locations";
 
 interface StepMeta {
   number: number;
@@ -84,6 +86,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const [countries, setCountries] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
 
   const {
     register,
@@ -138,12 +141,50 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const selectedSubCaste = watch("subCaste");
   const selectedCountry = watch("country");
   const selectedState = watch("state");
+  const selectedDistrict = watch("district");
   const dobValue = watch("dateOfBirth");
 
   // Calculate live age
   const calculatedAge = dobValue
     ? Math.floor((new Date().getTime() - new Date(dobValue).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
+
+  let initialFamilyData: Record<string, any> = {};
+  try {
+    if (initialProfile?.familyDetails) {
+      initialFamilyData = JSON.parse(initialProfile.familyDetails);
+    }
+  } catch {}
+
+  const [familyLocationType, setFamilyLocationType] = useState<"same" | "different">(
+    initialFamilyData.familyLocationType || "same"
+  );
+  const [familyCountry, setFamilyCountry] = useState<string>(
+    initialFamilyData.familyCountry || initialProfile?.country || "India"
+  );
+  const [familyState, setFamilyState] = useState<string>(
+    initialFamilyData.familyState || initialProfile?.state || ""
+  );
+  const [familyDistrict, setFamilyDistrict] = useState<string>(
+    initialFamilyData.familyDistrict || initialProfile?.district || ""
+  );
+  const [familyCity, setFamilyCity] = useState<string>(
+    initialFamilyData.familyCity || initialProfile?.city || ""
+  );
+  const [aboutFamilyText, setAboutFamilyText] = useState<string>(
+    initialFamilyData.aboutFamily || ""
+  );
+
+  const [activeHobbyTab, setActiveHobbyTab] = useState<string>("Hobbies & Interests");
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(
+    Array.isArray(initialFamilyData.hobbies) ? initialFamilyData.hobbies : []
+  );
+
+  const toggleHobby = (hobby: string) => {
+    setSelectedHobbies((prev) =>
+      prev.includes(hobby) ? prev.filter((h) => h !== hobby) : [...prev, hobby]
+    );
+  };
 
   // Fetch initial Master Data
   useEffect(() => {
@@ -242,6 +283,20 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       setDistricts([]);
     }
   }, [selectedState, states]);
+
+  // Fetch Cities when District changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      const districtObj = districts.find((d) => d.name === selectedDistrict || d.id === selectedDistrict);
+      const queryId = districtObj?.id || selectedDistrict;
+      fetch(`/api/master-data?type=cities&districtId=${encodeURIComponent(queryId)}&parentId=${encodeURIComponent(selectedState || "")}`)
+        .then((r) => r.json())
+        .then((res) => { if (res.success && res.data) setCities(res.data); })
+        .catch(() => {});
+    } else {
+      setCities([]);
+    }
+  }, [selectedDistrict, districts, selectedState]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -369,16 +424,32 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         city: data.city,
       };
     } else if (currentStep === 6) {
+      const familyPayload = {
+        fatherOccupation: data.fatherOccupation,
+        motherOccupation: data.motherOccupation,
+        brothersCount: data.brothersCount,
+        brothersMarried: data.brothersMarried,
+        sistersCount: data.sistersCount,
+        sistersMarried: data.sistersMarried,
+        familyType: data.familyType,
+        familyStatus: data.familyStatus,
+        familyLocationType,
+        familyCountry: familyLocationType === "different" ? familyCountry : data.country || "India",
+        familyState: familyLocationType === "different" ? familyState : data.state || "",
+        familyDistrict: familyLocationType === "different" ? familyDistrict : data.district || "",
+        familyCity: familyLocationType === "different" ? familyCity : data.city || "",
+        aboutFamily: aboutFamilyText,
+        hobbies: selectedHobbies,
+      };
+
       stepData = {
-        familyDetails: data.familyDetails || undefined,
+        familyDetails: JSON.stringify(familyPayload),
         familyValues: data.familyValues || undefined,
-        foodPreference: data.foodPreference || undefined,
-        smoking: data.smoking || undefined,
-        drinking: data.drinking || undefined,
       };
     } else if (currentStep === 7) {
       stepData = {
-        bio: data.bio,
+        bio: data.bio || undefined,
+        hobbies: selectedHobbies,
       };
     } else if (currentStep === 8) {
       stepData = {
@@ -854,7 +925,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       {errors.occupation && <p className="text-xs text-red-600">{errors.occupation.message as string}</p>}
                     </div>
 
-                    <div className="space-y-2">
+<div className="space-y-2">
                       <Label htmlFor="income" className="text-slate-700 font-medium text-xs">Annual Income (in Lakhs INR) <span className="text-rose-600">*</span></Label>
                       <Input
                         id="income"
@@ -868,7 +939,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                   </div>
                 )}
 
-                {/* STEP 5: Location Details */}
+                {/* STEP 5: Location Details (Hierarchical Cascading Dropdowns) */}
                 {currentStep === 5 && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -893,28 +964,24 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                       <div className="space-y-2">
                         <Label htmlFor="state" className="text-slate-700 font-medium text-xs">State <span className="text-rose-600">*</span></Label>
-                        {states.length > 0 ? (
-                          <select
-                            id="state"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                            {...register("state", { required: "State is required" })}
-                          >
-                            <option value="">Select State</option>
-                            {states.map((s) => (
-                              <option key={s.id} value={s.name}>
-                                {s.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <Input
-                            id="state"
-                            type="text"
-                            placeholder="e.g. Andhra Pradesh, Telangana, Karnataka"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("state", { required: "State is required" })}
-                          />
-                        )}
+                        <select
+                          id="state"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("state", { required: "State is required" })}
+                        >
+                          <option value="">Select State</option>
+                          {states.length > 0
+                            ? states.map((s) => (
+                                <option key={s.id} value={s.name}>
+                                  {s.name}
+                                </option>
+                              ))
+                            : Object.keys(INDIAN_LOCATION_DATA).map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                        </select>
                         {errors.state && <p className="text-xs text-red-600">{errors.state.message as string}</p>}
                       </div>
                     </div>
@@ -939,7 +1006,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                           <Input
                             id="district"
                             type="text"
-                            placeholder="e.g. Guntur, Krishna, Visakhapatnam"
+                            placeholder="e.g. Visakhapatnam, Hyderabad, Bangalore"
                             className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
                             {...register("district")}
                           />
@@ -948,111 +1015,382 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                       <div className="space-y-2">
                         <Label htmlFor="city" className="text-slate-700 font-medium text-xs">City / Town <span className="text-rose-600">*</span></Label>
-                        <Input
-                          id="city"
-                          type="text"
-                          placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                          {...register("city", { required: "City is required" })}
-                        />
+                        {cities.length > 0 ? (
+                          <select
+                            id="city"
+                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                            {...register("city", { required: "City is required" })}
+                          >
+                            <option value="">Select City / Town</option>
+                            {cities.map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="city"
+                            type="text"
+                            placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
+                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                            {...register("city", { required: "City is required" })}
+                          />
+                        )}
                         {errors.city && <p className="text-xs text-red-600">{errors.city.message as string}</p>}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* STEP 6: Family Details & Lifestyle */}
+                {/* STEP 6: Family Details (Screenshot 1 Implementation) */}
                 {currentStep === 6 && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="familyValues" className="text-slate-700 font-medium text-xs">Family Values</Label>
-                        <select
-                          id="familyValues"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("familyValues")}
-                        >
-                          <option value="">Select</option>
-                          <option value="Traditional">Traditional</option>
-                          <option value="Moderate">Moderate</option>
-                          <option value="Liberal">Liberal</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="foodPreference" className="text-slate-700 font-medium text-xs">Diet / Food Preference</Label>
-                        <select
-                          id="foodPreference"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("foodPreference")}
-                        >
-                          <option value="">Select</option>
-                          <option value="Vegetarian">Vegetarian</option>
-                          <option value="Non-Vegetarian">Non-Vegetarian</option>
-                          <option value="Eggetarian">Eggetarian</option>
-                          <option value="Jain">Jain</option>
-                          <option value="Vegan">Vegan</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="smoking" className="text-slate-700 font-medium text-xs">Smoking Habits</Label>
-                        <select
-                          id="smoking"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("smoking")}
-                        >
-                          <option value="">Select</option>
-                          <option value="NO">No / Non-smoker</option>
-                          <option value="OCCASIONAL">Occasionally</option>
-                          <option value="YES">Yes</option>
-                        </select>
+                  <div className="space-y-5">
+                    {/* Family Value Radio Group */}
+                    <div className="space-y-2">
+                      <Label className="text-slate-800 font-semibold text-xs flex items-center gap-1">
+                        Family Value <span className="text-rose-600">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {["Orthodox", "Traditional", "Moderate", "Liberal"].map((val) => (
+                          <label
+                            key={val}
+                            className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50/50 cursor-pointer text-xs font-medium text-slate-700 transition-colors has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/60 has-[:checked]:text-rose-800"
+                          >
+                            <input
+                              type="radio"
+                              value={val}
+                              defaultChecked={val === (initialFamilyData.familyValues || "Traditional")}
+                              {...register("familyValues" as any)}
+                              className="accent-rose-600"
+                            />
+                            <span>{val}</span>
+                          </label>
+                        ))}
                       </div>
                     </div>
 
+                    {/* Family Type Radio Group */}
+                    <div className="space-y-2">
+                      <Label className="text-slate-800 font-semibold text-xs flex items-center gap-1">
+                        Family Type <span className="text-rose-600">*</span>
+                      </Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {["Joint Family", "Nuclear Family", "Others"].map((val) => (
+                          <label
+                            key={val}
+                            className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50/50 cursor-pointer text-xs font-medium text-slate-700 transition-colors has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/60 has-[:checked]:text-rose-800"
+                          >
+                            <input
+                              type="radio"
+                              value={val}
+                              defaultChecked={val === (initialFamilyData.familyType || "Nuclear Family")}
+                              {...register("familyType" as any)}
+                              className="accent-rose-600"
+                            />
+                            <span>{val}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Family Status Radio Group */}
+                    <div className="space-y-2">
+                      <Label className="text-slate-800 font-semibold text-xs flex items-center gap-1">
+                        Family Status <span className="text-rose-600">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {["Middle Class", "Upper Middle Class", "High class", "Rich/Affluent"].map((val) => (
+                          <label
+                            key={val}
+                            className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50/50 cursor-pointer text-xs font-medium text-slate-700 transition-colors has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/60 has-[:checked]:text-rose-800"
+                          >
+                            <input
+                              type="radio"
+                              value={val}
+                              defaultChecked={val === (initialFamilyData.familyStatus || "Middle Class")}
+                              {...register("familyStatus" as any)}
+                              className="accent-rose-600"
+                            />
+                            <span>{val}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Parents Occupations */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="drinking" className="text-slate-700 font-medium text-xs">Drinking Habits</Label>
+                        <Label htmlFor="fatherOccupation" className="text-slate-700 font-medium text-xs">Father's Occupation</Label>
                         <select
-                          id="drinking"
+                          id="fatherOccupation"
+                          defaultValue={initialFamilyData.fatherOccupation || ""}
                           className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("drinking")}
+                          {...register("fatherOccupation" as any)}
                         >
-                          <option value="">Select</option>
-                          <option value="NO">No / Teetotaler</option>
-                          <option value="OCCASIONAL">Socially / Occasionally</option>
-                          <option value="YES">Yes</option>
+                          <option value="">- Select -</option>
+                          <option value="Employed">Employed</option>
+                          <option value="Business Man">Business Man</option>
+                          <option value="Professional">Professional</option>
+                          <option value="Retired">Retired</option>
+                          <option value="Not Employed">Not Employed</option>
+                          <option value="Passed Away">Passed Away</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="motherOccupation" className="text-slate-700 font-medium text-xs">Mother's Occupation</Label>
+                        <select
+                          id="motherOccupation"
+                          defaultValue={initialFamilyData.motherOccupation || ""}
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("motherOccupation" as any)}
+                        >
+                          <option value="">- Select -</option>
+                          <option value="Homemaker">Homemaker</option>
+                          <option value="Employed">Employed</option>
+                          <option value="Business Woman">Business Woman</option>
+                          <option value="Professional">Professional</option>
+                          <option value="Retired">Retired</option>
+                          <option value="Passed Away">Passed Away</option>
                         </select>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="familyDetails" className="text-slate-700 font-medium text-xs">Family Background & Structure</Label>
+                    {/* Brothers & Sisters Count & Married */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="brothersCount" className="text-slate-700 font-medium text-xs">No. of Brothers</Label>
+                        <select
+                          id="brothersCount"
+                          defaultValue={initialFamilyData.brothersCount || ""}
+                          className="w-full h-10 px-2.5 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-xs"
+                          {...register("brothersCount" as any)}
+                        >
+                          <option value="">- Select -</option>
+                          <option value="none">None</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5+">5+</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="brothersMarried" className="text-slate-700 font-medium text-xs">Brothers Married</Label>
+                        <select
+                          id="brothersMarried"
+                          defaultValue={initialFamilyData.brothersMarried || ""}
+                          className="w-full h-10 px-2.5 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-xs"
+                          {...register("brothersMarried" as any)}
+                        >
+                          <option value="">- Select -</option>
+                          <option value="none">None</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5+">5+</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sistersCount" className="text-slate-700 font-medium text-xs">No. of Sisters</Label>
+                        <select
+                          id="sistersCount"
+                          defaultValue={initialFamilyData.sistersCount || ""}
+                          className="w-full h-10 px-2.5 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-xs"
+                          {...register("sistersCount" as any)}
+                        >
+                          <option value="">- Select -</option>
+                          <option value="none">None</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5+">5+</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sistersMarried" className="text-slate-700 font-medium text-xs">Sisters Married</Label>
+                        <select
+                          id="sistersMarried"
+                          defaultValue={initialFamilyData.sistersMarried || ""}
+                          className="w-full h-10 px-2.5 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-xs"
+                          {...register("sistersMarried" as any)}
+                        >
+                          <option value="">- Select -</option>
+                          <option value="none">None</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5+">5+</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Family Location Toggle */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <Label className="text-slate-800 font-semibold text-xs">Family Location</Label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="familyLocToggle"
+                            checked={familyLocationType === "same"}
+                            onChange={() => setFamilyLocationType("same")}
+                            className="accent-rose-600"
+                          />
+                          <span>Same as my Location</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="familyLocToggle"
+                            checked={familyLocationType === "different"}
+                            onChange={() => setFamilyLocationType("different")}
+                            className="accent-rose-600"
+                          />
+                          <span>Different Location</span>
+                        </label>
+                      </div>
+
+                      {familyLocationType === "different" && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl mt-2">
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-600">Country</Label>
+                            <Input
+                              value={familyCountry}
+                              onChange={(e) => setFamilyCountry(e.target.value)}
+                              placeholder="India"
+                              className="h-9 text-xs bg-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-600">State</Label>
+                            <Input
+                              value={familyState}
+                              onChange={(e) => setFamilyState(e.target.value)}
+                              placeholder="State"
+                              className="h-9 text-xs bg-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-600">District</Label>
+                            <Input
+                              value={familyDistrict}
+                              onChange={(e) => setFamilyDistrict(e.target.value)}
+                              placeholder="District"
+                              className="h-9 text-xs bg-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[11px] text-slate-600">City</Label>
+                            <Input
+                              value={familyCity}
+                              onChange={(e) => setFamilyCity(e.target.value)}
+                              placeholder="City"
+                              className="h-9 text-xs bg-white"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* About My Family Text Section */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <Label htmlFor="aboutFamilyText" className="text-slate-800 font-semibold text-xs">About My Family</Label>
                       <Textarea
-                        id="familyDetails"
-                        placeholder="Tell us about your parents, siblings, family origin, native place, and values..."
-                        className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-xs leading-relaxed h-24"
-                        {...register("familyDetails")}
+                        id="aboutFamilyText"
+                        value={aboutFamilyText}
+                        onChange={(e) => setAboutFamilyText(e.target.value)}
+                        placeholder="Write a brief introduction about your family values, parents' background, native roots, and family tradition..."
+                        className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-xs leading-relaxed h-20"
                       />
                     </div>
                   </div>
                 )}
 
-                {/* STEP 7: About Me */}
+                {/* STEP 7: Hobbies & Interests (Screenshot 2 Implementation) */}
                 {currentStep === 7 && (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-200">
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        {Object.keys(HOBBIES_CATEGORIES).map((cat) => {
+                          const isActive = activeHobbyTab === cat;
+                          const countInCat = (HOBBIES_CATEGORIES[cat] || []).filter((h) =>
+                            selectedHobbies.includes(h)
+                          ).length;
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setActiveHobbyTab(cat)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                                isActive
+                                  ? "bg-rose-600 text-white shadow-sm"
+                                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                              }`}
+                            >
+                              <span>{cat}</span>
+                              {countInCat > 0 && (
+                                <span
+                                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                    isActive ? "bg-white/30 text-white" : "bg-rose-100 text-rose-700"
+                                  }`}
+                                >
+                                  {countInCat}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Hobbies Pill Selection Grid */}
                     <div className="space-y-2">
-                      <Label htmlFor="bio" className="text-slate-700 font-medium text-xs">About Me (Bio Description) <span className="text-rose-600">*</span></Label>
+                      <div className="flex justify-between items-center text-xs text-slate-500 mb-1">
+                        <span>Select hobbies & interests in <strong className="text-slate-800">{activeHobbyTab}</strong>:</span>
+                        <span>{selectedHobbies.length} selected total</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-1 scrollbar-thin">
+                        {(HOBBIES_CATEGORIES[activeHobbyTab] || []).map((hobby) => {
+                          const isSelected = selectedHobbies.includes(hobby);
+                          return (
+                            <button
+                              key={hobby}
+                              type="button"
+                              onClick={() => toggleHobby(hobby)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer ${
+                                isSelected
+                                  ? "bg-rose-600 border-rose-600 text-white shadow-sm scale-105"
+                                  : "bg-white border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50/50"
+                              }`}
+                            >
+                              {isSelected ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                              <span>{hobby}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Bio Description */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <Label htmlFor="bio" className="text-slate-800 font-semibold text-xs">
+                        About Me (Personal Bio)
+                      </Label>
                       <Textarea
                         id="bio"
-                        placeholder="Describe your personality, passions, career aspirations, interests, hobbies, and the kind of partner you are looking to build a life with..."
-                        className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-xs leading-relaxed h-36"
-                        {...register("bio", { required: "Bio must be at least 10 characters", minLength: { value: 10, message: "Bio must be at least 10 characters" } })}
+                        placeholder="Write a brief overview about yourself, personality, lifestyle, aspirations, and expectations..."
+                        className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-xs leading-relaxed h-20"
+                        {...register("bio")}
                       />
-                      {errors.bio && <p className="text-xs text-red-600">{errors.bio.message as string}</p>}
-                      <p className="text-[11px] text-slate-500">
-                        Tip: Profiles with comprehensive descriptions receive 4x more interest responses and faster match connections.
-                      </p>
                     </div>
                   </div>
                 )}

@@ -108,7 +108,7 @@ export class SearchSpecification {
       });
     }
 
-    if (params.gender) {
+    if (!params.profilePublicId && params.gender) {
       andClauses.push(
         ProfileSpecification.filterByGender(params.gender)
       );

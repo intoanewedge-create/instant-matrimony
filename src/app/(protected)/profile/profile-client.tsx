@@ -340,6 +340,12 @@ export function ProfileClient({
   const [familyCity, setFamilyCity] = useState<string>(
     initialFamilyData.familyCity || profile.city || ""
   );
+  const [familyType, setFamilyType] = useState<string>(
+    initialFamilyData.familyType || "Nuclear Family"
+  );
+  const [familyStatus, setFamilyStatus] = useState<string>(
+    initialFamilyData.familyStatus || "Middle Class"
+  );
 
   // Hobbies & Interests State
   const [activeHobbiesTab, setActiveHobbiesTab] = useState<string>("Hobbies & Interests");
@@ -541,6 +547,8 @@ export function ProfileClient({
         brothersMarried,
         sistersCount,
         sistersMarried,
+        familyType,
+        familyStatus,
         familyLocationType,
         familyCountry:
           familyLocationType === "different"
@@ -1456,8 +1464,9 @@ export function ProfileClient({
                         <Label htmlFor="familyType" className="text-xs font-semibold text-slate-700">Family Type</Label>
                         <select
                           id="familyType"
+                          value={familyType}
+                          onChange={(e) => setFamilyType(e.target.value)}
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("drinking")}
                         >
                           <option value="">Select Family Type</option>
                           {FAMILY_TYPE_OPTIONS.map((ft) => (
@@ -1470,8 +1479,9 @@ export function ProfileClient({
                         <Label htmlFor="familyStatus" className="text-xs font-semibold text-slate-700">Family Status</Label>
                         <select
                           id="familyStatus"
+                          value={familyStatus}
+                          onChange={(e) => setFamilyStatus(e.target.value)}
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("foodPreference")}
                         >
                           <option value="">Select Family Status</option>
                           {FAMILY_STATUS_OPTIONS.map((fs) => (
@@ -1786,8 +1796,8 @@ export function ProfileClient({
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minAge: prefValues.minAge, maxAge: prefValues.maxAge })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minAge: prefValues.minAge, maxAge: prefValues.maxAge })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1835,8 +1845,8 @@ export function ProfileClient({
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minHeight: prefValues.minHeight, maxHeight: prefValues.maxHeight })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minHeight: prefValues.minHeight, maxHeight: prefValues.maxHeight })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1873,8 +1883,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ maritalStatus: prefValues.maritalStatus })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ maritalStatus: prefValues.maritalStatus })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1920,8 +1930,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ religion: prefValues.religion })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ religion: prefValues.religion })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1957,8 +1967,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -2001,8 +2011,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -2045,8 +2055,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -2088,8 +2098,8 @@ export function ProfileClient({
                             />
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ bio: prefValues.bio })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ bio: prefValues.bio })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>

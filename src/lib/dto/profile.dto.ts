@@ -38,7 +38,11 @@ export interface PartnerPreferenceDto {
   maxHeight: number | null;
   maritalStatus: string | null;
   religion: string | null;
+  caste?: string | null;
   motherTongue: string | null;
   education: string | null;
+  occupation?: string | null;
   country: string | null;
+  state?: string | null;
+  city?: string | null;
 }

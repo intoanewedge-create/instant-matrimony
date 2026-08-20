@@ -23,9 +23,13 @@ export async function uploadPhoto(formData: FormData) {
   }
 
   try {
-    const profile = await container.repositories.profileRepository.findByUserId(userId);
+    let profile = await container.repositories.profileRepository.findByUserId(userId);
     if (!profile) {
-      return { success: false, error: "Profile not found" };
+      profile = await container.repositories.profileRepository.create({
+        userId,
+        status: "DRAFT",
+        completionPercent: 0,
+      });
     }
 
     const existingPhotos = await container.repositories.photoRepository.findByProfileId(profile.id);
@@ -39,7 +43,15 @@ export async function uploadPhoto(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const validateRes = await container.services.imageService.validateImage(buffer, file.name, file.type);
+    let detectedMime = (file.type || "").toLowerCase();
+    if (!detectedMime || detectedMime === "application/octet-stream") {
+      const ext = file.name.toLowerCase().split(".").pop();
+      if (ext === "jpg" || ext === "jpeg") detectedMime = "image/jpeg";
+      else if (ext === "png") detectedMime = "image/png";
+      else if (ext === "webp") detectedMime = "image/webp";
+    }
+
+    const validateRes = await container.services.imageService.validateImage(buffer, file.name, detectedMime || file.type);
     if (!validateRes.success) {
       return { success: false, error: validateRes.error };
     }

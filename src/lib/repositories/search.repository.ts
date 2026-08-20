@@ -43,12 +43,28 @@ export class PrismaSearchRepository implements ISearchRepository {
     const category = rawCategory?.toLowerCase();
     let categoryTargetUserIds: string[] | null = null;
 
+    // Fetch Viewer's Partner Preference for preference-driven categories
+    const viewerPref = await prisma.partnerPreference.findFirst({
+      where: { profile: { userId: viewerId } },
+    });
+
     if (category === "shortlisted_by_you") {
-      const favs = await prisma.favorite.findMany({
-        where: { userId: viewerId },
-        select: { favoriteUserId: true },
-      });
-      categoryTargetUserIds = favs.map((f) => f.favoriteUserId);
+      const [favs, sentInterests] = await Promise.all([
+        prisma.favorite.findMany({
+          where: { userId: viewerId },
+          select: { favoriteUserId: true },
+        }),
+        prisma.interest.findMany({
+          where: { senderId: viewerId },
+          select: { receiverId: true },
+        }),
+      ]);
+      categoryTargetUserIds = Array.from(
+        new Set([
+          ...favs.map((f) => f.favoriteUserId),
+          ...sentInterests.map((i) => i.receiverId),
+        ])
+      );
     } else if (category === "viewed_you") {
       const visits = await prisma.profileVisitor.findMany({
         where: { visitedId: viewerId },
@@ -56,79 +72,155 @@ export class PrismaSearchRepository implements ISearchRepository {
       });
       categoryTargetUserIds = visits.map((v) => v.visitorId);
     } else if (category === "shortlisted_you") {
-      const favs = await prisma.favorite.findMany({
-        where: { favoriteUserId: viewerId },
-        select: { userId: true },
-      });
-      categoryTargetUserIds = favs.map((f) => f.userId);
+      const [favs, receivedInterests] = await Promise.all([
+        prisma.favorite.findMany({
+          where: { favoriteUserId: viewerId },
+          select: { userId: true },
+        }),
+        prisma.interest.findMany({
+          where: { receiverId: viewerId },
+          select: { senderId: true },
+        }),
+      ]);
+      categoryTargetUserIds = Array.from(
+        new Set([
+          ...favs.map((f) => f.userId),
+          ...receivedInterests.map((i) => i.senderId),
+        ])
+      );
     } else if (category === "viewed_by_you") {
       const visits = await prisma.profileVisitor.findMany({
         where: { visitorId: viewerId },
         select: { visitedId: true },
       });
       categoryTargetUserIds = visits.map((v) => v.visitedId);
+    } else if (category === "new_matches") {
+      // Created within last 7 days + matches preference
+      filters.recentlyJoined = true;
+      if (viewerPref) {
+        if (viewerPref.minAge && !filters.minAge) filters.minAge = viewerPref.minAge;
+        if (viewerPref.maxAge && !filters.maxAge) filters.maxAge = viewerPref.maxAge;
+        if (viewerPref.minHeight && !filters.minHeight) filters.minHeight = viewerPref.minHeight;
+        if (viewerPref.maxHeight && !filters.maxHeight) filters.maxHeight = viewerPref.maxHeight;
+        if (viewerPref.religion && !filters.religion) filters.religion = viewerPref.religion;
+        if (viewerPref.caste && !filters.caste) filters.caste = viewerPref.caste;
+        if (viewerPref.motherTongue && !filters.motherTongue) filters.motherTongue = viewerPref.motherTongue;
+        if (viewerPref.education && !filters.education) filters.education = viewerPref.education;
+        if ((viewerPref as any).occupation && !filters.occupation) filters.occupation = (viewerPref as any).occupation;
+        if ((viewerPref as any).city && !filters.city) filters.city = (viewerPref as any).city;
+        if ((viewerPref as any).state && !filters.state) filters.state = (viewerPref as any).state;
+        if (viewerPref.country && !filters.country) filters.country = viewerPref.country;
+        if (viewerPref.maritalStatus && !filters.maritalStatus && viewerPref.maritalStatus !== "Any") {
+          filters.maritalStatus = viewerPref.maritalStatus;
+        }
+      }
     } else if (
-      category === "new_matches" ||
-      category === "newly_joined" ||
-      category === "recently_joined"
+      category === "recently_joined" ||
+      category === "newly_joined"
     ) {
+      // Created within last 30 days
       filters.recentlyJoined = true;
     } else if (category === "with_photos" || category === "matches_with_photos") {
       filters.hasPhoto = true;
     } else if (category === "nearby") {
-      if (viewerProfile?.city) filters.city = viewerProfile.city;
+      // Uses location preference from logged-in user's Partner Preference
+      if ((viewerPref as any)?.city) filters.city = (viewerPref as any).city;
+      else if ((viewerPref as any)?.state) filters.state = (viewerPref as any).state;
+      else if (viewerPref?.country) filters.country = viewerPref.country;
+      else if (viewerProfile?.city) filters.city = viewerProfile.city;
       else if (viewerProfile?.district) filters.district = viewerProfile.district;
       else if (viewerProfile?.state) filters.state = viewerProfile.state;
       else if (viewerProfile?.country) filters.country = viewerProfile.country;
+    } else if (
+      category === "pref_location" ||
+      category === "location_preference"
+    ) {
+      if ((viewerPref as any)?.city) filters.city = (viewerPref as any).city;
+      else if ((viewerPref as any)?.state) filters.state = (viewerPref as any).state;
+      else if (viewerPref?.country) filters.country = viewerPref.country;
+      else if (viewerProfile?.state) filters.state = viewerProfile.state;
+      else if (viewerProfile?.country) filters.country = viewerProfile.country;
+    } else if (
+      category === "pref_education" ||
+      category === "education_preference"
+    ) {
+      if (viewerPref?.education) {
+        filters.education = viewerPref.education;
+      }
+    } else if (
+      category === "pref_profession" ||
+      category === "profession_preference"
+    ) {
+      if ((viewerPref as any)?.occupation) {
+        filters.occupation = (viewerPref as any).occupation;
+      } else if (viewerPref?.education) {
+        filters.education = viewerPref.education;
+      }
     } else if (category === "mutual_matches") {
-      // Reciprocal Shortlists (A favorited B and B favorited A)
-      const myFavs = await prisma.favorite.findMany({
+      // Pure TWO-WAY Profile / Preference compatibility check
+      // 1. Apply viewer's PartnerPreference to candidate filters
+      if (viewerPref) {
+        if (viewerPref.minAge && !filters.minAge) filters.minAge = viewerPref.minAge;
+        if (viewerPref.maxAge && !filters.maxAge) filters.maxAge = viewerPref.maxAge;
+        if (viewerPref.minHeight && !filters.minHeight) filters.minHeight = viewerPref.minHeight;
+        if (viewerPref.maxHeight && !filters.maxHeight) filters.maxHeight = viewerPref.maxHeight;
+        if (viewerPref.religion && !filters.religion) filters.religion = viewerPref.religion;
+        if (viewerPref.motherTongue && !filters.motherTongue) filters.motherTongue = viewerPref.motherTongue;
+        if (viewerPref.maritalStatus && !filters.maritalStatus && viewerPref.maritalStatus !== "Any") {
+          filters.maritalStatus = viewerPref.maritalStatus;
+        }
+      }
+
+      // 2. Candidate's PartnerPreference must also match viewer's profile details
+      const viewerFull = await prisma.profile.findUnique({
         where: { userId: viewerId },
-        select: { favoriteUserId: true },
-      });
-      const myFavIds = myFavs.map((f) => f.favoriteUserId);
-
-      const mutualFavs = await prisma.favorite.findMany({
-        where: {
-          userId: { in: myFavIds },
-          favoriteUserId: viewerId,
+        select: {
+          dateOfBirth: true,
+          height: true,
+          maritalStatus: true,
+          religion: true,
+          motherTongue: true,
+          education: true,
+          country: true,
         },
-        select: { userId: true },
       });
-      const mutualFavUserIds = mutualFavs.map((f) => f.userId);
 
-      // Mutual / Reciprocal Interests
-      const mySentInterests = await prisma.interest.findMany({
-        where: { senderId: viewerId },
-        select: { receiverId: true },
-      });
-      const mySentIds = mySentInterests.map((i) => i.receiverId);
+      if (viewerFull) {
+        const prefConditions: any[] = [];
+        if (viewerFull.religion) {
+          prefConditions.push({
+            religion: { equals: viewerFull.religion, mode: "insensitive" as const },
+          });
+        }
+        if (viewerFull.motherTongue) {
+          prefConditions.push({
+            motherTongue: { equals: viewerFull.motherTongue, mode: "insensitive" as const },
+          });
+        }
+        if (viewerFull.education) {
+          prefConditions.push({
+            education: { contains: viewerFull.education, mode: "insensitive" as const },
+          });
+        }
+        if (viewerFull.maritalStatus) {
+          prefConditions.push({
+            maritalStatus: { equals: viewerFull.maritalStatus, mode: "insensitive" as const },
+          });
+        }
+        if (viewerFull.country) {
+          prefConditions.push({
+            country: { equals: viewerFull.country, mode: "insensitive" as const },
+          });
+        }
 
-      const reciprocalInterests = await prisma.interest.findMany({
-        where: {
-          senderId: { in: mySentIds },
-          receiverId: viewerId,
-        },
-        select: { senderId: true },
-      });
-      const mutualInterestUserIds = reciprocalInterests.map((i) => i.senderId);
-
-      const acceptedInterests = await prisma.interest.findMany({
-        where: {
-          OR: [
-            { senderId: viewerId, status: "ACCEPTED" },
-            { receiverId: viewerId, status: "ACCEPTED" },
-          ],
-        },
-        select: { senderId: true, receiverId: true },
-      });
-      const acceptedUserIds = acceptedInterests.map((i) =>
-        i.senderId === viewerId ? i.receiverId : i.senderId
-      );
-
-      categoryTargetUserIds = Array.from(
-        new Set([...mutualFavUserIds, ...mutualInterestUserIds, ...acceptedUserIds])
-      );
+        const matchingCandidatePrefs = await prisma.partnerPreference.findMany({
+          where: {
+            OR: prefConditions.length > 0 ? prefConditions : undefined,
+          },
+          include: { profile: { select: { userId: true } } },
+        });
+        categoryTargetUserIds = matchingCandidatePrefs.map((p) => p.profile.userId);
+      }
     } else if (category === "looking_for_you") {
       const viewerFull = await prisma.profile.findUnique({
         where: { userId: viewerId },
@@ -147,27 +239,27 @@ export class PrismaSearchRepository implements ISearchRepository {
         const prefConditions: any[] = [];
         if (viewerFull.religion) {
           prefConditions.push({
-            religion: { equals: viewerFull.religion, mode: "insensitive" },
+            religion: { equals: viewerFull.religion, mode: "insensitive" as const },
           });
         }
         if (viewerFull.motherTongue) {
           prefConditions.push({
-            motherTongue: { equals: viewerFull.motherTongue, mode: "insensitive" },
+            motherTongue: { equals: viewerFull.motherTongue, mode: "insensitive" as const },
           });
         }
         if (viewerFull.education) {
           prefConditions.push({
-            education: { contains: viewerFull.education, mode: "insensitive" },
+            education: { contains: viewerFull.education, mode: "insensitive" as const },
           });
         }
         if (viewerFull.maritalStatus) {
           prefConditions.push({
-            maritalStatus: { equals: viewerFull.maritalStatus, mode: "insensitive" },
+            maritalStatus: { equals: viewerFull.maritalStatus, mode: "insensitive" as const },
           });
         }
         if (viewerFull.country) {
           prefConditions.push({
-            country: { equals: viewerFull.country, mode: "insensitive" },
+            country: { equals: viewerFull.country, mode: "insensitive" as const },
           });
         }
 
@@ -175,37 +267,27 @@ export class PrismaSearchRepository implements ISearchRepository {
           where: {
             OR: prefConditions.length > 0 ? prefConditions : undefined,
           },
-          select: { profile: { select: { userId: true } } },
+          include: { profile: { select: { userId: true } } },
         });
         categoryTargetUserIds = matchingPrefs.map((p) => p.profile.userId);
       }
-    } else if (
-      category === "pref_education" ||
-      category === "education_preference" ||
-      category === "pref_profession" ||
-      category === "profession_preference" ||
-      category === "pref_location" ||
-      category === "location_preference"
-    ) {
-      const pref = await prisma.partnerPreference.findFirst({
-        where: { profile: { userId: viewerId } },
-      });
-      if (category === "pref_education" || category === "education_preference") {
-        if (pref?.education) {
-          filters.education = pref.education;
-        } else {
-          categoryTargetUserIds = [];
-        }
-      } else if (category === "pref_profession" || category === "profession_preference") {
-        // PartnerPreference has no occupation field in database schema
-        categoryTargetUserIds = [];
-      } else if (category === "pref_location" || category === "location_preference") {
-        if (pref?.country) {
-          filters.country = pref.country;
-        } else if (viewerProfile?.country) {
-          filters.country = viewerProfile.country;
-        } else {
-          categoryTargetUserIds = [];
+    } else if (category === "all" || category === "best_matches" || !category) {
+      // Best Matches: Apply user's full partner preference criteria
+      if (viewerPref) {
+        if (viewerPref.minAge && !filters.minAge) filters.minAge = viewerPref.minAge;
+        if (viewerPref.maxAge && !filters.maxAge) filters.maxAge = viewerPref.maxAge;
+        if (viewerPref.minHeight && !filters.minHeight) filters.minHeight = viewerPref.minHeight;
+        if (viewerPref.maxHeight && !filters.maxHeight) filters.maxHeight = viewerPref.maxHeight;
+        if (viewerPref.religion && !filters.religion) filters.religion = viewerPref.religion;
+        if (viewerPref.caste && !filters.caste) filters.caste = viewerPref.caste;
+        if (viewerPref.motherTongue && !filters.motherTongue) filters.motherTongue = viewerPref.motherTongue;
+        if (viewerPref.education && !filters.education) filters.education = viewerPref.education;
+        if ((viewerPref as any).occupation && !filters.occupation) filters.occupation = (viewerPref as any).occupation;
+        if ((viewerPref as any).city && !filters.city) filters.city = (viewerPref as any).city;
+        if ((viewerPref as any).state && !filters.state) filters.state = (viewerPref as any).state;
+        if (viewerPref.country && !filters.country) filters.country = viewerPref.country;
+        if (viewerPref.maritalStatus && !filters.maritalStatus && viewerPref.maritalStatus !== "Any") {
+          filters.maritalStatus = viewerPref.maritalStatus;
         }
       }
     }

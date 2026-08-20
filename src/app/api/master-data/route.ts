@@ -4,7 +4,7 @@ import { masterDataService } from "@/lib/services/master-data.service";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
-  const parentId = searchParams.get("parentId") || searchParams.get("religionId") || searchParams.get("casteId") || searchParams.get("countryId") || searchParams.get("stateId");
+  const parentId = searchParams.get("parentId") || searchParams.get("religionId") || searchParams.get("casteId") || searchParams.get("countryId") || searchParams.get("stateId") || searchParams.get("districtId");
 
   try {
     switch (type) {

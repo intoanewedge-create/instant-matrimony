@@ -54,9 +54,13 @@ export class ProfileMapper {
       maxHeight: preference.maxHeight,
       maritalStatus: preference.maritalStatus,
       religion: preference.religion,
+      caste: (preference as any).caste || null,
       motherTongue: preference.motherTongue,
       education: preference.education,
+      occupation: (preference as any).occupation || null,
       country: preference.country,
+      state: (preference as any).state || null,
+      city: (preference as any).city || null,
     };
   }
 }

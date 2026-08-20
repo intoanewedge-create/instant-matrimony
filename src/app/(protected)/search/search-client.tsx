@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import {
   searchMatchesAction,
@@ -57,6 +58,7 @@ import {
 export function SearchClient({
   initialResults,
   defaultGender,
+  initialError,
 }: {
   initialResults: {
     data: any[];
@@ -65,6 +67,7 @@ export function SearchClient({
     totalPages: number;
   };
   defaultGender: string;
+  initialError?: string;
 }) {
   const [resultsData, setResultsData] = useState(initialResults?.data || []);
   const [pagination, setPagination] = useState({
@@ -73,7 +76,7 @@ export function SearchClient({
     totalRecords: initialResults?.totalRecords || 0,
   });
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
   const [sortBy, setSortBy] = useState("bestMatch");
   const [interestLoadingId, setInterestLoadingId] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<"quick" | "advanced" | "profileId" | "recentlyViewed">("quick");
@@ -1301,9 +1304,10 @@ export function SearchClient({
                       <div>
                         {/* Image Preview Container */}
                         <div className="relative aspect-square overflow-hidden bg-slate-100">
-                          <img
+                          <Image
                             src={mainPhotoUrl}
                             alt={displayName}
+                            fill
                             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                               isBlur ? "blur-md scale-110" : ""
                             }`}

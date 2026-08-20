@@ -20,9 +20,19 @@ export class ImageService extends BaseService {
     mimeType: string
   ): Promise<Result<void>> {
     // 1. MIME validation
-    if (!imageConfig.allowedMimeTypes.includes(mimeType.toLowerCase())) {
+    let normalizedMime = (mimeType || "").toLowerCase();
+    if (!normalizedMime || normalizedMime === "application/octet-stream") {
+      const ext = (_originalName || "").toLowerCase().split(".").pop();
+      if (ext === "jpg" || ext === "jpeg") normalizedMime = "image/jpeg";
+      else if (ext === "png") normalizedMime = "image/png";
+      else if (ext === "webp") normalizedMime = "image/webp";
+    }
+    if (normalizedMime === "image/jpg" || normalizedMime === "image/pjpeg") normalizedMime = "image/jpeg";
+    if (normalizedMime === "image/x-png") normalizedMime = "image/png";
+
+    if (!imageConfig.allowedMimeTypes.includes(normalizedMime)) {
       return this.returnFailure(
-        `Invalid file type: ${mimeType}. Allowed formats: ${imageConfig.allowedMimeTypes.join(", ")}`,
+        `Invalid file type: ${mimeType || _originalName}. Allowed formats: ${imageConfig.allowedMimeTypes.join(", ")}`,
         "INVALID_MIME_TYPE"
       );
     }

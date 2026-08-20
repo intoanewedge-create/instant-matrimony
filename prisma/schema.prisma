@@ -164,6 +164,8 @@ model Profile {
   @@index([occupation])
   @@index([status])
   @@index([gender])
+  @@index([dateOfBirth])
+  @@index([height])
 }
 
 model PartnerPreference {
@@ -175,9 +177,13 @@ model PartnerPreference {
   maxHeight     Int?
   maritalStatus String?
   religion      String?
+  caste         String?
   motherTongue  String?
   education     String?
+  occupation    String?
   country       String?
+  state         String?
+  city          String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
