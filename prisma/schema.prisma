@@ -133,6 +133,8 @@ model Profile {
   foodPreference    String?
   familyValues      String?
   horoscope         String?
+  star              String?
+  rasi              String?
   completionPercent Int                @default(0)
   status            ProfileStatus      @default(DRAFT)
   approvedById      String?
@@ -164,6 +166,8 @@ model Profile {
   @@index([occupation])
   @@index([status])
   @@index([gender])
+  @@index([star])
+  @@index([rasi])
   @@index([dateOfBirth])
   @@index([height])
 }
@@ -183,10 +187,17 @@ model PartnerPreference {
   occupation    String?
   country       String?
   state         String?
+  district      String?
   city          String?
+  star          String?
+  rasi          String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([occupation])
+  @@index([state])
+  @@index([city])
 }
 
 model Photo {

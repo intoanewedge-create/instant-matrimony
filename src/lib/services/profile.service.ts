@@ -29,6 +29,8 @@ const ALLOWED_PROFILE_FIELDS = [
   "familyDetails",
   "familyValues",
   "horoscope",
+  "star",
+  "rasi",
   "smoking",
   "drinking",
   "foodPreference",
@@ -47,7 +49,10 @@ const ALLOWED_PREF_FIELDS = [
   "occupation",
   "country",
   "state",
+  "district",
   "city",
+  "star",
+  "rasi",
 ] as const;
 
 export class ProfileService extends BaseService {

@@ -97,7 +97,10 @@ interface PartnerPreference {
   occupation?: string;
   country?: string;
   state?: string;
+  district?: string;
   city?: string;
+  star?: string;
+  rasi?: string;
   bio?: string;
 }
 
@@ -124,6 +127,8 @@ interface UserProfile {
   familyValues?: string;
   familyDetails?: string;
   horoscope?: string;
+  star?: string;
+  rasi?: string;
   smoking?: string;
   drinking?: string;
   foodPreference?: string;
@@ -394,6 +399,8 @@ export function ProfileClient({
       familyValues: profile.familyValues || "",
       familyDetails: profile.familyDetails || "",
       horoscope: profile.horoscope || "",
+      star: profile.star || "",
+      rasi: profile.rasi || "",
       smoking: profile.smoking || "",
       drinking: profile.drinking || "",
       foodPreference: profile.foodPreference || "",
@@ -411,10 +418,13 @@ export function ProfileClient({
     caste: (profile.partnerPreference as any)?.caste || "",
     motherTongue: profile.partnerPreference?.motherTongue || "",
     education: profile.partnerPreference?.education || "",
-    occupation: (profile.partnerPreference as any)?.occupation || "",
+    occupation: profile.partnerPreference?.occupation || "",
     country: profile.partnerPreference?.country || "India",
-    state: (profile.partnerPreference as any)?.state || "",
-    city: (profile.partnerPreference as any)?.city || "",
+    state: profile.partnerPreference?.state || "",
+    district: profile.partnerPreference?.district || "",
+    city: profile.partnerPreference?.city || "",
+    star: profile.partnerPreference?.star || "",
+    rasi: profile.partnerPreference?.rasi || "",
     bio: profile.partnerPreference?.bio || "",
   });
 

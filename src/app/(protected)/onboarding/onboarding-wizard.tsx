@@ -132,7 +132,15 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       partnerReligion: initialProfile?.partnerPreference?.religion || "",
       partnerMotherTongue: initialProfile?.partnerPreference?.motherTongue || "",
       partnerEducation: initialProfile?.partnerPreference?.education || "",
+      partnerOccupation: initialProfile?.partnerPreference?.occupation || "",
       partnerCountry: initialProfile?.partnerPreference?.country || "India",
+      partnerState: initialProfile?.partnerPreference?.state || "",
+      partnerDistrict: initialProfile?.partnerPreference?.district || "",
+      partnerCity: initialProfile?.partnerPreference?.city || "",
+      partnerStar: initialProfile?.partnerPreference?.star || "",
+      partnerRasi: initialProfile?.partnerPreference?.rasi || "",
+      star: initialProfile?.star || "",
+      rasi: initialProfile?.rasi || "",
     },
   });
 
@@ -411,6 +419,8 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         gothram: data.gothram || undefined,
         motherTongue: data.motherTongue,
         horoscope: horoscopeCombined,
+        star: data.star || undefined,
+        rasi: data.rasi || undefined,
       };
     } else if (currentStep === 4) {
       stepData = {
@@ -463,7 +473,13 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         religion: data.partnerReligion || undefined,
         motherTongue: data.partnerMotherTongue || undefined,
         education: data.partnerEducation || undefined,
+        occupation: data.partnerOccupation || undefined,
         country: data.partnerCountry || undefined,
+        state: data.partnerState || undefined,
+        district: data.partnerDistrict || undefined,
+        city: data.partnerCity || undefined,
+        star: data.partnerStar || undefined,
+        rasi: data.partnerRasi || undefined,
       };
     } else if (currentStep === 9) {
       stepData = { photosAcknowledged: true };

@@ -91,7 +91,8 @@ export class SearchSpecification {
     ) {
       andClauses.push({
         country: {
-          notIn: ["India", "INDIA", "in", "In", "IN"],
+          notIn: ["India", "INDIA", "in", "In", "IN", "india"],
+          not: null,
         },
       });
     } else if (
@@ -102,6 +103,11 @@ export class SearchSpecification {
       andClauses.push({
         horoscope: {
           not: null,
+        },
+      });
+      andClauses.push({
+        horoscope: {
+          not: "",
         },
       });
     } else if (
@@ -123,10 +129,23 @@ export class SearchSpecification {
       });
     }
 
-    if (params.gender) {
-      andClauses.push(
-        ProfileSpecification.filterByGender(params.gender)
-      );
+    if (params.profilePublicId && params.profilePublicId.trim().length > 0) {
+      const cleanId = params.profilePublicId.trim();
+      const idWithIM = cleanId.toUpperCase().startsWith("IM")
+        ? cleanId.toUpperCase()
+        : `IM${cleanId.toUpperCase()}`;
+      andClauses.push({
+        user: {
+          publicId: {
+            in: [cleanId, cleanId.toUpperCase(), idWithIM],
+            mode: "insensitive",
+          },
+        },
+      });
+    }
+
+    if (params.gender && (!params.profilePublicId || params.profilePublicId.trim().length === 0)) {
+      andClauses.push(ProfileSpecification.filterByGender(params.gender));
     }
 
     const ageFilter = ProfileSpecification.filterByAgeRange(
