@@ -341,20 +341,15 @@ export function ProfileDetailClient({
               </Button>
             )}
 
-            {/* Chat button */}
             <Button
               onClick={() => {
-                if (conversationId) {
-                  router.push(`/messages/${profile.userId || profile.id}`);
-                } else {
-                  setShowChatModal(true);
-                }
+                setShowChatModal(true);
               }}
               variant="outline"
               className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-700 py-5 text-xs rounded-xl gap-2 font-medium bg-white shadow-xs"
             >
               <MessageSquare className="w-4 h-4 text-rose-600" />
-              {conversationId ? "Go to Chat" : "Direct Message"}
+              Direct Message
             </Button>
 
             {/* Contact Unlock Card */}

@@ -59,3 +59,47 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { category, name, order, code, parentId } = body;
+    if (!category || !name) {
+      return NextResponse.json({ success: false, error: "Category and name are required" }, { status: 400 });
+    }
+    const res = await masterDataService.createEntry(category, { name, order, code, parentId });
+    return NextResponse.json(res, { status: res.success ? 201 : 400 });
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { category, id, name, order, code } = body;
+    if (!category || !id) {
+      return NextResponse.json({ success: false, error: "Category and id are required" }, { status: 400 });
+    }
+    const res = await masterDataService.updateEntry(category, id, { name, order, code });
+    return NextResponse.json(res);
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
+    const id = searchParams.get("id");
+    if (!category || !id) {
+      return NextResponse.json({ success: false, error: "Category and id are required" }, { status: 400 });
+    }
+    const res = await masterDataService.deleteEntry(category, id);
+    return NextResponse.json(res);
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+  }
+}
+

@@ -199,6 +199,71 @@ export class MasterDataService extends BaseService {
       return this.returnFailure(e.message, "CITIES_FETCH_ERROR");
     }
   }
+
+  // ─── Admin CRUD Operations ────────────────────────────────────────
+
+  private getModel(category: string): any {
+    const map: Record<string, any> = {
+      religions: prisma.masterReligion,
+      castes: prisma.masterCaste,
+      mothertongues: prisma.masterMotherTongue,
+      educations: prisma.masterEducation,
+      occupations: prisma.masterOccupation,
+      countries: prisma.masterCountry,
+      states: prisma.masterState,
+    };
+    return map[category] || null;
+  }
+
+  async createEntry(category: string, data: { name: string; order?: number; code?: string; category?: string; parentId?: string }): Promise<Result<any>> {
+    try {
+      const model = this.getModel(category);
+      if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
+
+      const createData: any = { name: data.name, order: data.order ?? 0 };
+      if (data.code) createData.code = data.code;
+      if (data.category) createData.category = data.category;
+
+      // Handle parent relationships
+      if (category === "castes" && data.parentId) createData.religionId = data.parentId;
+      if (category === "states" && data.parentId) createData.countryId = data.parentId;
+
+      const item = await model.create({ data: createData });
+      return this.returnSuccess(item);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "MASTER_DATA_CREATE_ERROR");
+    }
+  }
+
+  async updateEntry(category: string, id: string, data: { name?: string; order?: number; code?: string; category?: string }): Promise<Result<any>> {
+    try {
+      const model = this.getModel(category);
+      if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
+
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.order !== undefined) updateData.order = data.order;
+      if (data.code !== undefined) updateData.code = data.code;
+      if (data.category !== undefined) updateData.category = data.category;
+
+      const item = await model.update({ where: { id }, data: updateData });
+      return this.returnSuccess(item);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "MASTER_DATA_UPDATE_ERROR");
+    }
+  }
+
+  async deleteEntry(category: string, id: string): Promise<Result<boolean>> {
+    try {
+      const model = this.getModel(category);
+      if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
+
+      await model.delete({ where: { id } });
+      return this.returnSuccess(true);
+    } catch (e: any) {
+      return this.returnFailure(e.message, "MASTER_DATA_DELETE_ERROR");
+    }
+  }
 }
 
 export const masterDataService = new MasterDataService();

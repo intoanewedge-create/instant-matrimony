@@ -2,6 +2,7 @@ import { masterDataService } from "@/lib/services/master-data.service";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Layers, Globe, GraduationCap, Briefcase, MapPin } from "lucide-react";
+import { EditableMasterDataList } from "./editable-master-data-list";
 
 export const dynamic = "force-dynamic";
 
@@ -78,20 +79,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {religions.length > 0 ? (
-                  religions.map((r: any) => (
-                    <div key={r.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{r.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Order: {r.order ?? 0}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    No religion taxonomies seeded. Standard defaults will be loaded dynamically.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="religions"
+                items={religions}
+                labelField="order"
+                labelPrefix="Order"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -107,20 +100,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {castes.length > 0 ? (
-                  castes.map((c: any) => (
-                    <div key={c.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{c.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Order: {c.order ?? 0}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    No custom caste records seeded. All standard community options are available in user forms.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="castes"
+                items={castes}
+                labelField="order"
+                labelPrefix="Order"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -136,20 +121,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {motherTongues.length > 0 ? (
-                  motherTongues.map((l: any) => (
-                    <div key={l.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{l.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{l.code || "ISO"}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    Telugu, English, Hindi, Tamil, Kannada, Malayalam are supported by default.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="mothertongues"
+                items={motherTongues}
+                labelField="code"
+                labelPrefix="Code"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -165,20 +142,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {educations.length > 0 ? (
-                  educations.map((e: any) => (
-                    <div key={e.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{e.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{e.category || "Degree"}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    B.Tech, M.Tech, MBBS, MS, MBA, MCA, B.Sc, B.Com, Chartered Accountant and other degrees configured.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="educations"
+                items={educations}
+                labelField="category"
+                labelPrefix="Type"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -194,20 +163,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {occupations.length > 0 ? (
-                  occupations.map((o: any) => (
-                    <div key={o.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{o.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Active</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    Software Engineer, Doctor, Civil Services, Business, Professor, Banking, Architect and more.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="occupations"
+                items={occupations}
+                labelField="status"
+                labelPrefix="Status"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -223,20 +184,12 @@ export default async function AdminMasterDataPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {states.length > 0 ? (
-                  states.map((s: any) => (
-                    <div key={s.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-800">{s.name}</span>
-                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{s.code || "IN"}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-8 text-center text-slate-500">
-                    Andhra Pradesh, Telangana, Karnataka, Tamil Nadu, Maharashtra, and international locations configured.
-                  </div>
-                )}
-              </div>
+              <EditableMasterDataList
+                category="states"
+                items={states}
+                labelField="code"
+                labelPrefix="Code"
+              />
             </CardContent>
           </Card>
         </TabsContent>

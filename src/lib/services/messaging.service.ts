@@ -93,7 +93,7 @@ export class MessagingService extends BaseService {
       const allowed = await this.permissionService.canChat(userId, contactId);
       if (!allowed) {
         return this.returnFailure(
-          "You must have a mutual interest and an active Standard membership (₹1,000) to chat.",
+          "Chat access denied. Ensure you have an active Premium/Standard membership and a mutually accepted interest.",
           "CHAT_ACCESS_DENIED"
         );
       }
@@ -149,6 +149,7 @@ export class MessagingService extends BaseService {
     try {
       let conversationId = targetId;
       let otherUserId: string | null = null;
+      let cachedConversation: any = null;
 
       // 1. Try resolving targetId directly as a conversation
       let participant = await this.participantRepo.findParticipant(conversationId, userId);
@@ -158,6 +159,7 @@ export class MessagingService extends BaseService {
         if (conversation) {
           conversationId = conversation.id;
           otherUserId = targetId;
+          cachedConversation = conversation;
           participant = await this.participantRepo.findParticipant(conversationId, userId);
         } else {
           // If no conversation record yet, still mark any direct messages as read
@@ -171,9 +173,12 @@ export class MessagingService extends BaseService {
       }
 
       if (!otherUserId) {
-        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
-        if (conversation && conversation.participants) {
-          const otherParticipant = conversation.participants.find((p: any) => p.userId !== userId);
+        // Fetch conversation once and cache it
+        if (!cachedConversation) {
+          cachedConversation = await this.conversationRepo.findById(conversationId);
+        }
+        if (cachedConversation?.participants) {
+          const otherParticipant = cachedConversation.participants.find((p: any) => p.userId !== userId);
           if (otherParticipant) {
             otherUserId = otherParticipant.userId;
           }
@@ -182,8 +187,11 @@ export class MessagingService extends BaseService {
 
       if (otherUserId) {
         await this.messageRepository.markAsRead(otherUserId, userId);
-        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
-        const lastMsg = conversation?.messages?.[0];
+        // Reuse cachedConversation instead of fetching again
+        if (!cachedConversation) {
+          cachedConversation = await this.conversationRepo.findById(conversationId);
+        }
+        const lastMsg = cachedConversation?.messages?.[0];
         if (lastMsg) {
           await this.realtimeProvider.emitReadReceipt(conversationId, userId, lastMsg.id);
         }
@@ -191,7 +199,7 @@ export class MessagingService extends BaseService {
 
       return this.returnSuccess(true);
     } catch (error: unknown) {
-      return { success: false, error: (error as Error).message };
+      return this.returnFailure((error as Error).message, "MARK_READ_ERROR");
     }
   }
 

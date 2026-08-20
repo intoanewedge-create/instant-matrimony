@@ -402,7 +402,7 @@ export function InterestsClient({
 
                       {activeDirection === "received" && item.status === "ACCEPTED" && (
                         <Link
-                          href="/messages"
+                          href={`/messages/${member?.userId || member?.id}`}
                           className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
                         >
                           <MessageSquare className="w-3.5 h-3.5" /> Start Chatting
@@ -417,6 +417,15 @@ export function InterestsClient({
                         >
                           <RotateCcw className="w-3.5 h-3.5" /> Withdraw Interest
                         </button>
+                      )}
+
+                      {activeDirection === "sent" && item.status === "ACCEPTED" && (
+                        <Link
+                          href={`/messages/${member?.userId || member?.id}`}
+                          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" /> Start Chatting
+                        </Link>
                       )}
 
                       <Link

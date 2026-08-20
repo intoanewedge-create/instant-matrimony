@@ -118,6 +118,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       subCaste: initialProfile?.subCaste || "",
       gothram: initialProfile?.gothram || "",
       motherTongue: initialProfile?.motherTongue || "",
+      motherTongueOther: "",
       rashi: "",
       star: "",
       horoscope: initialProfile?.horoscope || "",
@@ -417,7 +418,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         caste: data.caste || undefined,
         subCaste: data.subCaste || undefined,
         gothram: data.gothram || undefined,
-        motherTongue: data.motherTongue,
+        motherTongue: data.motherTongue === "Other" ? data.motherTongueOther : data.motherTongue,
         horoscope: horoscopeCombined,
       };
     } else if (currentStep === 4) {
@@ -810,6 +811,9 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                           id="motherTongue"
                           className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
                           {...register("motherTongue", { required: "Mother tongue is required" })}
+                          onChange={(e) => {
+                            register("motherTongue").onChange(e);
+                          }}
                         >
                           <option value="">Select Mother Tongue</option>
                           {motherTongues.length > 0
@@ -830,8 +834,18 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                                 <option value="Gujarati">Gujarati</option>
                               </>
                             )}
+                          <option value="Other">Other (Please specify)</option>
                         </select>
+                        {watch("motherTongue") === "Other" && (
+                           <Input
+                             type="text"
+                             placeholder="Please specify your mother tongue"
+                             className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                             {...register("motherTongueOther", { required: "Please specify your mother tongue" })}
+                           />
+                        )}
                         {errors.motherTongue && <p className="text-xs text-red-600">{errors.motherTongue.message as string}</p>}
+                        {errors.motherTongueOther && <p className="text-xs text-red-600">{errors.motherTongueOther.message as string}</p>}
                       </div>
                     </div>
 

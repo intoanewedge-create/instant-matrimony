@@ -13,18 +13,18 @@ export default async function MatchesPage() {
 
   const userId = (session.user as any).id as string;
 
-  // Search initial matches for user
-  const searchResult = await container.services.searchService
-    .searchMatches(userId, {
-      filters: {},
-      page: 1,
-      limit: 12,
-      sortBy: "bestMatch",
-    })
-    .catch(() => ({ success: false, error: "Failed to fetch matches", data: { data: [], totalRecords: 0, page: 1, totalPages: 1 } }));
+  const { searchMatchesAction } = await import("@/lib/actions/search.actions");
+
+  // Search initial matches for user using the Action to enforce gender filters
+  const searchResult = await searchMatchesAction({
+    filters: { category: "all" },
+    page: 1,
+    limit: 12,
+    sortBy: "bestMatch",
+  }).catch(() => ({ success: false, error: "Failed to fetch matches", data: [], totalRecords: 0, page: 1, totalPages: 1 }));
 
   const initialData = searchResult.success
-    ? searchResult.data
+    ? searchResult
     : { data: [], totalRecords: 0, page: 1, totalPages: 1 };
 
   return <MatchesClient initialResults={initialData} />;
