@@ -33,6 +33,7 @@ export class SearchSpecification {
     hasPhoto?: boolean;
     recentlyJoined?: boolean;
     recentlyActive?: boolean;
+    createdWithinDays?: number;
     minCompletion?: number;
     category?: string;
     categoryTargetUserIds?: string[] | null;
@@ -55,14 +56,11 @@ export class SearchSpecification {
       });
     }
 
-    // The current Prisma Profile schema only stores country and horoscope
-    // for these categories. Do not reference fields that are not part of
-    // the schema: Prisma would reject the query at runtime and turn a
-    // search into a 500 response.
     if (params.category === "pref_nri") {
       andClauses.push({
         country: {
-          notIn: ["India", "INDIA", "in", "In", "IN"],
+          notIn: ["India", "INDIA", "india", "In", "IN", "in", "Bharat", "BHARAT"],
+          not: null,
         },
       });
     } else if (
@@ -70,19 +68,10 @@ export class SearchSpecification {
       params.category === "horoscope_matches"
     ) {
       andClauses.push({
-        horoscope: {
-          not: null,
-        },
-      });
-    } else if (params.category === "star_matches") {
-      // There is no star/rasi field in the current schema. Returning no
-      // results is safer than treating every horoscope as a star match or
-      // issuing an invalid Prisma query. This category can be implemented
-      // properly if a future schema explicitly stores star information.
-      andClauses.push({
-        id: {
-          in: [],
-        },
+        AND: [
+          { horoscope: { not: null } },
+          { horoscope: { not: "" } },
+        ],
       });
     }
 
@@ -256,13 +245,20 @@ export class SearchSpecification {
       andClauses.push(photoFilter);
     }
 
-    const recentJoinedFilter =
-      ProfileSpecification.filterByRecentlyJoined(
-        params.recentlyJoined
-      );
+    if (params.createdWithinDays) {
+      const createdFilter = ProfileSpecification.filterByCreatedWithinDays(params.createdWithinDays);
+      if (Object.keys(createdFilter).length > 0) {
+        andClauses.push(createdFilter);
+      }
+    } else {
+      const recentJoinedFilter =
+        ProfileSpecification.filterByRecentlyJoined(
+          params.recentlyJoined
+        );
 
-    if (Object.keys(recentJoinedFilter).length > 0) {
-      andClauses.push(recentJoinedFilter);
+      if (Object.keys(recentJoinedFilter).length > 0) {
+        andClauses.push(recentJoinedFilter);
+      }
     }
 
     const recentActiveFilter =

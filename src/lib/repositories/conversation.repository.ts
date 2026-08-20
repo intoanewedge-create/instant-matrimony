@@ -53,44 +53,41 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findUserConversations(userId: string): Promise<any[]> {
-    // Check for any accepted interests for this user to ensure conversations exist
-    try {
-      const acceptedInterests = await prisma.interest.findMany({
-        where: {
-          OR: [
-            { senderId: userId, status: "ACCEPTED" },
-            { receiverId: userId, status: "ACCEPTED" },
-          ],
-        },
-        select: { senderId: true, receiverId: true },
-      });
-
-      for (const interest of acceptedInterests) {
-        const otherUserId = interest.senderId === userId ? interest.receiverId : interest.senderId;
-        const existingConv = await this.findByParticipants([userId, otherUserId]);
-        if (!existingConv) {
-          await this.create([userId, otherUserId]);
-        }
-      }
-    } catch {
-      // Ignore background sync errors to not block main query
-    }
-
     const participantEntries = await prisma.conversationParticipant.findMany({
       where: {
         userId,
         isDeleted: false,
       },
-      include: {
+      select: {
+        unreadCount: true,
+        isArchived: true,
+        isMuted: true,
         conversation: {
-          include: {
+          select: {
+            id: true,
+            updatedAt: true,
             participants: {
               where: {
                 userId: { not: userId },
               },
-              include: {
+              select: {
+                userId: true,
                 user: {
-                  include: { profile: { include: { photos: true } } },
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                    publicId: true,
+                    profile: {
+                      select: {
+                        photos: {
+                          where: { deletedAt: null },
+                          select: { url: true, isMain: true },
+                          take: 2,
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -98,6 +95,10 @@ export class PrismaConversationRepository implements IConversationRepository {
               where: { isDeleted: false },
               orderBy: { createdAt: "desc" },
               take: 1,
+              select: {
+                content: true,
+                createdAt: true,
+              },
             },
           },
         },
@@ -109,16 +110,20 @@ export class PrismaConversationRepository implements IConversationRepository {
         const conv = entry.conversation;
         const otherParticipant = conv.participants[0];
         const lastMsg = conv.messages[0];
-        if (!otherParticipant) return null;
+        if (!otherParticipant?.user) return null;
 
-        const photoUrl = otherParticipant.user.profile?.photos?.find((p) => p.isMain)?.url || otherParticipant.user.image;
+        const photoUrl =
+          otherParticipant.user.profile?.photos?.find((p) => p.isMain)?.url ||
+          otherParticipant.user.profile?.photos?.[0]?.url ||
+          otherParticipant.user.image ||
+          null;
 
         return {
           id: conv.id,
           contactId: otherParticipant.userId,
           partnerId: otherParticipant.userId,
-          contactName: otherParticipant.user.name,
-          name: otherParticipant.user.name,
+          contactName: otherParticipant.user.name || "Member",
+          name: otherParticipant.user.name || "Member",
           publicId: otherParticipant.user.publicId,
           contactPhoto: photoUrl,
           image: photoUrl,

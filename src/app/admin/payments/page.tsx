@@ -20,7 +20,7 @@ export default async function AdminPaymentsPage() {
   const [users, plans] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: userIds as string[] } },
-      select: { id: true, name: true, email: true, phone: true },
+      select: { id: true, name: true, email: true, phone: true, publicId: true },
     }),
     prisma.membershipPlan.findMany({
       where: { id: { in: planIds as string[] } },

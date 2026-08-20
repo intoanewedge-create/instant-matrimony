@@ -10,11 +10,20 @@ interface MasterDataItem {
   order?: number;
   code?: string;
   category?: string;
+  parentId?: string;
+  religionId?: string;
+  casteId?: string;
+  subCasteId?: string;
+  countryId?: string;
+  stateId?: string;
+  districtId?: string;
 }
 
 interface EditableMasterDataListProps {
   category: string;
   items: MasterDataItem[];
+  parentItems?: MasterDataItem[];
+  parentLabel?: string;
   labelField?: string; // "order" | "code" | "category" | "status"
   labelPrefix?: string;
 }
@@ -22,6 +31,8 @@ interface EditableMasterDataListProps {
 export function EditableMasterDataList({
   category,
   items: initialItems,
+  parentItems,
+  parentLabel = "Parent",
   labelField = "order",
   labelPrefix = "Order",
 }: EditableMasterDataListProps) {
@@ -29,9 +40,11 @@ export function EditableMasterDataList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editLabel, setEditLabel] = useState("");
+  const [editParentId, setEditParentId] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLabel, setNewLabel] = useState("");
+  const [newParentId, setNewParentId] = useState(parentItems?.[0]?.id || "");
   const [loading, setLoading] = useState<string | null>(null);
 
   const getLabelValue = (item: MasterDataItem) => {
@@ -41,10 +54,24 @@ export function EditableMasterDataList({
     return `${item.order ?? 0}`;
   };
 
+  const getParentIdOfItem = (item: MasterDataItem) => {
+    return (
+      item.parentId ||
+      item.religionId ||
+      item.casteId ||
+      item.subCasteId ||
+      item.countryId ||
+      item.stateId ||
+      item.districtId ||
+      ""
+    );
+  };
+
   const startEdit = (item: MasterDataItem) => {
     setEditingId(item.id);
     setEditName(item.name);
     setEditLabel(getLabelValue(item));
+    setEditParentId(getParentIdOfItem(item));
     setIsAdding(false);
   };
 
@@ -52,6 +79,7 @@ export function EditableMasterDataList({
     setEditingId(null);
     setEditName("");
     setEditLabel("");
+    setEditParentId("");
   };
 
   const saveEdit = async () => {
@@ -61,6 +89,7 @@ export function EditableMasterDataList({
       const body: any = { category, id: editingId, name: editName.trim() };
       if (labelField === "order") body.order = parseInt(editLabel) || 0;
       if (labelField === "code") body.code = editLabel;
+      if (editParentId) body.parentId = editParentId;
 
       const res = await fetch("/api/master-data", {
         method: "PUT",
@@ -113,6 +142,7 @@ export function EditableMasterDataList({
       const body: any = { category, name: newName.trim() };
       if (labelField === "order") body.order = parseInt(newLabel) || 0;
       if (labelField === "code") body.code = newLabel;
+      if (newParentId) body.parentId = newParentId;
 
       const res = await fetch("/api/master-data", {
         method: "POST",
@@ -139,77 +169,105 @@ export function EditableMasterDataList({
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {items.length > 0 ? (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between group transition-all hover:border-rose-200 hover:bg-rose-50/30"
-            >
-              {editingId === item.id ? (
-                <div className="flex items-center gap-2 w-full">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 text-sm font-medium text-slate-800 bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEdit();
-                      if (e.key === "Escape") cancelEdit();
-                    }}
-                  />
-                  <button
-                    onClick={saveEdit}
-                    disabled={loading === item.id}
-                    className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-                  >
-                    {loading === item.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Check className="w-4 h-4" />
+          items.map((item) => {
+            const itemParentId = getParentIdOfItem(item);
+            const parentObj = parentItems?.find((p) => p.id === itemParentId);
+
+            return (
+              <div
+                key={item.id}
+                className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between group transition-all hover:border-rose-200 hover:bg-rose-50/30"
+              >
+                {editingId === item.id ? (
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="flex-1 text-sm font-medium text-slate-800 bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveEdit();
+                          if (e.key === "Escape") cancelEdit();
+                        }}
+                      />
+                      <button
+                        onClick={saveEdit}
+                        disabled={loading === item.id}
+                        className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+                      >
+                        {loading === item.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="p-1 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {parentItems && parentItems.length > 0 && (
+                      <select
+                        value={editParentId}
+                        onChange={(e) => setEditParentId(e.target.value)}
+                        className="w-full text-xs text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      >
+                        <option value="">-- Select {parentLabel} --</option>
+                        {parentItems.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
                     )}
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="p-1 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-sm font-medium text-slate-800">
-                    {item.name}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
-                      {labelField === "status"
-                        ? "Active"
-                        : `${labelPrefix}: ${getLabelValue(item)}`}
-                    </span>
-                    <button
-                      onClick={() => startEdit(item)}
-                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all opacity-0 group-hover:opacity-100"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      disabled={loading === item.id}
-                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all opacity-0 group-hover:opacity-100"
-                      title="Delete"
-                    >
-                      {loading === item.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
                   </div>
-                </>
-              )}
-            </div>
-          ))
+                ) : (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-slate-800">
+                        {item.name}
+                      </span>
+                      {parentObj && (
+                        <span className="text-[10px] text-slate-500">
+                          {parentLabel}: {parentObj.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
+                        {labelField === "status"
+                          ? "Active"
+                          : `${labelPrefix}: ${getLabelValue(item)}`}
+                      </span>
+                      <button
+                        onClick={() => startEdit(item)}
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={loading === item.id}
+                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                        title="Delete"
+                      >
+                        {loading === item.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="col-span-full py-8 text-center text-slate-500">
             No entries found. Click &quot;Add New&quot; to create one.
@@ -219,7 +277,7 @@ export function EditableMasterDataList({
 
       {/* Add New Entry */}
       {isAdding ? (
-        <div className="flex items-center gap-2 p-3 border border-dashed border-rose-300 bg-rose-50/50 rounded-xl">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 border border-dashed border-rose-300 bg-rose-50/50 rounded-xl">
           <input
             type="text"
             placeholder="Enter name..."
@@ -236,6 +294,20 @@ export function EditableMasterDataList({
               }
             }}
           />
+          {parentItems && parentItems.length > 0 && (
+            <select
+              value={newParentId}
+              onChange={(e) => setNewParentId(e.target.value)}
+              className="text-xs text-slate-700 bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="">-- Select {parentLabel} --</option>
+              {parentItems.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
           {labelField !== "status" && (
             <input
               type="text"
@@ -245,27 +317,29 @@ export function EditableMasterDataList({
               className="w-24 text-xs text-slate-600 bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
             />
           )}
-          <button
-            onClick={handleAdd}
-            disabled={loading === "new"}
-            className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-          >
-            {loading === "new" ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Check className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            onClick={() => {
-              setIsAdding(false);
-              setNewName("");
-              setNewLabel("");
-            }}
-            className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleAdd}
+              disabled={loading === "new"}
+              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
+            >
+              {loading === "new" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setIsAdding(false);
+                setNewName("");
+                setNewLabel("");
+              }}
+              className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       ) : (
         <Button

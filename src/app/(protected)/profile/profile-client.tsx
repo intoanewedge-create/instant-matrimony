@@ -250,6 +250,13 @@ export function ProfileClient({
   const [castes, setCastes] = useState<any[]>([]);
   const [subCastes, setSubCastes] = useState<any[]>([]);
   const [gothrams, setGothrams] = useState<any[]>([]);
+  const [motherTongues, setMotherTongues] = useState<any[]>([]);
+  const [educations, setEducations] = useState<any[]>([]);
+  const [occupations, setOccupations] = useState<any[]>([]);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
 
   // Preferences Inline Editing State
   const [editingRow, setEditingRow] = useState<string | null>(null);
@@ -358,6 +365,7 @@ export function ProfileClient({
     register: registerDetails,
     handleSubmit: handleSubmitDetails,
     watch: watchDetails,
+    setValue: setValueDetails,
     reset: resetDetails,
   } = useForm({
     defaultValues: {
@@ -407,6 +415,9 @@ export function ProfileClient({
   const selectedReligion = watchDetails("religion");
   const selectedCaste = watchDetails("caste");
   const selectedSubCaste = watchDetails("subCaste");
+  const selectedCountry = watchDetails("country");
+  const selectedState = watchDetails("state");
+  const selectedDistrict = watchDetails("district");
   const selectedEducation = watchDetails("education");
   const selectedOccupation = watchDetails("occupation");
 
@@ -416,6 +427,34 @@ export function ProfileClient({
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data) setReligions(res.data);
+      })
+      .catch(() => {});
+
+    fetch("/api/master-data?type=mothertongues")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setMotherTongues(res.data);
+      })
+      .catch(() => {});
+
+    fetch("/api/master-data?type=educations")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setEducations(res.data);
+      })
+      .catch(() => {});
+
+    fetch("/api/master-data?type=occupations")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setOccupations(res.data);
+      })
+      .catch(() => {});
+
+    fetch("/api/master-data?type=countries")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setCountries(res.data);
       })
       .catch(() => {});
 
@@ -488,6 +527,60 @@ export function ProfileClient({
       setGothrams([]);
     }
   }, [selectedSubCaste, subCastes]);
+
+  // Fetch States when Country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const countryObj = countries.find(
+        (c) => c.name === selectedCountry || c.id === selectedCountry,
+      );
+      const queryId = countryObj?.id || selectedCountry;
+      fetch(`/api/master-data?type=states&parentId=${encodeURIComponent(queryId)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data) setStates(res.data);
+        })
+        .catch(() => {});
+    } else {
+      setStates([]);
+    }
+  }, [selectedCountry, countries]);
+
+  // Fetch Districts when State changes
+  useEffect(() => {
+    if (selectedState) {
+      const stateObj = states.find(
+        (s) => s.name === selectedState || s.id === selectedState,
+      );
+      const queryId = stateObj?.name || stateObj?.id || selectedState;
+      fetch(`/api/master-data?type=districts&parentId=${encodeURIComponent(queryId)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data) setDistricts(res.data);
+        })
+        .catch(() => {});
+    } else {
+      setDistricts([]);
+    }
+  }, [selectedState, states]);
+
+  // Fetch Cities when District changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      const distObj = districts.find(
+        (d) => d.name === selectedDistrict || d.id === selectedDistrict,
+      );
+      const queryId = distObj?.name || distObj?.id || selectedDistrict;
+      fetch(`/api/master-data?type=cities&parentId=${encodeURIComponent(queryId)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data) setCities(res.data);
+        })
+        .catch(() => {});
+    } else {
+      setCities([]);
+    }
+  }, [selectedDistrict, districts]);
 
   // IntersectionObserver for Sticky Edit Preferences Scroll Spy
   useEffect(() => {
@@ -1280,50 +1373,86 @@ export function ProfileClient({
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="city" className="text-xs font-semibold text-slate-700">City</Label>
-                        <Input
-                          id="city"
-                          placeholder="e.g. Hyderabad"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                          {...registerDetails("city")}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
-                        <Input
-                          id="district"
-                          placeholder="e.g. Rangareddy"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                          {...registerDetails("district")}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="state" className="text-xs font-semibold text-slate-700">State</Label>
-                        <select
-                          id="state"
-                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("state")}
-                        >
-                          <option value="">Select State</option>
-                          {INDIAN_STATES.map((st) => (
-                            <option key={st} value={st}>{st}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1.5">
                         <Label htmlFor="country" className="text-xs font-semibold text-slate-700">Country</Label>
                         <select
                           id="country"
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
                           {...registerDetails("country")}
                         >
-                          {MAJOR_COUNTRIES.map((ct) => (
-                            <option key={ct} value={ct}>{ct}</option>
+                          <option value="India">India</option>
+                          {countries.filter((c) => c.name !== "India").map((ct) => (
+                            <option key={ct.id || ct.name} value={ct.name}>{ct.name}</option>
                           ))}
                         </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="state" className="text-xs font-semibold text-slate-700">State</Label>
+                        {states.length > 0 ? (
+                          <select
+                            id="state"
+                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                            {...registerDetails("state")}
+                          >
+                            <option value="">Select State</option>
+                            {states.map((st) => (
+                              <option key={st.id || st.name} value={st.name}>{st.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="state"
+                            placeholder="e.g. Andhra Pradesh, Telangana"
+                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                            {...registerDetails("state")}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
+                        {districts.length > 0 ? (
+                          <select
+                            id="district"
+                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                            {...registerDetails("district")}
+                          >
+                            <option value="">Select District</option>
+                            {districts.map((d) => (
+                              <option key={d.id || d.name} value={d.name}>{d.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="district"
+                            placeholder="e.g. Guntur, Rangareddy"
+                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                            {...registerDetails("district")}
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="city" className="text-xs font-semibold text-slate-700">City / Town</Label>
+                        {cities.length > 0 ? (
+                          <select
+                            id="city"
+                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                            {...registerDetails("city")}
+                          >
+                            <option value="">Select City / Town</option>
+                            {cities.map((c) => (
+                              <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="city"
+                            placeholder="e.g. Hyderabad, Vijayawada"
+                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
+                            {...registerDetails("city")}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

@@ -206,11 +206,15 @@ export class MasterDataService extends BaseService {
     const map: Record<string, any> = {
       religions: prisma.masterReligion,
       castes: prisma.masterCaste,
+      subcastes: prisma.masterSubCaste,
+      gothrams: prisma.masterGothram,
       mothertongues: prisma.masterMotherTongue,
       educations: prisma.masterEducation,
       occupations: prisma.masterOccupation,
       countries: prisma.masterCountry,
       states: prisma.masterState,
+      districts: prisma.masterDistrict,
+      cities: prisma.masterCity,
     };
     return map[category] || null;
   }
@@ -226,7 +230,11 @@ export class MasterDataService extends BaseService {
 
       // Handle parent relationships
       if (category === "castes" && data.parentId) createData.religionId = data.parentId;
+      if (category === "subcastes" && data.parentId) createData.casteId = data.parentId;
+      if (category === "gothrams" && data.parentId) createData.subCasteId = data.parentId;
       if (category === "states" && data.parentId) createData.countryId = data.parentId;
+      if (category === "districts" && data.parentId) createData.stateId = data.parentId;
+      if (category === "cities" && data.parentId) createData.districtId = data.parentId;
 
       const item = await model.create({ data: createData });
       return this.returnSuccess(item);
@@ -235,7 +243,7 @@ export class MasterDataService extends BaseService {
     }
   }
 
-  async updateEntry(category: string, id: string, data: { name?: string; order?: number; code?: string; category?: string }): Promise<Result<any>> {
+  async updateEntry(category: string, id: string, data: { name?: string; order?: number; code?: string; category?: string; parentId?: string }): Promise<Result<any>> {
     try {
       const model = this.getModel(category);
       if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
@@ -245,6 +253,13 @@ export class MasterDataService extends BaseService {
       if (data.order !== undefined) updateData.order = data.order;
       if (data.code !== undefined) updateData.code = data.code;
       if (data.category !== undefined) updateData.category = data.category;
+
+      if (category === "castes" && data.parentId) updateData.religionId = data.parentId;
+      if (category === "subcastes" && data.parentId) updateData.casteId = data.parentId;
+      if (category === "gothrams" && data.parentId) updateData.subCasteId = data.parentId;
+      if (category === "states" && data.parentId) updateData.countryId = data.parentId;
+      if (category === "districts" && data.parentId) updateData.stateId = data.parentId;
+      if (category === "cities" && data.parentId) updateData.districtId = data.parentId;
 
       const item = await model.update({ where: { id }, data: updateData });
       return this.returnSuccess(item);
@@ -257,6 +272,29 @@ export class MasterDataService extends BaseService {
     try {
       const model = this.getModel(category);
       if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
+
+      // Check dependent children before deletion to prevent foreign key errors
+      if (category === "religions") {
+        const casteCount = await prisma.masterCaste.count({ where: { religionId: id } });
+        if (casteCount > 0) {
+          return this.returnFailure(`Cannot delete: ${casteCount} castes are linked to this religion. Delete them first.`, "DEPENDENT_RECORDS_EXIST");
+        }
+      } else if (category === "castes") {
+        const subCasteCount = await prisma.masterSubCaste.count({ where: { casteId: id } });
+        if (subCasteCount > 0) {
+          return this.returnFailure(`Cannot delete: ${subCasteCount} sub-castes are linked to this caste. Delete them first.`, "DEPENDENT_RECORDS_EXIST");
+        }
+      } else if (category === "states") {
+        const districtCount = await prisma.masterDistrict.count({ where: { stateId: id } });
+        if (districtCount > 0) {
+          return this.returnFailure(`Cannot delete: ${districtCount} districts are linked to this state. Delete them first.`, "DEPENDENT_RECORDS_EXIST");
+        }
+      } else if (category === "districts") {
+        const cityCount = await prisma.masterCity.count({ where: { districtId: id } });
+        if (cityCount > 0) {
+          return this.returnFailure(`Cannot delete: ${cityCount} cities are linked to this district. Delete them first.`, "DEPENDENT_RECORDS_EXIST");
+        }
+      }
 
       await model.delete({ where: { id } });
       return this.returnSuccess(true);

@@ -12,8 +12,8 @@ export default async function AdminUnlocksPage() {
   const unlocks = await prisma.contactUnlock.findMany({
     orderBy: { unlockedAt: "desc" },
     include: {
-      user: { select: { id: true, name: true, email: true } },
-      targetUser: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, publicId: true } },
+      targetUser: { select: { id: true, name: true, email: true, publicId: true } },
       membership: { include: { plan: true } },
     },
   });

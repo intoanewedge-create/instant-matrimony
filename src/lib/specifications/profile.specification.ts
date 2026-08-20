@@ -156,6 +156,15 @@ export class ProfileSpecification {
     };
   }
 
+  static filterByCreatedWithinDays(days?: number) {
+    if (!days || days <= 0) return {};
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    return {
+      createdAt: { gte: cutoff },
+    };
+  }
+
   static filterByRecentlyActive(recentlyActive?: boolean) {
     if (!recentlyActive) return {};
     const sevenDaysAgo = new Date();
@@ -165,3 +174,4 @@ export class ProfileSpecification {
     };
   }
 }
+
