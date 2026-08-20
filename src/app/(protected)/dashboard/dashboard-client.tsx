@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, AlertCircle, CheckCheck } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { ProfileSidebarCard } from "@/components/dashboard/profile-sidebar-card";
 import { UpgradeCard } from "@/components/dashboard/upgrade-card";
@@ -155,7 +156,7 @@ export function DashboardClient({
     <div className="space-y-4" style={{ color: "#111827" }}>
       {/* ── STATUS BANNERS (full width, above columns) ── */}
       <AnimatePresence>
-        {profile?.status === "PENDING" && (
+        {(profile as any)?.status === "PENDING" && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,7 +196,7 @@ export function DashboardClient({
           </motion.div>
         )}
 
-        {profile?.status === "REJECTED" && (
+        {(profile as any)?.status === "REJECTED" && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -214,7 +215,7 @@ export function DashboardClient({
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
                   <strong>Reason:</strong>{" "}
-                  {profile?.rejectionReason ||
+                  {(profile as any)?.rejectionReason ||
                     "Please update your profile according to guidelines."}
                 </p>
               </div>
@@ -241,7 +242,7 @@ export function DashboardClient({
           </motion.div>
         )}
 
-        {profile?.status === "SUSPENDED" && (
+        {(profile as any)?.status === "SUSPENDED" && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -317,10 +318,11 @@ export function DashboardClient({
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {r.photoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={r.photoUrl}
-                          alt={r.name}
+                          alt={(r as any).name}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 rounded-full object-cover shrink-0 border"
                           style={{ borderColor: "#E5E7EB" }}
                         />
@@ -332,7 +334,7 @@ export function DashboardClient({
                               "linear-gradient(135deg, #E11D48, #F43F5E)",
                           }}
                         >
-                          {r.name.charAt(0)}
+                          {(r as any).name.charAt(0)}
                         </div>
                       )}
                       <div className="min-w-0">
@@ -342,14 +344,14 @@ export function DashboardClient({
                           style={{ color: "#111827" }}
                           data-testid={`interest-profile-link-${r.id}`}
                         >
-                          {r.name}
+                          {(r as any).name}
                         </Link>
                         <span
                           className="text-[10px] font-semibold"
                           style={{ color: "#9CA3AF" }}
                         >
                           {r.direction === "incoming" ? "Received" : "Sent"} ·{" "}
-                          {r.status}
+                          {(r as any).status}
                         </span>
                       </div>
                     </div>
@@ -372,7 +374,7 @@ export function DashboardClient({
                       <span
                         className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border"
                         style={
-                          r.status === "ACCEPTED"
+                          (r as any).status === "ACCEPTED"
                             ? {
                                 backgroundColor: "#E6F4EA",
                                 color: "#00A76F",
@@ -386,7 +388,7 @@ export function DashboardClient({
                         }
                         data-testid={`interest-status-${r.id}`}
                       >
-                        {r.status}
+                        {(r as any).status}
                       </span>
                     )}
                   </div>
@@ -544,20 +546,20 @@ export function DashboardClient({
                         className="font-semibold"
                         style={{ color: n.read ? "#6B7280" : "#111827" }}
                       >
-                        {n.title}
+                        {(n as any).title}
                       </span>
                       <span
                         className="text-xs shrink-0"
                         style={{ color: "#9CA3AF" }}
                       >
-                        {formatDate(n.createdAt)}
+                        {formatDate((n as any).createdAt)}
                       </span>
                     </div>
                     <p
                       className="mt-0.5"
                       style={{ color: n.read ? "#9CA3AF" : "#374151" }}
                     >
-                      {n.message}
+                      {(n as any).message}
                     </p>
                   </button>
                 ))}

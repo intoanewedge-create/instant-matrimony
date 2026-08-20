@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import {
   searchMatchesAction,
@@ -1303,9 +1304,10 @@ export function SearchClient({
                       <div>
                         {/* Image Preview Container */}
                         <div className="relative aspect-square overflow-hidden bg-slate-100">
-                          <img
+                          <Image
                             src={mainPhotoUrl}
                             alt={displayName}
+                            fill
                             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                               isBlur ? "blur-md scale-110" : ""
                             }`}

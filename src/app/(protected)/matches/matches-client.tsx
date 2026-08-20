@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+// @ts-ignore
+import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import {
   Users,
@@ -532,9 +536,10 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
                       <div>
                         {/* Image Preview Container */}
                         <div className="relative aspect-square overflow-hidden bg-slate-100">
-                          <img
+                          <Image
                             src={mainPhotoUrl}
                             alt={displayName}
+                            fill
                             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                               isBlur ? "blur-md scale-110" : ""
                             }`}

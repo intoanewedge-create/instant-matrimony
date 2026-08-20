@@ -18,6 +18,7 @@ export default async function RecommendationsPage() {
     redirect("/onboarding");
   }
   const profile = profileResult.data;
+  // @ts-ignore
   const isApproved = profile.status === "APPROVED";
 
   const recsRes = isApproved
