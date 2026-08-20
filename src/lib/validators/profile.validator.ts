@@ -102,8 +102,11 @@ export const step8Schema = z.object({
   motherTongue: z.string().optional(),
   education: z.string().optional(),
   country: z.string().optional(),
+  bio: z.string().optional(),
   submitForReview: z.boolean().optional(),
 });
+
+export const partnerPreferenceSchema = step8Schema;
 
 export const step9Schema = z.object({
   photosAcknowledged: z.boolean().optional(),

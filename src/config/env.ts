@@ -7,9 +7,8 @@ export const env = createEnv({
     AUTH_SECRET: z.string().min(8, "AUTH_SECRET must be at least 8 characters long"),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
-    STORAGE_PROVIDER: z.enum(["local", "s3", "cloudinary", "r2", "minio", "mock"]).default("local"),
+    STORAGE_PROVIDER: z.enum(["local", "supabase", "s3", "cloudinary", "r2", "minio", "mock"]).default("supabase"),
     CACHE_PROVIDER: z.enum(["memory", "redis"]).default("memory"),
-    // Optional provider settings
     EMAIL_PROVIDER: z.enum(["mock", "smtp", "resend"]).optional(),
     EMAIL_FROM: z.string().optional(),
     SMTP_HOST: z.string().optional(),

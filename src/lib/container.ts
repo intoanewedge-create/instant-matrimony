@@ -201,8 +201,12 @@ const emailOtpProvider = new EmailOtpProvider(emailProvider);
 const smsOtpProvider =
   smsConfig.provider === "twilio" ? new SmsOtpProvider() : emailOtpProvider;
 
+import { SupabaseStorageProvider } from "./storage/supabase-provider";
+
 let storageProvider: StorageProvider;
-if (storageConfig.provider === "local") {
+if (storageConfig.provider === "supabase") {
+  storageProvider = new SupabaseStorageProvider();
+} else if (storageConfig.provider === "local") {
   storageProvider = new LocalStorageProvider();
 } else if (storageConfig.provider === "cloudinary") {
   storageProvider = new CloudinaryStorageProvider();
@@ -213,7 +217,7 @@ if (storageConfig.provider === "local") {
 } else if (storageConfig.provider === "minio") {
   storageProvider = new MinioStorageProvider();
 } else {
-  storageProvider = new LocalStorageProvider();
+  storageProvider = new SupabaseStorageProvider();
 }
 
 const emailNotificationProvider = new EmailNotificationProvider(emailProvider);

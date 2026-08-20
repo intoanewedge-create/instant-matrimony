@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { getDisplayProfileId } from "@/lib/utils/public-id";
 
+import { useSearchParams } from "next/navigation";
+
 interface InterestsClientProps {
   receivedInterests: any[];
   sentInterests: any[];
@@ -36,12 +38,34 @@ export function InterestsClient({
   sentInterests: initialSent,
 }: InterestsClientProps) {
   const router = useRouter();
-  const [activeDirection, setActiveDirection] = useState<"received" | "sent">("received");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const searchParams = useSearchParams();
+
+  const urlDirection = searchParams.get("direction") === "sent" ? "sent" : "received";
+  const urlStatus = searchParams.get("status") || "ALL";
+
+  const [activeDirection, setActiveDirection] = useState<"received" | "sent">(urlDirection);
+  const [statusFilter, setStatusFilter] = useState<string>(urlStatus);
   const [searchQuery, setSearchQuery] = useState("");
   const [received, setReceived] = useState(initialReceived || []);
   const [sent, setSent] = useState(initialSent || []);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // Sync state if URL search parameters change
+  useEffect(() => {
+    const dir = searchParams.get("direction") === "sent" ? "sent" : "received";
+    const st = searchParams.get("status") || "ALL";
+    setActiveDirection(dir);
+    setStatusFilter(st);
+  }, [searchParams]);
+
+  const selectCategory = (direction: "received" | "sent", status: string) => {
+    setActiveDirection(direction);
+    setStatusFilter(status);
+    const params = new URLSearchParams(window.location.search);
+    params.set("direction", direction);
+    params.set("status", status);
+    router.replace(`/interests?${params.toString()}`, { scroll: false });
+  };
 
   const handleAccept = async (interestId: string) => {
     setLoadingId(interestId);
@@ -128,18 +152,18 @@ export function InterestsClient({
         {/* ── 8A. INTEREST SIDEBAR (LEFT 25-30%) ── */}
         <aside className="space-y-4" aria-label="Interest navigation sidebar">
           <div
-            className="rounded-2xl border shadow-xs overflow-hidden"
-            style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
+            className="rounded-2xl border shadow-sm overflow-hidden bg-white"
+            style={{ borderColor: "#E5E7EB" }}
           >
             {/* RECEIVED SECTION */}
-            <div className="p-4 border-b space-y-2" style={{ borderColor: "#F3F4F6" }}>
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400">
+            <div className="p-4 border-b space-y-2.5" style={{ borderColor: "#F3F4F6" }}>
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
                 <Inbox className="w-4 h-4 text-emerald-600" />
                 <span>Interests Received</span>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {[
-                  { id: "ALL", label: "All", count: sidebarReceivedCounts.ALL },
+                  { id: "ALL", label: "All Received", count: sidebarReceivedCounts.ALL },
                   { id: "PENDING", label: "Pending", count: sidebarReceivedCounts.PENDING },
                   { id: "ACCEPTED", label: "Accepted / Replied", count: sidebarReceivedCounts.ACCEPTED },
                   { id: "DECLINED", label: "Declined", count: sidebarReceivedCounts.DECLINED },
@@ -148,25 +172,23 @@ export function InterestsClient({
                   return (
                     <button
                       key={`rec-${cat.id}`}
-                      onClick={() => {
-                        setActiveDirection("received");
-                        setStatusFilter(cat.id);
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-                      style={
+                      onClick={() => selectCategory("received", cat.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
                         active
-                          ? { backgroundColor: "#E6F4EA", color: "#00A76F", fontWeight: "700" }
-                          : { backgroundColor: "transparent", color: "#374151" }
-                      }
+                          ? "bg-emerald-50 text-emerald-700 font-bold border border-emerald-300 shadow-xs ring-1 ring-emerald-400/20"
+                          : "hover:bg-slate-50 text-slate-700 hover:text-slate-900"
+                      }`}
                     >
-                      <span>{cat.label}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${active ? "bg-emerald-500 ring-2 ring-emerald-200" : "bg-slate-300"}`} />
+                        <span>{cat.label}</span>
+                      </div>
                       <span
-                        className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                        style={
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                           active
-                            ? { backgroundColor: "#00A76F", color: "#FFFFFF" }
-                            : { backgroundColor: "#F3F4F6", color: "#6B7280" }
-                        }
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
                       >
                         {cat.count}
                       </span>
@@ -177,14 +199,14 @@ export function InterestsClient({
             </div>
 
             {/* SENT SECTION */}
-            <div className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400">
+            <div className="p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
                 <Send className="w-4 h-4 text-emerald-600" />
                 <span>Interests Sent</span>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {[
-                  { id: "ALL", label: "All", count: sidebarSentCounts.ALL },
+                  { id: "ALL", label: "All Sent", count: sidebarSentCounts.ALL },
                   { id: "PENDING", label: "Pending", count: sidebarSentCounts.PENDING },
                   { id: "ACCEPTED", label: "Accepted / Replied", count: sidebarSentCounts.ACCEPTED },
                   { id: "DECLINED", label: "Declined", count: sidebarSentCounts.DECLINED },
@@ -193,25 +215,23 @@ export function InterestsClient({
                   return (
                     <button
                       key={`sent-${cat.id}`}
-                      onClick={() => {
-                        setActiveDirection("sent");
-                        setStatusFilter(cat.id);
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-                      style={
+                      onClick={() => selectCategory("sent", cat.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
                         active
-                          ? { backgroundColor: "#E6F4EA", color: "#00A76F", fontWeight: "700" }
-                          : { backgroundColor: "transparent", color: "#374151" }
-                      }
+                          ? "bg-emerald-50 text-emerald-700 font-bold border border-emerald-300 shadow-xs ring-1 ring-emerald-400/20"
+                          : "hover:bg-slate-50 text-slate-700 hover:text-slate-900"
+                      }`}
                     >
-                      <span>{cat.label}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${active ? "bg-emerald-500 ring-2 ring-emerald-200" : "bg-slate-300"}`} />
+                        <span>{cat.label}</span>
+                      </div>
                       <span
-                        className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                        style={
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                           active
-                            ? { backgroundColor: "#00A76F", color: "#FFFFFF" }
-                            : { backgroundColor: "#F3F4F6", color: "#6B7280" }
-                        }
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
                       >
                         {cat.count}
                       </span>

@@ -20,8 +20,8 @@ export async function searchMatchesAction(params: {
 
   // Check viewer's profile status
   const profileRes = await container.services.profileService.getProfileByUserId(userId);
-  if (!profileRes.success || profileRes.data?.status !== "APPROVED") {
-    return { success: false, error: "Only members with APPROVED profiles can search." };
+  if (!profileRes.success || !profileRes.data) {
+    return { success: false, error: "Please complete your profile to search matches." };
   }
 
   const filtersVal = params.filters || {};

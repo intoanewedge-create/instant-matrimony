@@ -100,7 +100,23 @@ export class MasterDataService extends BaseService {
         where: countryId ? { countryId } : undefined,
         orderBy: [{ order: "asc" }, { name: "asc" }],
       });
-      return this.returnSuccess(items);
+      if (items.length > 0) {
+        return this.returnSuccess(items);
+      }
+      // Fallback from locations dataset
+      const fallbackStates = [
+        { id: "ap", name: "Andhra Pradesh" },
+        { id: "tg", name: "Telangana" },
+        { id: "ka", name: "Karnataka" },
+        { id: "tn", name: "Tamil Nadu" },
+        { id: "mh", name: "Maharashtra" },
+        { id: "dl", name: "Delhi NCR" },
+        { id: "kl", name: "Kerala" },
+        { id: "gj", name: "Gujarat" },
+        { id: "up", name: "Uttar Pradesh" },
+        { id: "wb", name: "West Bengal" },
+      ];
+      return this.returnSuccess(fallbackStates);
     } catch (e: any) {
       return this.returnFailure(e.message, "STATES_FETCH_ERROR");
     }
@@ -108,11 +124,37 @@ export class MasterDataService extends BaseService {
 
   async getDistricts(stateId?: string): Promise<Result<any[]>> {
     try {
-      const items = await prisma.masterDistrict.findMany({
-        where: stateId ? { stateId } : undefined,
-        orderBy: [{ order: "asc" }, { name: "asc" }],
-      });
-      return this.returnSuccess(items);
+      if (stateId) {
+        const items = await prisma.masterDistrict.findMany({
+          where: {
+            OR: [
+              { stateId },
+              { state: { name: { equals: stateId, mode: "insensitive" } } },
+            ],
+          },
+          orderBy: [{ order: "asc" }, { name: "asc" }],
+        });
+        if (items.length > 0) {
+          return this.returnSuccess(items);
+        }
+      }
+
+      // Check fallback location hierarchy
+      const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
+      const matched = INDIAN_LOCATION_DATA.find(
+        (s) =>
+          s.state.toLowerCase() === (stateId || "").toLowerCase() ||
+          s.state.toLowerCase().includes((stateId || "").toLowerCase())
+      );
+      if (matched) {
+        const mapped = matched.districts.map((d, idx) => ({
+          id: `${matched.state.toLowerCase()}-${idx}`,
+          name: d.name,
+        }));
+        return this.returnSuccess(mapped);
+      }
+
+      return this.returnSuccess([]);
     } catch (e: any) {
       return this.returnFailure(e.message, "DISTRICTS_FETCH_ERROR");
     }
@@ -120,11 +162,39 @@ export class MasterDataService extends BaseService {
 
   async getCities(districtId?: string): Promise<Result<any[]>> {
     try {
-      const items = await prisma.masterCity.findMany({
-        where: districtId ? { districtId } : undefined,
-        orderBy: [{ order: "asc" }, { name: "asc" }],
-      });
-      return this.returnSuccess(items);
+      if (districtId) {
+        const items = await prisma.masterCity.findMany({
+          where: {
+            OR: [
+              { districtId },
+              { district: { name: { equals: districtId, mode: "insensitive" } } },
+            ],
+          },
+          orderBy: [{ order: "asc" }, { name: "asc" }],
+        });
+        if (items.length > 0) {
+          return this.returnSuccess(items);
+        }
+      }
+
+      // Check fallback location hierarchy
+      const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
+      for (const st of INDIAN_LOCATION_DATA) {
+        const d = st.districts.find(
+          (dis) =>
+            dis.name.toLowerCase() === (districtId || "").toLowerCase() ||
+            dis.name.toLowerCase().includes((districtId || "").toLowerCase())
+        );
+        if (d) {
+          const mapped = d.cities.map((c, idx) => ({
+            id: `${d.name.toLowerCase()}-${idx}`,
+            name: c,
+          }));
+          return this.returnSuccess(mapped);
+        }
+      }
+
+      return this.returnSuccess([]);
     } catch (e: any) {
       return this.returnFailure(e.message, "CITIES_FETCH_ERROR");
     }

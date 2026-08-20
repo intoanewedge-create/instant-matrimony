@@ -84,6 +84,19 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const [countries, setCountries] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+
+  // Parse Initial Family Details
+  let initialFamily: any = {};
+  try {
+    if (initialProfile?.familyDetails) {
+      initialFamily = typeof initialProfile.familyDetails === "string" 
+        ? JSON.parse(initialProfile.familyDetails) 
+        : initialProfile.familyDetails;
+    }
+  } catch {
+    initialFamily = { aboutFamily: initialProfile?.familyDetails };
+  }
 
   const {
     register,
@@ -115,12 +128,24 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       state: initialProfile?.state || "",
       district: initialProfile?.district || "",
       city: initialProfile?.city || "",
-      familyValues: initialProfile?.familyValues || "",
-      familyDetails: initialProfile?.familyDetails || "",
-      foodPreference: initialProfile?.foodPreference || "",
-      smoking: initialProfile?.smoking || "",
-      drinking: initialProfile?.drinking || "",
+      // Family Details Reference Fields
+      familyValues: initialProfile?.familyValues || initialFamily.familyValues || "Moderate",
+      familyType: initialFamily.familyType || "Nuclear Family",
+      familyStatus: initialFamily.familyStatus || "Middle Class",
+      fatherOccupation: initialFamily.fatherOccupation || "",
+      motherOccupation: initialFamily.motherOccupation || "",
+      brothersCount: initialFamily.brothersCount || "0",
+      brothersMarried: initialFamily.brothersMarried || "0",
+      sistersCount: initialFamily.sistersCount || "0",
+      sistersMarried: initialFamily.sistersMarried || "0",
+      familyLocationType: initialFamily.familyLocationType || "same",
+      aboutFamily: initialFamily.aboutFamily || (typeof initialProfile?.familyDetails === "string" && !initialProfile.familyDetails.startsWith("{") ? initialProfile.familyDetails : ""),
+      // Lifestyle Fields
+      foodPreference: initialProfile?.foodPreference || "Vegetarian",
+      smoking: initialProfile?.smoking || "NO",
+      drinking: initialProfile?.drinking || "NO",
       bio: initialProfile?.bio || "",
+      // Partner Preferences
       minAge: initialProfile?.partnerPreference?.minAge || 21,
       maxAge: initialProfile?.partnerPreference?.maxAge || 35,
       minHeight: initialProfile?.partnerPreference?.minHeight || 150,
@@ -138,6 +163,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const selectedSubCaste = watch("subCaste");
   const selectedCountry = watch("country");
   const selectedState = watch("state");
+  const selectedDistrict = watch("district");
   const dobValue = watch("dateOfBirth");
 
   // Calculate live age
@@ -233,15 +259,42 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   useEffect(() => {
     if (selectedState) {
       const stateObj = states.find((s) => s.name === selectedState || s.id === selectedState);
-      const queryId = stateObj?.id || selectedState;
+      const queryId = stateObj?.name || stateObj?.id || selectedState;
       fetch(`/api/master-data?type=districts&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
-        .then((res) => { if (res.success && res.data) setDistricts(res.data); })
-        .catch(() => {});
+        .then((res) => { 
+          if (res.success && res.data) {
+            setDistricts(res.data);
+          } else {
+            setDistricts([]);
+          }
+        })
+        .catch(() => setDistricts([]));
     } else {
       setDistricts([]);
+      setCities([]);
     }
   }, [selectedState, states]);
+
+  // Fetch Cities when District changes
+  useEffect(() => {
+    if (selectedDistrict) {
+      const distObj = districts.find((d) => d.name === selectedDistrict || d.id === selectedDistrict);
+      const queryId = distObj?.name || distObj?.id || selectedDistrict;
+      fetch(`/api/master-data?type=cities&parentId=${encodeURIComponent(queryId)}`)
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data) {
+            setCities(res.data);
+          } else {
+            setCities([]);
+          }
+        })
+        .catch(() => setCities([]));
+    } else {
+      setCities([]);
+    }
+  }, [selectedDistrict, districts]);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -251,17 +304,29 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       return;
     }
 
+    const file = files[0];
+    // File validation
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("File size exceeds maximum 5MB limit.");
+      return;
+    }
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setPhotoError("Only JPG, PNG, and WEBP images are supported.");
+      return;
+    }
+
     setUploadingPhoto(true);
     setPhotoError(null);
     const formData = new FormData();
-    formData.append("file", files[0]);
+    formData.append("file", file);
 
     try {
       const res = await uploadPhoto(formData);
       if (res.success && res.photo) {
         setPhotos((prev) => [...prev, res.photo]);
       } else {
-        setPhotoError(res.error || "Failed to upload photo.");
+        setPhotoError(res.error || "Failed to upload photo to Supabase storage.");
       }
     } catch {
       setPhotoError("Network error while uploading photo.");
@@ -369,8 +434,22 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
         city: data.city,
       };
     } else if (currentStep === 6) {
+      const familyPayload = {
+        familyValue: data.familyValues,
+        familyType: data.familyType,
+        familyStatus: data.familyStatus,
+        fatherOccupation: data.fatherOccupation,
+        motherOccupation: data.motherOccupation,
+        brothersCount: data.brothersCount,
+        brothersMarried: data.brothersMarried,
+        sistersCount: data.sistersCount,
+        sistersMarried: data.sistersMarried,
+        familyLocationType: data.familyLocationType,
+        aboutFamily: data.aboutFamily,
+      };
+
       stepData = {
-        familyDetails: data.familyDetails || undefined,
+        familyDetails: JSON.stringify(familyPayload),
         familyValues: data.familyValues || undefined,
         foodPreference: data.foodPreference || undefined,
         smoking: data.smoking || undefined,
@@ -870,7 +949,7 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                 {/* STEP 5: Location Details */}
                 {currentStep === 5 && (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="country" className="text-slate-700 font-medium text-xs">Country <span className="text-rose-600">*</span></Label>
@@ -921,14 +1000,14 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="district" className="text-slate-700 font-medium text-xs">District</Label>
+                        <Label htmlFor="district" className="text-slate-700 font-medium text-xs">District <span className="text-rose-600">*</span></Label>
                         {districts.length > 0 ? (
                           <select
                             id="district"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                            {...register("district")}
+                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
+                            {...register("district", { required: "District is required" })}
                           >
-                            <option value="">Select District</option>
+                            <option value="">- Select District -</option>
                             {districts.map((d) => (
                               <option key={d.id} value={d.name}>
                                 {d.name}
@@ -939,100 +1018,258 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                           <Input
                             id="district"
                             type="text"
-                            placeholder="e.g. Guntur, Krishna, Visakhapatnam"
+                            placeholder="e.g. Guntur, Hyderabad, Krishna"
                             className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("district")}
+                            {...register("district", { required: "District is required" })}
                           />
                         )}
+                        {errors.district && <p className="text-xs text-red-600">{errors.district.message as string}</p>}
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="city" className="text-slate-700 font-medium text-xs">City / Town <span className="text-rose-600">*</span></Label>
-                        <Input
-                          id="city"
-                          type="text"
-                          placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
-                          className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                          {...register("city", { required: "City is required" })}
-                        />
+                        {cities.length > 0 ? (
+                          <select
+                            id="city"
+                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
+                            {...register("city", { required: "City is required" })}
+                          >
+                            <option value="">- Select City / Town -</option>
+                            {cities.map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            id="city"
+                            type="text"
+                            placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
+                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
+                            {...register("city", { required: "City is required" })}
+                          />
+                        )}
                         {errors.city && <p className="text-xs text-red-600">{errors.city.message as string}</p>}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* STEP 6: Family Details & Lifestyle */}
+                {/* STEP 6: Family Details (Reference UI Layout) */}
                 {currentStep === 6 && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="familyValues" className="text-slate-700 font-medium text-xs">Family Values</Label>
-                        <select
-                          id="familyValues"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("familyValues")}
-                        >
-                          <option value="">Select</option>
-                          <option value="Traditional">Traditional</option>
-                          <option value="Moderate">Moderate</option>
-                          <option value="Liberal">Liberal</option>
-                        </select>
+                  <div className="space-y-6">
+                    {/* Family Details Card Box */}
+                    <div className="border border-slate-200 rounded-2xl p-5 bg-white shadow-xs space-y-5">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 className="text-base font-bold text-slate-900">Family Details</h3>
+                        <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-100">
+                          Step 6 of 10
+                        </span>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="foodPreference" className="text-slate-700 font-medium text-xs">Diet / Food Preference</Label>
-                        <select
-                          id="foodPreference"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("foodPreference")}
-                        >
-                          <option value="">Select</option>
-                          <option value="Vegetarian">Vegetarian</option>
-                          <option value="Non-Vegetarian">Non-Vegetarian</option>
-                          <option value="Eggetarian">Eggetarian</option>
-                          <option value="Jain">Jain</option>
-                          <option value="Vegan">Vegan</option>
-                        </select>
+                      {/* Family Value Radio Group */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center text-xs">
+                        <Label className="md:col-span-3 text-slate-700 font-semibold">
+                          Family Value <span className="text-rose-600">*</span>
+                        </Label>
+                        <div className="md:col-span-9 flex flex-wrap gap-4 text-xs">
+                          {["Orthodox", "Traditional", "Moderate", "Liberal"].map((val) => (
+                            <label key={val} className="flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900">
+                              <input
+                                type="radio"
+                                value={val}
+                                className="w-3.5 h-3.5 text-rose-600 accent-rose-600"
+                                {...register("familyValues", { required: "Family value is required" })}
+                              />
+                              <span>{val}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="smoking" className="text-slate-700 font-medium text-xs">Smoking Habits</Label>
-                        <select
-                          id="smoking"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("smoking")}
-                        >
-                          <option value="">Select</option>
-                          <option value="NO">No / Non-smoker</option>
-                          <option value="OCCASIONAL">Occasionally</option>
-                          <option value="YES">Yes</option>
-                        </select>
+                      {/* Family Type Radio Group */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center text-xs">
+                        <Label className="md:col-span-3 text-slate-700 font-semibold">
+                          Family Type <span className="text-rose-600">*</span>
+                        </Label>
+                        <div className="md:col-span-9 flex flex-wrap gap-4 text-xs">
+                          {["Joint Family", "Nuclear Family", "Others"].map((val) => (
+                            <label key={val} className="flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900">
+                              <input
+                                type="radio"
+                                value={val}
+                                className="w-3.5 h-3.5 text-rose-600 accent-rose-600"
+                                {...register("familyType", { required: "Family type is required" })}
+                              />
+                              <span>{val}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Family Status Radio Group */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center text-xs">
+                        <Label className="md:col-span-3 text-slate-700 font-semibold">
+                          Family Status <span className="text-rose-600">*</span>
+                        </Label>
+                        <div className="md:col-span-9 flex flex-wrap gap-4 text-xs">
+                          {["Middle Class", "Upper Middle Class", "High class", "Rich/Affluent"].map((val) => (
+                            <label key={val} className="flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900">
+                              <input
+                                type="radio"
+                                value={val}
+                                className="w-3.5 h-3.5 text-rose-600 accent-rose-600"
+                                {...register("familyStatus", { required: "Family status is required" })}
+                              />
+                              <span>{val}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Father's & Mother's Occupation */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="fatherOccupation" className="text-slate-700 font-medium text-xs">
+                            Father&apos;s Occupation
+                          </Label>
+                          <select
+                            id="fatherOccupation"
+                            className="w-full h-9 px-3 border border-slate-300 bg-white rounded-lg text-slate-800 focus:border-rose-500 text-xs"
+                            {...register("fatherOccupation")}
+                          >
+                            <option value="">- Select -</option>
+                            <option value="Business">Business / Self-Employed</option>
+                            <option value="Employed">Employed / Private Sector</option>
+                            <option value="Govt Service">Government / Civil Services</option>
+                            <option value="Professional">Doctor / Lawyer / Professional</option>
+                            <option value="Retired">Retired</option>
+                            <option value="Passed away">Passed away</option>
+                            <option value="Not Employed">Not Employed</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="motherOccupation" className="text-slate-700 font-medium text-xs">
+                            Mother&apos;s Occupation
+                          </Label>
+                          <select
+                            id="motherOccupation"
+                            className="w-full h-9 px-3 border border-slate-300 bg-white rounded-lg text-slate-800 focus:border-rose-500 text-xs"
+                            {...register("motherOccupation")}
+                          >
+                            <option value="">- Select -</option>
+                            <option value="Homemaker">Homemaker</option>
+                            <option value="Employed">Employed / Private Sector</option>
+                            <option value="Govt Service">Government / Civil Services</option>
+                            <option value="Business">Business / Self-Employed</option>
+                            <option value="Professional">Doctor / Teacher / Professional</option>
+                            <option value="Retired">Retired</option>
+                            <option value="Passed away">Passed away</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Siblings Count Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-slate-700 font-medium text-xs">No. of Brothers</Label>
+                          <select
+                            className="w-full h-9 px-2 border border-slate-300 bg-white rounded-lg text-slate-800 text-xs focus:border-rose-500"
+                            {...register("brothersCount")}
+                          >
+                            <option value="0">- Select -</option>
+                            <option value="0">None</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4+">4+</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-slate-700 font-medium text-xs">Brothers Married</Label>
+                          <select
+                            className="w-full h-9 px-2 border border-slate-300 bg-white rounded-lg text-slate-800 text-xs focus:border-rose-500"
+                            {...register("brothersMarried")}
+                          >
+                            <option value="0">- Select -</option>
+                            <option value="0">None</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4+">4+</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-slate-700 font-medium text-xs">No. of Sisters</Label>
+                          <select
+                            className="w-full h-9 px-2 border border-slate-300 bg-white rounded-lg text-slate-800 text-xs focus:border-rose-500"
+                            {...register("sistersCount")}
+                          >
+                            <option value="0">- Select -</option>
+                            <option value="0">None</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4+">4+</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-slate-700 font-medium text-xs">Sisters Married</Label>
+                          <select
+                            className="w-full h-9 px-2 border border-slate-300 bg-white rounded-lg text-slate-800 text-xs focus:border-rose-500"
+                            {...register("sistersMarried")}
+                          >
+                            <option value="0">- Select -</option>
+                            <option value="0">None</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4+">4+</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Family Location */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center text-xs pt-2">
+                        <Label className="md:col-span-3 text-slate-700 font-semibold">Family Location</Label>
+                        <div className="md:col-span-9 flex flex-wrap gap-4 text-xs">
+                          <label className="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                            <input
+                              type="radio"
+                              value="same"
+                              className="w-3.5 h-3.5 text-rose-600 accent-rose-600"
+                              {...register("familyLocationType")}
+                            />
+                            <span>Same as my Location</span>
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer text-slate-700">
+                            <input
+                              type="radio"
+                              value="different"
+                              className="w-3.5 h-3.5 text-rose-600 accent-rose-600"
+                              {...register("familyLocationType")}
+                            />
+                            <span>Different Location</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="drinking" className="text-slate-700 font-medium text-xs">Drinking Habits</Label>
-                        <select
-                          id="drinking"
-                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                          {...register("drinking")}
-                        >
-                          <option value="">Select</option>
-                          <option value="NO">No / Teetotaler</option>
-                          <option value="OCCASIONAL">Socially / Occasionally</option>
-                          <option value="YES">Yes</option>
-                        </select>
+                    {/* About My Family Section */}
+                    <div className="border border-slate-200 rounded-2xl p-5 bg-white shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-sm font-bold text-slate-900">About My Family</h4>
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="familyDetails" className="text-slate-700 font-medium text-xs">Family Background & Structure</Label>
                       <Textarea
-                        id="familyDetails"
-                        placeholder="Tell us about your parents, siblings, family origin, native place, and values..."
+                        id="aboutFamily"
+                        placeholder="Write a few lines about your family origin, values, parents, and background..."
                         className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-xs leading-relaxed h-24"
-                        {...register("familyDetails")}
+                        {...register("aboutFamily")}
                       />
                     </div>
                   </div>
@@ -1380,14 +1617,18 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div><span className="text-slate-500">Family Values:</span> <span className="text-slate-800 font-medium">{watch("familyValues") || "—"}</span></div>
+                        <div><span className="text-slate-500">Family Type:</span> <span className="text-slate-800 font-medium">{watch("familyType") || "—"}</span></div>
+                        <div><span className="text-slate-500">Family Status:</span> <span className="text-slate-800 font-medium">{watch("familyStatus") || "—"}</span></div>
                         <div><span className="text-slate-500">Diet Preference:</span> <span className="text-slate-800 font-medium">{watch("foodPreference") || "—"}</span></div>
-                        <div><span className="text-slate-500">Smoking:</span> <span className="text-slate-800 font-medium">{watch("smoking") || "NO"}</span></div>
-                        <div><span className="text-slate-500">Drinking:</span> <span className="text-slate-800 font-medium">{watch("drinking") || "NO"}</span></div>
+                        <div><span className="text-slate-500">Father&apos;s Occ:</span> <span className="text-slate-800 font-medium">{watch("fatherOccupation") || "—"}</span></div>
+                        <div><span className="text-slate-500">Mother&apos;s Occ:</span> <span className="text-slate-800 font-medium">{watch("motherOccupation") || "—"}</span></div>
+                        <div><span className="text-slate-500">Brothers:</span> <span className="text-slate-800 font-medium">{watch("brothersCount") || "0"} ({watch("brothersMarried") || "0"} m)</span></div>
+                        <div><span className="text-slate-500">Sisters:</span> <span className="text-slate-800 font-medium">{watch("sistersCount") || "0"} ({watch("sistersMarried") || "0"} m)</span></div>
                       </div>
-                      {watch("familyDetails") && (
+                      {watch("aboutFamily") && (
                         <p className="text-xs text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200">
-                          <span className="text-slate-500 block text-[10px] uppercase font-bold mb-1">Family Background & Parents:</span>
-                          {watch("familyDetails")}
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold mb-1">About My Family:</span>
+                          {watch("aboutFamily")}
                         </p>
                       )}
                     </div>

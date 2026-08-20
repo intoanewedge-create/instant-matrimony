@@ -2,7 +2,7 @@
 
 import { auth } from "../auth";
 import { container } from "../container";
-import { profileUpdateSchema, step7Schema } from "../validators/profile.validator";
+import { profileUpdateSchema, partnerPreferenceSchema } from "../validators/profile.validator";
 import { ProfileMapper } from "../mappers/profile.mapper";
 import { revalidatePath } from "next/cache";
 import { verifyActionPermission } from "./action-utils";
@@ -21,10 +21,6 @@ export async function updateProfileAction(formData: any) {
   }
 
   const serviceResult = await container.services.profileService.updateProfile(userId, result.data);
-  if (!serviceResult.success) {
-    return { success: false, error: serviceResult.error };
-  }
-
   revalidatePath("/profile");
   revalidatePath("/dashboard");
   // @ts-ignore
@@ -38,7 +34,7 @@ export async function updatePreferencesAction(formData: any) {
   }
   const userId = (session.user as any).id;
 
-  const result = step7Schema.safeParse(formData);
+  const result = partnerPreferenceSchema.safeParse(formData);
   if (!result.success) {
     return { success: false, error: result.error.issues[0].message };
   }
@@ -51,7 +47,7 @@ export async function updatePreferencesAction(formData: any) {
 
   revalidatePath("/profile");
   revalidatePath("/dashboard");
-  return { success: true };
+  return { success: true, partnerPreference: serviceResult.data };
 }
 
 export async function getAiMatchExplanationAction(targetUserId: string) {

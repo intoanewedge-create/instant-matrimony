@@ -33,8 +33,8 @@ export class SearchService extends BaseService {
         return this.returnFailure("Viewer profile not found", "PROFILE_NOT_FOUND");
       }
 
-      if (viewerProfile.status !== "APPROVED") {
-        return this.returnFailure("Only approved profiles are authorized to search", "UNAUTHORIZED_STATUS");
+      if (viewerProfile.status === "DRAFT" && viewerProfile.completionPercent === 0) {
+        return this.returnFailure("Please complete basic profile details to search matches", "UNAUTHORIZED_STATUS");
       }
 
       let parsedFilters = params.filters || {};
