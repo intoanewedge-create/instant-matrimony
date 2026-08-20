@@ -164,6 +164,8 @@ model Profile {
   @@index([occupation])
   @@index([status])
   @@index([gender])
+  @@index([dateOfBirth])
+  @@index([height])
 }
 
 model PartnerPreference {
