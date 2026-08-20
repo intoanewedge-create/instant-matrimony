@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -167,6 +168,8 @@ model Profile {
   @@index([gender])
   @@index([star])
   @@index([rasi])
+  @@index([dateOfBirth])
+  @@index([height])
 }
 
 model PartnerPreference {
@@ -178,15 +181,16 @@ model PartnerPreference {
   maxHeight     Int?
   maritalStatus String?
   religion      String?
+  caste         String?
   motherTongue  String?
   education     String?
   occupation    String?
+  country       String?
   state         String?
   district      String?
   city          String?
   star          String?
   rasi          String?
-  country       String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)

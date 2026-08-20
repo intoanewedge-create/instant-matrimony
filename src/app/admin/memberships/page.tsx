@@ -27,8 +27,8 @@ export default async function AdminMembershipsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Membership Plans & Subscriptions</h1>
-        <p className="text-xs text-slate-400 mt-1">Configure database-driven membership plans and review active user subscriptions.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Membership Plans & Subscriptions</h1>
+        <p className="text-xs text-slate-600 mt-1">Configure database-driven membership plans and review active user subscriptions.</p>
       </div>
 
       <AdminMembershipsClient

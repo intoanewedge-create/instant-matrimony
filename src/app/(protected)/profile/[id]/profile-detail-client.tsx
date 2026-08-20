@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Heart,
@@ -33,6 +33,7 @@ import {
 } from "@/lib/actions/interest.actions";
 import { sendMessageAction } from "@/lib/actions/chat.actions";
 import { unlockContactAction } from "@/lib/actions/contact-unlock.actions";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function ProfileDetailClient({
   profile,
@@ -59,6 +60,7 @@ export function ProfileDetailClient({
   const [sentInterest, setSentInterest] = useState(initialSentInterest);
   const [receivedInterest, setReceivedInterest] = useState(initialReceivedInterest);
   const [interestLoading, setInterestLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Unlock state
   const [unlockedState, setUnlockedState] = useState<boolean>(isUnlocked);
@@ -121,64 +123,73 @@ export function ProfileDetailClient({
     fetchAiInsights();
   }, [profile.userId]);
 
-  const handleSendInterest = async () => {
+  const handleSendInterest = () => {
+    if (interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await sendInterestAction(profile.userId);
-      if (res.success) {
-        setSentInterest(res.interest);
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await sendInterestAction(profile.userId);
+        if (res.success) {
+          setSentInterest(res.interest);
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
-  const handleAcceptInterest = async () => {
-    if (!receivedInterest) return;
+  const handleAcceptInterest = () => {
+    if (!receivedInterest || interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await acceptInterestAction(receivedInterest.id);
-      if (res.success) {
-        setReceivedInterest((prev: any) => ({ ...prev, status: "ACCEPTED" }));
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await acceptInterestAction(receivedInterest.id);
+        if (res.success) {
+          setReceivedInterest((prev: any) => ({ ...prev, status: "ACCEPTED" }));
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
-  const handleDeclineInterest = async () => {
-    if (!receivedInterest) return;
+  const handleDeclineInterest = () => {
+    if (!receivedInterest || interestLoading || isPending) return;
     setInterestLoading(true);
-    try {
-      const res = await declineInterestAction(receivedInterest.id);
-      if (res.success) {
-        setReceivedInterest((prev: any) => ({ ...prev, status: "DECLINED" }));
-        router.refresh();
+    startTransition(async () => {
+      try {
+        const res = await declineInterestAction(receivedInterest.id);
+        if (res.success) {
+          setReceivedInterest((prev: any) => ({ ...prev, status: "DECLINED" }));
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      } finally {
+        setInterestLoading(false);
       }
-    } catch {
-      // ignore
-    } finally {
-      setInterestLoading(false);
-    }
+    });
   };
 
   const handleInitiateChat = async () => {
     if (!chatMessage.trim()) return;
     setIsSendingMessage(true);
     try {
-      const res = await sendMessageAction(profile.userId, chatMessage);
+      const res = await sendMessageAction(profile.userId || profile.id, chatMessage);
       if (res.success) {
         setShowChatModal(false);
-        router.push("/messages");
+        router.push(`/messages/${profile.userId || profile.id}`);
+      } else {
+        alert(res.error || "Could not send message. You must have a mutual connection and active membership.");
       }
     } catch {
-      // ignore
+      alert("An unexpected error occurred while sending the message.");
     } finally {
       setIsSendingMessage(false);
     }
@@ -282,6 +293,13 @@ export function ProfileDetailClient({
             )}
           </div>
 
+          {/* Profile ID directly below photo */}
+          <div className="flex items-center justify-center -mt-2">
+            <span className="text-xs font-mono font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200 shadow-xs">
+              Profile ID: {getDisplayProfileId(profile.user, profile.userId || profile.id)}
+            </span>
+          </div>
+
           {/* Action buttons */}
           <div className="space-y-3">
             {/* Interest state machine buttons */}
@@ -327,7 +345,7 @@ export function ProfileDetailClient({
             <Button
               onClick={() => {
                 if (conversationId) {
-                  router.push("/messages");
+                  router.push(`/messages/${profile.userId || profile.id}`);
                 } else {
                   setShowChatModal(true);
                 }

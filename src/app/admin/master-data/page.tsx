@@ -36,44 +36,44 @@ export default async function AdminMasterDataPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
             Master Data Registry
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Standardized demographic, caste, religious, and geographic taxonomies used across the platform.
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="religions" className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-xl">
-          <TabsTrigger value="religions" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+        <TabsList className="flex flex-wrap h-auto gap-1.5 bg-slate-100 border border-slate-200 p-1.5 rounded-xl">
+          <TabsTrigger value="religions" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <Layers className="w-4 h-4 mr-1.5" /> Religions ({religions.length})
           </TabsTrigger>
-          <TabsTrigger value="castes" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+          <TabsTrigger value="castes" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <Layers className="w-4 h-4 mr-1.5" /> Castes ({castes.length})
           </TabsTrigger>
-          <TabsTrigger value="languages" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+          <TabsTrigger value="languages" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <Globe className="w-4 h-4 mr-1.5" /> Languages ({motherTongues.length})
           </TabsTrigger>
-          <TabsTrigger value="educations" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+          <TabsTrigger value="educations" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <GraduationCap className="w-4 h-4 mr-1.5" /> Education ({educations.length})
           </TabsTrigger>
-          <TabsTrigger value="occupations" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+          <TabsTrigger value="occupations" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <Briefcase className="w-4 h-4 mr-1.5" /> Professions ({occupations.length})
           </TabsTrigger>
-          <TabsTrigger value="geography" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white">
+          <TabsTrigger value="geography" className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-slate-700 text-xs sm:text-sm">
             <MapPin className="w-4 h-4 mr-1.5" /> Locations ({states.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="religions" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <Database className="w-5 h-5 text-rose-500" /> Religions
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Registered community and faith taxonomies
               </CardDescription>
             </CardHeader>
@@ -81,9 +81,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {religions.length > 0 ? (
                   religions.map((r: any) => (
-                    <div key={r.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{r.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">Order: {r.order ?? 0}</span>
+                    <div key={r.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{r.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Order: {r.order ?? 0}</span>
                     </div>
                   ))
                 ) : (
@@ -97,12 +97,12 @@ export default async function AdminMasterDataPage() {
         </TabsContent>
 
         <TabsContent value="castes" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <Layers className="w-5 h-5 text-rose-500" /> Caste Classifications
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Categorized castes and associated sub-castes
               </CardDescription>
             </CardHeader>
@@ -110,9 +110,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {castes.length > 0 ? (
                   castes.map((c: any) => (
-                    <div key={c.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{c.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">Order: {c.order ?? 0}</span>
+                    <div key={c.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{c.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Order: {c.order ?? 0}</span>
                     </div>
                   ))
                 ) : (
@@ -126,12 +126,12 @@ export default async function AdminMasterDataPage() {
         </TabsContent>
 
         <TabsContent value="languages" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <Globe className="w-5 h-5 text-rose-500" /> Mother Tongues
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Primary regional spoken languages
               </CardDescription>
             </CardHeader>
@@ -139,9 +139,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {motherTongues.length > 0 ? (
                   motherTongues.map((l: any) => (
-                    <div key={l.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{l.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">{l.code || "ISO"}</span>
+                    <div key={l.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{l.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{l.code || "ISO"}</span>
                     </div>
                   ))
                 ) : (
@@ -155,12 +155,12 @@ export default async function AdminMasterDataPage() {
         </TabsContent>
 
         <TabsContent value="educations" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-rose-500" /> Education Degrees & Qualifications
+              <CardTitle className="text-slate-900 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-rose-500" /> Education Degrees &amp; Qualifications
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Standardized academic qualifications
               </CardDescription>
             </CardHeader>
@@ -168,9 +168,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {educations.length > 0 ? (
                   educations.map((e: any) => (
-                    <div key={e.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{e.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">{e.category || "Degree"}</span>
+                    <div key={e.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{e.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{e.category || "Degree"}</span>
                     </div>
                   ))
                 ) : (
@@ -184,12 +184,12 @@ export default async function AdminMasterDataPage() {
         </TabsContent>
 
         <TabsContent value="occupations" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-rose-500" /> Professions & Occupations
+              <CardTitle className="text-slate-900 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-rose-500" /> Professions &amp; Occupations
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Occupational fields and career categories
               </CardDescription>
             </CardHeader>
@@ -197,9 +197,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {occupations.length > 0 ? (
                   occupations.map((o: any) => (
-                    <div key={o.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{o.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">Active</span>
+                    <div key={o.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{o.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">Active</span>
                     </div>
                   ))
                 ) : (
@@ -213,12 +213,12 @@ export default async function AdminMasterDataPage() {
         </TabsContent>
 
         <TabsContent value="geography" className="mt-6">
-          <Card className="border border-slate-800 bg-slate-900/60 backdrop-blur-xl">
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-500" /> Geographic Divisions & States
+              <CardTitle className="text-slate-900 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-rose-500" /> Geographic Divisions &amp; States
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-slate-500">
                 Countries, states, and regional districts
               </CardDescription>
             </CardHeader>
@@ -226,9 +226,9 @@ export default async function AdminMasterDataPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {states.length > 0 ? (
                   states.map((s: any) => (
-                    <div key={s.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-200">{s.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">{s.code || "IN"}</span>
+                    <div key={s.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-800">{s.name}</span>
+                      <span className="text-xs text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">{s.code || "IN"}</span>
                     </div>
                   ))
                 ) : (

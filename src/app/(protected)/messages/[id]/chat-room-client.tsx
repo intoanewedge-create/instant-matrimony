@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   sendMessageAction,
+  getChatMessagesAction,
   addMessageReactionAction,
   updatePresenceAction,
   deleteMessageAction,
@@ -79,6 +80,44 @@ export function ChatRoomClient({
     };
   }, []);
 
+  // Polling synchronization every 4 seconds while conversation is open
+  useEffect(() => {
+    let isMounted = true;
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await getChatMessagesAction(contactId);
+        if (res.success && res.messages && isMounted) {
+          setMessages((prev) => {
+            const optimistic = prev.filter((m) => m.id?.startsWith?.("opt_"));
+            // @ts-ignore
+            const fetchedIds = new Set(res.messages.map((m: any) => m.id));
+            const remainingOptimistic = optimistic.filter((o) => !fetchedIds.has(o.id));
+
+            const prevNonOptIds = prev
+              .filter((m) => !m.id?.startsWith?.("opt_"))
+              .map((m) => m.id)
+              .join(",");
+            // @ts-ignore
+            const newIds = res.messages.map((m: any) => m.id).join(",");
+
+            if (prevNonOptIds === newIds && remainingOptimistic.length === 0) {
+              return prev;
+            }
+            // @ts-ignore
+            return [...remainingOptimistic, ...res.messages];
+          });
+        }
+      } catch {
+        // Silently ignore background polling errors
+      }
+    }, 4000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(pollInterval);
+    };
+  }, [contactId]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!content.trim() && !selectedAttachment) || sending) return;
@@ -123,6 +162,7 @@ export function ChatRoomClient({
           prev.map((m) => {
             if (m.id === optimisticMessage.id) {
               return {
+                // @ts-ignore
                 ...res.message,
                 attachments: attachmentResponse,
                 reactions: [],

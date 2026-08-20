@@ -7,9 +7,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { PublicProfile } from "@/lib/mock-profiles";
-
-export function ProfileCard({ profile }: { profile: PublicProfile }) {
+export function ProfileCard({ profile }: { profile: any }) {
   return (
     <div
       data-testid={`profile-card-${profile.id}`}

@@ -17,11 +17,9 @@ export default async function OnboardingPage() {
   const userId = (session.user as any).id;
 
   const result = await container.services.profileService.getProfileByUserId(userId);
-  if (!result.success) {
-    redirect("/login");
-  }
-
-  const profile = result.data;
+  // If profile is not found, render onboarding with null so the user can create one.
+  // Do NOT redirect to /login — that causes an infinite redirect loop
+  const profile = result.success ? result.data : null;
 
   return (
     <div className="flex-grow flex flex-col bg-gradient-to-b from-rose-50/40 via-slate-50 to-white text-slate-900 min-h-screen">

@@ -86,3 +86,43 @@ export function derivePublicId(createdAtMs: number, counter: number): string {
   const padded = mixed.toString().padStart(DIGITS, "0");
   return `${IM_PREFIX}${padded}`;
 }
+
+/**
+ * Get a consistent public Profile ID for display in both User and Admin interfaces.
+ * Ensures the exact same ID is used everywhere:
+ * 1. Checks user.publicId
+ * 2. Checks profile.publicId
+ * 3. Falls back to deterministic IM + 8-char sanitized UUID
+ */
+export function getDisplayProfileId(
+  userOrProfile?: any,
+  fallbackUserId?: string | null
+): string {
+  if (!userOrProfile && !fallbackUserId) return "IM00000000";
+
+  // Check direct publicId field on user/profile object
+  if (typeof userOrProfile === "string" && userOrProfile.startsWith("IM")) {
+    return userOrProfile;
+  }
+  if (userOrProfile?.publicId && typeof userOrProfile.publicId === "string") {
+    return userOrProfile.publicId;
+  }
+  if (userOrProfile?.user?.publicId && typeof userOrProfile.user.publicId === "string") {
+    return userOrProfile.user.publicId;
+  }
+
+  // Fallback to user ID or object ID
+  const idToUse =
+    userOrProfile?.userId ||
+    userOrProfile?.user?.id ||
+    fallbackUserId ||
+    userOrProfile?.id;
+
+  if (idToUse && typeof idToUse === "string") {
+    const clean = idToUse.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    return `${IM_PREFIX}${clean.slice(0, DIGITS).padEnd(DIGITS, "0")}`;
+  }
+
+  return "IM00000000";
+}
+

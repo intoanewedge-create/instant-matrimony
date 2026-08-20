@@ -23,6 +23,7 @@ import {
   Trash2,
   ShieldAlert,
 } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminProfileDetailActions({ profile }: { profile: any }) {
   const router = useRouter();
@@ -239,12 +240,8 @@ export function AdminProfileDetailActions({ profile }: { profile: any }) {
 
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Target Member:</span>
-                  <span className="font-semibold text-slate-900">{profile.user?.publicId || `IM${profile.userId?.slice(0, 8)}`}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Profile ID:</span>
-                  <span className="font-mono text-slate-700">{profile.id}</span>
+                  <span className="text-slate-500">Target Member Profile ID:</span>
+                  <span className="font-mono font-bold text-slate-900">{getDisplayProfileId(profile.user, profile.userId)}</span>
                 </div>
               </div>
 

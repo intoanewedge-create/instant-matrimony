@@ -63,9 +63,16 @@ export function MembershipClient({
           return;
         }
       }
+      if (activeMembership?.planId) {
+        const activePlan = plans.find((p) => p.id === activeMembership.planId);
+        if (activePlan) {
+          setSelectedPlan(activePlan);
+          return;
+        }
+      }
       setSelectedPlan((current: any) => current || plans[0]);
     }
-  }, [plans]);
+  }, [plans, activeMembership]);
 
   const handleCopyNumber = () => {
     const rawDigits = paymentNumber.replace(/[^0-9+]/g, "");
@@ -331,7 +338,41 @@ export function MembershipClient({
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            {success ? (
+            {activeMembership?.planId === selectedPlan?.id &&
+            activeMembership?.status === "ACTIVE" &&
+            new Date(activeMembership.endDate) > new Date() ? (
+              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-center space-y-4 shadow-sm">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+                <h3 className="text-xl font-bold text-emerald-900">Your {selectedPlan?.name} Subscription is Active!</h3>
+                <p className="text-xs text-emerald-800 max-w-md mx-auto leading-relaxed">
+                  You are currently enjoying full active benefits of this tier until {formatDate(activeMembership.endDate)}.
+                </p>
+                <div className="pt-2 flex justify-center gap-3">
+                  {selectedPlan?.price >= 100000 || selectedPlan?.name?.toLowerCase().includes("concierge") ? (
+                    <Button
+                      onClick={() => router.push("/dashboard/concierge")}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 rounded-xl"
+                    >
+                      Open VIP Concierge Workspace
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => router.push("/dashboard")}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 rounded-xl"
+                    >
+                      Go to Dashboard
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/dashboard/billing")}
+                    className="border-emerald-300 text-emerald-800 hover:bg-emerald-100/50 rounded-xl text-xs"
+                  >
+                    View Billing History
+                  </Button>
+                </div>
+              </div>
+            ) : success ? (
               <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-center space-y-4 shadow-sm">
                 <Check className="w-12 h-12 text-emerald-600 mx-auto animate-bounce" />
                 <h3 className="text-xl font-bold text-emerald-900">Payment Submitted for Admin Verification!</h3>

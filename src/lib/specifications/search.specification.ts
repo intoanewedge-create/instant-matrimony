@@ -37,6 +37,35 @@ export class SearchSpecification {
     category?: string;
     categoryTargetUserIds?: string[] | null;
   }) {
+    // Filter by Profile ID (publicId IM########, Profile UUID, or User ID)
+    // When Search by Profile ID is active, return ONLY that exact profile without demographic filters
+    if (
+      params.profilePublicId &&
+      params.profilePublicId.trim().length > 0
+    ) {
+      const rawId = params.profilePublicId.trim();
+      return {
+        AND: [
+          { userId: { not: params.viewerId } },
+          ...(params.blockedUserIds && params.blockedUserIds.length > 0 ? [{ userId: { notIn: params.blockedUserIds } }] : []),
+          {
+            OR: [
+              { id: rawId },
+              { userId: rawId },
+              {
+                user: {
+                  publicId: {
+                    equals: rawId.toUpperCase(),
+                    mode: "insensitive",
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      };
+    }
+
     const andClauses: any[] = [
       ProfileSpecification.approvedOnly(),
       { userId: { not: params.viewerId } },
@@ -46,18 +75,31 @@ export class SearchSpecification {
       andClauses.push({ userId: { notIn: params.blockedUserIds } });
     }
 
-    if (params.categoryTargetUserIds !== undefined && params.categoryTargetUserIds !== null) {
-      andClauses.push({ userId: { in: params.categoryTargetUserIds } });
+    if (
+      params.categoryTargetUserIds !== undefined &&
+      params.categoryTargetUserIds !== null
+    ) {
+      andClauses.push({
+        userId: { in: params.categoryTargetUserIds },
+      });
     }
 
-    if (params.category === "pref_nri") {
+    if (
+      params.category === "pref_nri" ||
+      params.category === "nri" ||
+      params.category === "nri_matches"
+    ) {
       andClauses.push({
         country: {
           notIn: ["India", "INDIA", "in", "In", "IN", "india"],
           not: null,
         },
       });
-    } else if (params.category === "with_horoscope") {
+    } else if (
+      params.category === "with_horoscope" ||
+      params.category === "horoscope_matches" ||
+      params.category === "matches_with_horoscope"
+    ) {
       andClauses.push({
         horoscope: {
           not: null,
@@ -68,9 +110,25 @@ export class SearchSpecification {
           not: "",
         },
       });
+    } else if (
+      params.category === "with_photos" ||
+      params.category === "matches_with_photos"
+    ) {
+      andClauses.push({
+        photos: {
+          some: {
+            deletedAt: null,
+          },
+        },
+      });
+    } else if (params.category === "star_matches") {
+      andClauses.push({
+        id: {
+          in: [],
+        },
+      });
     }
 
-    // Filter by public Profile ID (IM########)
     if (params.profilePublicId && params.profilePublicId.trim().length > 0) {
       const cleanId = params.profilePublicId.trim();
       const idWithIM = cleanId.toUpperCase().startsWith("IM")
@@ -90,89 +148,171 @@ export class SearchSpecification {
       andClauses.push(ProfileSpecification.filterByGender(params.gender));
     }
 
-    const ageFilter = ProfileSpecification.filterByAgeRange(params.minAge, params.maxAge);
+    const ageFilter = ProfileSpecification.filterByAgeRange(
+      params.minAge,
+      params.maxAge
+    );
+
     if (ageFilter.dateOfBirth) {
       andClauses.push(ageFilter);
     }
 
-    const heightFilter = ProfileSpecification.filterByHeightRange(params.minHeight, params.maxHeight);
+    const heightFilter =
+      ProfileSpecification.filterByHeightRange(
+        params.minHeight,
+        params.maxHeight
+      );
+
     if (heightFilter.height) {
       andClauses.push(heightFilter);
     }
 
-    const weightFilter = ProfileSpecification.filterByWeightRange(params.minWeight, params.maxWeight);
+    const weightFilter =
+      ProfileSpecification.filterByWeightRange(
+        params.minWeight,
+        params.maxWeight
+      );
+
     if (weightFilter.weight) {
       andClauses.push(weightFilter);
     }
 
     if (params.maritalStatus) {
-      andClauses.push({ maritalStatus: { equals: params.maritalStatus, mode: "insensitive" } });
+      andClauses.push({
+        maritalStatus: {
+          equals: params.maritalStatus,
+          mode: "insensitive",
+        },
+      });
     }
 
-    const religionFilter = ProfileSpecification.filterByReligionCaste(params.religion, params.caste);
+    const religionFilter =
+      ProfileSpecification.filterByReligionCaste(
+        params.religion,
+        params.caste
+      );
+
     if (Object.keys(religionFilter).length > 0) {
       andClauses.push(religionFilter);
     }
 
-    const subCasteGothramFilter = ProfileSpecification.filterBySubCasteGothram(params.subCaste, params.gothram);
+    const subCasteGothramFilter =
+      ProfileSpecification.filterBySubCasteGothram(
+        params.subCaste,
+        params.gothram
+      );
+
     if (Object.keys(subCasteGothramFilter).length > 0) {
       andClauses.push(subCasteGothramFilter);
     }
 
-    const mtFilter = ProfileSpecification.filterByMotherTongue(params.motherTongue);
+    const mtFilter =
+      ProfileSpecification.filterByMotherTongue(
+        params.motherTongue
+      );
+
     if (Object.keys(mtFilter).length > 0) {
       andClauses.push(mtFilter);
     }
 
-    const eduFilter = ProfileSpecification.filterByEducation(params.education);
+    const eduFilter =
+      ProfileSpecification.filterByEducation(
+        params.education
+      );
+
     if (Object.keys(eduFilter).length > 0) {
       andClauses.push(eduFilter);
     }
 
-    const occFilter = ProfileSpecification.filterByOccupation(params.occupation);
+    const occFilter =
+      ProfileSpecification.filterByOccupation(
+        params.occupation
+      );
+
     if (Object.keys(occFilter).length > 0) {
       andClauses.push(occFilter);
     }
 
-    const incomeFilter = ProfileSpecification.filterByIncomeRange(params.minIncome, params.maxIncome);
+    const incomeFilter =
+      ProfileSpecification.filterByIncomeRange(
+        params.minIncome,
+        params.maxIncome
+      );
+
     if (incomeFilter.income) {
       andClauses.push(incomeFilter);
     }
 
-    const locationFilter = ProfileSpecification.filterByLocation(params.city, params.state, params.country);
+    const locationFilter =
+      ProfileSpecification.filterByLocation(
+        params.city,
+        params.state,
+        params.country
+      );
+
     if (params.district) {
-      locationFilter.district = { equals: params.district, mode: "insensitive" };
+      locationFilter.district = {
+        equals: params.district,
+        mode: "insensitive",
+      };
     }
+
     if (Object.keys(locationFilter).length > 0) {
       andClauses.push(locationFilter);
     }
 
-    const lifestyleFilter = ProfileSpecification.filterByLifestyle(params.smoking, params.drinking, params.food);
+    const lifestyleFilter =
+      ProfileSpecification.filterByLifestyle(
+        params.smoking,
+        params.drinking,
+        params.food
+      );
+
     if (Object.keys(lifestyleFilter).length > 0) {
       andClauses.push(lifestyleFilter);
     }
 
-    const verifFilter = ProfileSpecification.filterByVerification(params.isVerified);
+    const verifFilter =
+      ProfileSpecification.filterByVerification(
+        params.isVerified
+      );
+
     if (Object.keys(verifFilter).length > 0) {
       andClauses.push(verifFilter);
     }
 
-    const photoFilter = ProfileSpecification.filterByHasPhoto(params.hasPhoto);
+    const photoFilter =
+      ProfileSpecification.filterByHasPhoto(
+        params.hasPhoto
+      );
+
     if (Object.keys(photoFilter).length > 0) {
       andClauses.push(photoFilter);
     }
 
-    const recentJoinedFilter = ProfileSpecification.filterByRecentlyJoined(params.recentlyJoined);
+    const recentJoinedFilter =
+      ProfileSpecification.filterByRecentlyJoined(
+        params.recentlyJoined
+      );
+
     if (Object.keys(recentJoinedFilter).length > 0) {
       andClauses.push(recentJoinedFilter);
     }
 
-    const recentActiveFilter = ProfileSpecification.filterByRecentlyActive(params.recentlyActive);
+    const recentActiveFilter =
+      ProfileSpecification.filterByRecentlyActive(
+        params.recentlyActive
+      );
+
     if (Object.keys(recentActiveFilter).length > 0) {
       andClauses.push(recentActiveFilter);
     }
 
-    const compFilter = ProfileSpecification.filterByCompletion(params.minCompletion || 20);
+    const compFilter =
+      ProfileSpecification.filterByCompletion(
+        params.minCompletion || 20
+      );
+
     if (compFilter.completionPercent) {
       andClauses.push(compFilter);
     }
@@ -184,6 +324,8 @@ export class SearchSpecification {
       },
     });
 
-    return { AND: andClauses };
+    return {
+      AND: andClauses,
+    };
   }
 }

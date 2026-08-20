@@ -5,9 +5,11 @@ import { useState } from "react";
 import { Heart, Eye, MapPin, ShieldCheck, ChevronRight } from "lucide-react";
 import { sendInterestAction } from "@/lib/actions/interest.actions";
 import { toggleFavoriteAction } from "@/lib/actions/favorite.actions";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 interface RecommendationsSectionProps {
   suggestions: any[];
+  userGender?: string;
 }
 
 export function RecommendationsSection({ suggestions }: RecommendationsSectionProps) {
@@ -108,7 +110,7 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
               const isVerified = s?.user?.identityVerification?.status === "APPROVED";
               const photos: any[] = p?.photos || [];
               const mainPhoto = photos.find((ph: any) => ph.isMain)?.url || photos[0]?.url;
-              const publicId = p?.publicId || null;
+              const publicId = getDisplayProfileId(p?.user || s?.user || p, userId);
 
               return (
                 <div
@@ -161,6 +163,10 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
 
                   {/* Info */}
                   <div className="p-3 space-y-1">
+                    {publicId && (
+                      <p className="text-[11px] font-mono font-bold" style={{ color: "#00A76F" }}>Profile ID: {publicId}</p>
+                    )}
+
                     <div className="flex items-center gap-1">
                       <h3 className="text-sm font-bold truncate" style={{ color: "#1F2937" }}>{name}</h3>
                       {isVerified && (
@@ -179,10 +185,6 @@ export function RecommendationsSection({ suggestions }: RecommendationsSectionPr
                         <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" />
                         {city}{city && state ? ", " : ""}{state}
                       </p>
-                    )}
-
-                    {publicId && (
-                      <p className="text-xs font-mono font-bold" style={{ color: "#00A76F" }}>{publicId}</p>
                     )}
                   </div>
 

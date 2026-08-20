@@ -128,59 +128,119 @@ export function UserConciergeClient({ caseData }: { caseData: any }) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Timeline Updates & Send Note */}
+        {/* Left 2 Cols: Two-Way Chat Stream & Manager Updates */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Post Note Form */}
-          <Card className="border border-slate-200 bg-white p-6 space-y-3 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Send className="w-4 h-4 text-rose-600" /> Send Note to Relationship Manager
-            </h3>
-            {errorMsg && <p className="text-xs font-semibold text-rose-600 bg-rose-50 p-2 rounded-lg">{errorMsg}</p>}
-            <form onSubmit={handleSendNote} className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Type your question or preferences update for your manager..."
-                value={noteContent}
-                onChange={(e) => setNoteContent(e.target.value)}
-                disabled={submitting}
-                className="text-xs flex-1 border-slate-200 focus:border-rose-500"
-              />
-              <Button
-                type="submit"
-                disabled={submitting || !noteContent.trim()}
-                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shrink-0"
-              >
-                {submitting ? "Sending..." : "Send Note"}
-              </Button>
-            </form>
+          {/* Two-Way Chat Conversation Card */}
+          <Card className="border border-slate-200 bg-white shadow-sm rounded-3xl overflow-hidden flex flex-col">
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-300 font-bold">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    Direct Chat with Relationship Manager
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    {caseData.assignedAdmin?.name || "Senior Advisor"} (Assigned Advisor)
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Case
+              </span>
+            </div>
+
+            {/* Message Stream */}
+            <div className="p-4 sm:p-6 space-y-4 max-h-[420px] overflow-y-auto bg-slate-50/50">
+              {updates.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  <p>No messages in this concierge case yet.</p>
+                  <p className="mt-1 text-[11px]">Send a note below to begin direct communication with your Relationship Manager.</p>
+                </div>
+              ) : (
+                [...updates].reverse().map((u: any) => {
+                  const isUser = u.authorId === caseData.userId;
+                  return (
+                    <div
+                      key={u.id}
+                      className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-slate-500 font-medium">
+                        <span>{isUser ? "You" : caseData.assignedAdmin?.name || "Relationship Manager"}</span>
+                        <span>•</span>
+                        <span className="font-mono">{new Date(u.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(u.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div
+                        className={`max-w-[85%] sm:max-w-[75%] p-3.5 rounded-2xl text-xs leading-relaxed shadow-xs whitespace-pre-wrap ${
+                          isUser
+                            ? "bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-xs"
+                            : "bg-white border border-slate-200 text-slate-800 rounded-tl-xs"
+                        }`}
+                      >
+                        {u.content}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Message Input Box */}
+            <div className="p-4 bg-white border-t border-slate-200">
+              {errorMsg && (
+                <p className="text-xs font-semibold text-rose-600 bg-rose-50 p-2 rounded-xl mb-3 border border-rose-200">
+                  {errorMsg}
+                </p>
+              )}
+              <form onSubmit={handleSendNote} className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Type your question or preferences update for your manager..."
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  disabled={submitting}
+                  className="text-xs flex-1 border-slate-200 focus:border-rose-500 rounded-xl"
+                />
+                <Button
+                  type="submit"
+                  disabled={submitting || !noteContent.trim()}
+                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shrink-0 rounded-xl px-4"
+                >
+                  <Send className="w-3.5 h-3.5 mr-1.5" />
+                  {submitting ? "Sending..." : "Send Note"}
+                </Button>
+              </form>
+            </div>
           </Card>
 
-          <Card className="border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+          {/* Manager Activity & Progress Updates */}
+          <Card className="border border-slate-200 bg-white p-6 space-y-4 shadow-sm rounded-3xl">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-4 h-4 text-rose-600" /> Manager Activity & Progress Updates
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {updates.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">No updates published yet.</p>
+                <p className="text-xs text-slate-400 italic">No progress logs recorded yet.</p>
               ) : (
                 updates.map((u: any) => (
-                  <div key={u.id} className="p-4 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
+                  <div key={u.id} className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-1 text-xs">
                     <div className="flex justify-between items-center text-[10px] text-slate-500">
                       <span className="font-bold text-rose-600 flex items-center gap-1">
                         {u.authorId === caseData.userId ? (
                           <>
-                            <UserCheck className="w-3.5 h-3.5 text-blue-600" /> Your Note
+                            <UserCheck className="w-3.5 h-3.5 text-blue-600" /> Client Note Logged
                           </>
                         ) : (
                           <>
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Relationship Manager Update
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Manager Milestone Update
                           </>
                         )}
                       </span>
-                      <span>{new Date(u.createdAt).toLocaleString()}</span>
+                      <span className="font-mono">{new Date(u.createdAt).toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-slate-700 leading-relaxed">{u.content}</p>
+                    <p className="text-slate-700 leading-relaxed pt-0.5">{u.content}</p>
                   </div>
                 ))
               )}

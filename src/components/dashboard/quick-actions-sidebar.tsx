@@ -47,14 +47,6 @@ export function QuickActionsSidebar() {
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#6B7280" }}>
             Account Management
           </span>
-          <Link
-            href="/login"
-            className="flex items-center gap-1 text-xs font-semibold hover:underline"
-            style={{ color: "#00A76F" }}
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Switch account</span>
-          </Link>
         </div>
 
         <div className="p-2 space-y-1">

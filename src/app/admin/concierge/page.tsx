@@ -23,8 +23,8 @@ export default async function AdminConciergePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">VIP Concierge Case Management</h1>
-        <p className="text-xs text-slate-400 mt-1">Dedicated Relationship Manager matchmaking system for Plan 2 VIP Concierge subscribers.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">VIP Concierge Case Management</h1>
+        <p className="text-xs text-slate-600 mt-1">Dedicated Relationship Manager matchmaking system for Plan 2 VIP Concierge subscribers.</p>
       </div>
 
       <AdminConciergeClient

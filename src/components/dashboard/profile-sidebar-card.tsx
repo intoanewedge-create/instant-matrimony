@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Camera, Copy, CheckCheck, Star, Crown } from "lucide-react";
 
@@ -56,7 +57,7 @@ export function ProfileSidebarCard({
             style={{ background: photoUrl ? undefined : "linear-gradient(135deg, #00A76F 0%, #008F60 100%)" }}
           >
             {photoUrl ? (
-              <img src={photoUrl} alt={`${name}'s photo`} className="w-full h-full object-cover" />
+              <Image src={photoUrl} alt={`${name}'s photo`} fill className="object-cover" />
             ) : (
               <span>{initials}</span>
             )}
@@ -69,27 +70,19 @@ export function ProfileSidebarCard({
           </span>
         </Link>
 
-        {/* Name */}
-        <h2 className="mt-3 text-base font-bold text-center" style={{ color: "#1F2937" }}>
-          {name}
-        </h2>
-
-        {/* Brand line */}
-        <p className="text-xs font-medium" style={{ color: "#6B7280" }}>InstantMatrimony</p>
-
-        {/* Profile ID */}
+        {/* Profile ID directly below photo */}
         {publicId ? (
-          <div className="mt-2 flex items-center gap-1.5">
+          <div className="mt-2.5 flex items-center gap-1.5">
             <span
               className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full"
               style={{ backgroundColor: "#E6F4EA", color: "#00A76F", border: "1px solid #A7F3D0" }}
             >
-              {publicId}
+              Profile ID: {publicId}
             </span>
             <button
               onClick={handleCopy}
               aria-label={`Copy Profile ID ${publicId}`}
-              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
             >
               {copied ? (
                 <CheckCheck className="w-3.5 h-3.5" style={{ color: "#16A34A" }} />
@@ -99,8 +92,16 @@ export function ProfileSidebarCard({
             </button>
           </div>
         ) : (
-          <div className="mt-2 h-7" />
+          <div className="mt-2.5 h-6" />
         )}
+
+        {/* Name */}
+        <h2 className="mt-2 text-base font-bold text-center" style={{ color: "#1F2937" }}>
+          {name}
+        </h2>
+
+        {/* Brand line */}
+        <p className="text-xs font-medium" style={{ color: "#6B7280" }}>InstantMatrimony</p>
 
         {/* Membership badge */}
         <span

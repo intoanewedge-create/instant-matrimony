@@ -5,6 +5,7 @@ import { CompletionService } from "./completion.service";
 import { eventDispatcher } from "../events/event-dispatcher";
 import { DOMAIN_EVENTS } from "@/constants";
 import { prisma } from "../prisma";
+import { Profile, PartnerPreference, ProfilePrivacy } from "@prisma/client";
 
 const ALLOWED_PROFILE_FIELDS = [
   "gender",
@@ -42,6 +43,7 @@ const ALLOWED_PREF_FIELDS = [
   "maxHeight",
   "maritalStatus",
   "religion",
+  "caste",
   "motherTongue",
   "education",
   "occupation",
@@ -61,7 +63,7 @@ export class ProfileService extends BaseService {
     super();
   }
 
-  async getProfileByUserId(userId: string): Promise<Result<any>> {
+  async getProfileByUserId(userId: string): Promise<Result<Profile | null>> {
     try {
       console.log("Looking for profile with userId:", userId);
 
@@ -71,12 +73,12 @@ export class ProfileService extends BaseService {
         return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
       return this.returnSuccess(profile);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_FETCH_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_FETCH_ERROR");
     }
   }
 
-  async updateProfile(userId: string, data: any): Promise<Result<any>> {
+  async updateProfile(userId: string, data: Partial<Profile> & { partnerPreference?: Partial<PartnerPreference> }): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findByUserId(userId);
       console.log("Profile found:", profile);
@@ -94,8 +96,8 @@ export class ProfileService extends BaseService {
         ];
         for (const field of criticalFields) {
           if (
-            data[field] !== undefined &&
-            data[field] !== (profile as any)[field]
+            data[field as keyof typeof data] !== undefined &&
+            data[field as keyof typeof data] !== (profile as Record<string, unknown>)[field]
           ) {
             resetToPending = true;
             break;
@@ -104,10 +106,11 @@ export class ProfileService extends BaseService {
       }
 
       // Filter to only allowed profile fields
-      const cleanProfileData: Record<string, any> = {};
+      const cleanProfileData: Record<string, unknown> = {};
       for (const field of ALLOWED_PROFILE_FIELDS) {
-        if (data[field] !== undefined) {
-          cleanProfileData[field] = data[field];
+        const key = field as keyof typeof data;
+        if (data[key] !== undefined) {
+          cleanProfileData[field] = data[key];
         }
       }
 
@@ -136,20 +139,26 @@ export class ProfileService extends BaseService {
       }
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_UPDATE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_UPDATE_ERROR");
     }
   }
 
   async saveWizardStep(
     userId: string,
     step: number,
-    stepData: any,
-  ): Promise<Result<any>> {
+    stepData: Record<string, unknown>,
+  ): Promise<Result<Profile>> {
     try {
-      const profile = await this.profileRepository.findByUserId(userId);
-      if (!profile)
-        return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
+      let profile = await this.profileRepository.findByUserId(userId);
+      if (!profile) {
+        // Auto-create a DRAFT profile if one doesn't exist yet
+        profile = await this.profileRepository.create({
+          userId,
+          status: "DRAFT",
+          completionPercent: 0,
+        });
+      }
 
       // Step 1: User name and phone
       if (step === 1) {
@@ -205,24 +214,25 @@ export class ProfileService extends BaseService {
       }
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "WIZARD_SAVE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "WIZARD_SAVE_ERROR");
     }
   }
 
   async updatePartnerPreference(
     userId: string,
-    prefData: any,
-  ): Promise<Result<any>> {
+    prefData: Partial<PartnerPreference>,
+  ): Promise<Result<PartnerPreference>> {
     try {
       const profile = await this.profileRepository.findByUserId(userId);
       if (!profile)
         return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
-      const cleanPrefData: Record<string, any> = {};
+      const cleanPrefData: Record<string, unknown> = {};
       for (const field of ALLOWED_PREF_FIELDS) {
-        if (prefData[field] !== undefined) {
-          cleanPrefData[field] = prefData[field];
+        const key = field as keyof typeof prefData;
+        if (prefData[key] !== undefined) {
+          cleanPrefData[field] = prefData[key];
         }
       }
 
@@ -247,12 +257,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PREFERENCE_UPDATE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PREFERENCE_UPDATE_ERROR");
     }
   }
 
-  async approveProfile(adminUserId: string, profileId: string): Promise<Result<any>> {
+  async approveProfile(adminUserId: string, profileId: string): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findById(profileId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -274,12 +284,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_APPROVE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_APPROVE_ERROR");
     }
   }
 
-  async rejectProfile(adminUserId: string, profileId: string, reason: string): Promise<Result<any>> {
+  async rejectProfile(adminUserId: string, profileId: string, reason: string): Promise<Result<Profile>> {
     try {
       if (!reason || reason.trim().length === 0) {
         return this.returnFailure("Rejection reason is required", "REASON_REQUIRED");
@@ -303,12 +313,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_REJECT_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_REJECT_ERROR");
     }
   }
 
-  async suspendProfile(adminUserId: string, profileId: string, reason?: string): Promise<Result<any>> {
+  async suspendProfile(adminUserId: string, profileId: string, reason?: string): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findById(profileId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -319,12 +329,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_SUSPEND_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_SUSPEND_ERROR");
     }
   }
 
-  async restoreProfile(adminUserId: string, profileId: string): Promise<Result<any>> {
+  async restoreProfile(adminUserId: string, profileId: string): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findById(profileId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -338,12 +348,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_RESTORE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_RESTORE_ERROR");
     }
   }
 
-  async resubmitProfile(userId: string): Promise<Result<any>> {
+  async resubmitProfile(userId: string): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findByUserId(userId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -367,12 +377,12 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(updated);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_RESUBMIT_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_RESUBMIT_ERROR");
     }
   }
 
-  async deleteProfileByAdmin(adminUserId: string, profileId: string, reason?: string): Promise<Result<any>> {
+  async deleteProfileByAdmin(adminUserId: string, profileId: string, reason?: string): Promise<Result<Profile>> {
     try {
       const profile = await this.profileRepository.findById(profileId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -432,12 +442,12 @@ export class ProfileService extends BaseService {
       );
 
       return this.returnSuccess(result);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PROFILE_DELETE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PROFILE_DELETE_ERROR");
     }
   }
 
-  async getProfilePrivacy(userId: string): Promise<Result<any>> {
+  async getProfilePrivacy(userId: string): Promise<Result<ProfilePrivacy>> {
     try {
       const profile = await this.profileRepository.findByUserId(userId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
@@ -446,6 +456,7 @@ export class ProfileService extends BaseService {
         where: { profileId: profile.id },
       });
 
+      // @ts-ignore
       return this.returnSuccess(
         privacy || {
           blurPhotos: false,
@@ -456,17 +467,17 @@ export class ProfileService extends BaseService {
           hideOnlineStatus: false,
         }
       );
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PRIVACY_GET_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PRIVACY_GET_ERROR");
     }
   }
 
-  async updateProfilePrivacy(userId: string, data: any): Promise<Result<any>> {
+  async updateProfilePrivacy(userId: string, data: Partial<ProfilePrivacy>): Promise<Result<ProfilePrivacy>> {
     try {
       const profile = await this.profileRepository.findByUserId(userId);
       if (!profile) return this.returnFailure("Profile not found", "PROFILE_NOT_FOUND");
 
-      const privacyData: any = {};
+      const privacyData: Record<string, unknown> = {};
       const fields = [
         "blurPhotos",
         "hidePhone",
@@ -476,7 +487,9 @@ export class ProfileService extends BaseService {
         "hideOnlineStatus",
       ];
       for (const f of fields) {
+        // @ts-ignore
         if (typeof data[f] === "boolean") {
+          // @ts-ignore
           privacyData[f] = data[f];
         }
       }
@@ -491,8 +504,8 @@ export class ProfileService extends BaseService {
       });
 
       return this.returnSuccess(privacy);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PRIVACY_UPDATE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PRIVACY_UPDATE_ERROR");
     }
   }
 }

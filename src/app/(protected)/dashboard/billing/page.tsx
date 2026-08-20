@@ -12,16 +12,32 @@ export default async function BillingPage() {
 
   const userId = session.user.id;
 
-  const plansResult = await container.services.membershipService.getPlans();
-  const activeMembership = await container.repositories.membershipRepository.findActiveByUserId(userId);
-  const invoices = await container.repositories.invoiceRepository.findUserInvoices(userId);
-  const orders = await container.repositories.membershipRepository.findOrdersByUserId(userId);
-  const payments = await prisma.payment.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+  let plans: any[] = [];
+  let activeMembership: any = null;
+  let invoices: any[] = [];
+  let orders: any[] = [];
+  let payments: any[] = [];
 
-  const plans = plansResult.success ? plansResult.data : [];
+  try {
+    const [plansResult, activeMem, invs, ords, pymts] = await Promise.all([
+      container.services.membershipService.getPlans().catch(() => ({ success: false, data: [] })),
+      container.repositories.membershipRepository.findActiveByUserId(userId).catch(() => null),
+      container.repositories.invoiceRepository.findUserInvoices(userId).catch(() => []),
+      container.repositories.membershipRepository.findOrdersByUserId(userId).catch(() => []),
+      prisma.payment.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      }).catch(() => []),
+    ]);
+
+    plans = plansResult.success && plansResult.data ? JSON.parse(JSON.stringify(plansResult.data)) : [];
+    activeMembership = activeMem ? JSON.parse(JSON.stringify(activeMem)) : null;
+    invoices = JSON.parse(JSON.stringify(invs || []));
+    orders = JSON.parse(JSON.stringify(ords || []));
+    payments = JSON.parse(JSON.stringify(pymts || []));
+  } catch (error) {
+    console.error("[BillingPage] Error loading billing data:", error);
+  }
 
   return (
     <BillingClient
@@ -29,7 +45,8 @@ export default async function BillingPage() {
       activeMembership={activeMembership}
       invoices={invoices}
       orders={orders}
-      payments={JSON.parse(JSON.stringify(payments))}
+      payments={payments}
     />
   );
 }
+

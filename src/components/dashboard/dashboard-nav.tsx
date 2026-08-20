@@ -320,7 +320,7 @@ export function DashboardNav({
             {/* Notification Dropdown */}
             {notifOpen && (
               <div
-                className="absolute right-1/2 translate-x-1/2 md:translate-x-0 md:right-0 mt-2 w-80 sm:w-96 rounded-2xl border shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2"
+                className="fixed inset-x-2 top-16 sm:inset-x-auto sm:right-0 sm:top-auto sm:absolute mt-2 sm:w-96 max-w-sm sm:max-w-none rounded-2xl border shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 mx-auto"
                 style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
                 role="region"
                 aria-label="Notifications menu"
@@ -620,48 +620,138 @@ export function DashboardNav({
       {/* Mobile Navigation Drawer */}
       {mobileOpen && (
         <nav
-          className="md:hidden border-t animate-in fade-in slide-in-from-top-1"
+          className="md:hidden border-t max-h-[calc(100vh-4rem)] overflow-y-auto animate-in fade-in slide-in-from-top-1"
           style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}
           aria-label="Mobile navigation"
         >
-          <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
-            {navLinks.map(({ href, label, icon: Icon }) => {
-              const active = isActive(href);
-              return (
+          <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+            {/* User Profile Card on Mobile */}
+            <div
+              className="p-3.5 rounded-2xl border flex items-center justify-between"
+              style={{ backgroundColor: "#FAFAFA", borderColor: "#F3F4F6" }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs shrink-0"
+                  style={{ backgroundColor: "#00A76F" }}
+                >
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{userName}</p>
+                  {publicId && (
+                    <p className="text-xs font-mono font-semibold text-emerald-700">
+                      Profile ID: {publicId}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Link
+                href="/dashboard/billing"
+                onClick={() => setMobileOpen(false)}
+                className="shrink-0"
+              >
+                <span
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white shadow-xs"
+                  style={{ backgroundColor: "#FF6B00" }}
+                >
+                  <Crown className="w-3 h-3" />
+                  <span>{isPremium ? planName : "Upgrade"}</span>
+                </span>
+              </Link>
+            </div>
+
+            {/* Primary Navigation Links */}
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3 pb-1">
+                Navigation
+              </p>
+              {navLinks.map(({ href, label, icon: Icon }) => {
+                const active = isActive(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      active
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "hover:bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        className="w-5 h-5"
+                        style={{ color: active ? "#00A76F" : "#6B7280" }}
+                        aria-hidden="true"
+                      />
+                      <span>{label}</span>
+                    </div>
+                    {active && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                    )}
+                  </Link>
+                );
+              })}
+
+              <Link
+                href="/dashboard/concierge"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  pathname.startsWith("/dashboard/concierge")
+                    ? "bg-rose-50 text-rose-700"
+                    : "hover:bg-gray-50 text-gray-700"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Crown
+                    className="w-5 h-5"
+                    style={{
+                      color: pathname.startsWith("/dashboard/concierge")
+                        ? "#E11D48"
+                        : "#6B7280",
+                    }}
+                  />
+                  <span>VIP Concierge</span>
+                </div>
+              </Link>
+            </div>
+
+            {/* Account & Settings Links */}
+            <div className="space-y-1 border-t pt-3" style={{ borderColor: "#F3F4F6" }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3 pb-1">
+                Account & Settings
+              </p>
+              {[
+                { href: "/profile", label: "My Profile", icon: User },
+                { href: "/settings", label: "Account Settings", icon: Settings },
+                { href: "/dashboard/billing", label: "Manage Plan & Invoices", icon: CreditCard },
+              ].map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    active
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "hover:bg-gray-50 text-gray-700"
-                  }`}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <Icon
-                    className="w-5 h-5"
-                    style={{ color: active ? "#00A76F" : "#6B7280" }}
-                    aria-hidden="true"
-                  />
-                  {label}
+                  <Icon className="w-5 h-5 text-gray-400" />
+                  <span>{label}</span>
                 </Link>
-              );
-            })}
+              ))}
 
-            {isAdmin && (
-              <Link
-                href="/admin"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors"
-              >
-                <Shield className="w-5 h-5" /> Admin Panel
-              </Link>
-            )}
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors"
+                >
+                  <Shield className="w-5 h-5" /> Admin Management
+                </Link>
+              )}
+            </div>
 
-            <div
-              className="border-t pt-3 mt-2"
-              style={{ borderColor: "#F3F4F6" }}
-            >
+            {/* Logout Action */}
+            <div className="border-t pt-3" style={{ borderColor: "#F3F4F6" }}>
               <form action={signOutAction}>
                 <button
                   type="submit"

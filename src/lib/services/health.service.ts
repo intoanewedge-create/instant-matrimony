@@ -1,8 +1,7 @@
 import { BaseService } from "./base.service";
 import { prisma } from "../prisma";
 import { RedisCacheProvider } from "../cache/redis-cache-provider";
-import { MockRealtimeProvider } from "../realtime/mock-realtime-provider";
-import { MockNotificationProvider } from "../notifications/providers/mock-notification-provider";
+
 import { PostgresSearchProvider } from "../search/postgres-search-provider";
 import { SecretProvider } from "../secrets/secret-provider";
 import { logger } from "../logger";
@@ -20,8 +19,7 @@ export interface HealthReport {
  */
 export class HealthService extends BaseService {
   private redisCache = new RedisCacheProvider();
-  private realtime = new MockRealtimeProvider();
-  private notifier = new MockNotificationProvider();
+
   private search = new PostgresSearchProvider();
   private secrets = new SecretProvider();
 
@@ -56,23 +54,7 @@ export class HealthService extends BaseService {
       report.status = "DOWN";
     }
 
-    // 3. Realtime Event Bus/Socket Check
-    const rtStart = Date.now();
-    try {
-      const rtHealth = await this.realtime.getHealth();
-      report.components.realtime = { status: rtHealth.status, latencyMs: Date.now() - rtStart };
-    } catch (err: any) {
-      report.components.realtime = { status: "DOWN", latencyMs: Date.now() - rtStart, details: err.message };
-    }
 
-    // 4. Notifications Check
-    const nfStart = Date.now();
-    try {
-      const nfHealth = await this.notifier.getHealth();
-      report.components.notifications = { status: nfHealth.status, latencyMs: Date.now() - nfStart };
-    } catch (err: any) {
-      report.components.notifications = { status: "DOWN", latencyMs: Date.now() - nfStart, details: err.message };
-    }
 
     // 5. Search Check
     const searchStart = Date.now();
@@ -103,8 +85,7 @@ export class HealthService extends BaseService {
       services: {
         database: { status: report.components.database?.status || "DOWN" },
         cache: { status: report.components.cache?.status || "DOWN" },
-        realtime: { status: report.components.realtime?.status || "DOWN" },
-        notifications: { status: report.components.notifications?.status || "DOWN" },
+
         search: { status: report.components.search?.status || "DOWN" },
         secrets: { status: report.components.secrets?.status || "DOWN" }
       }

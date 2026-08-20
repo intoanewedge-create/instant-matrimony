@@ -26,6 +26,7 @@ import {
   Trash2,
   ShieldAlert,
 } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminProfileTable({
   profiles,
@@ -39,7 +40,9 @@ export function AdminProfileTable({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
+    null
+  );
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -49,16 +52,26 @@ export function AdminProfileTable({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     const params = new URLSearchParams();
-    if (currentFilter && currentFilter !== "ALL") params.set("status", currentFilter);
-    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+    if (currentFilter && currentFilter !== "ALL") {
+      params.set("status", currentFilter);
+    }
+
+    if (searchQuery.trim()) {
+      params.set("search", searchQuery.trim());
+    }
+
     router.push(`/admin/profiles?${params.toString()}`);
   };
 
   const handleApprove = (profileId: string) => {
     setErrorMsg(null);
+
     startTransition(async () => {
       const res = await approveProfileAction(profileId);
+
       if (res.success) {
         router.refresh();
       } else {
@@ -79,9 +92,15 @@ export function AdminProfileTable({
       setErrorMsg("Please enter a rejection reason");
       return;
     }
+
     setErrorMsg(null);
+
     startTransition(async () => {
-      const res = await rejectProfileAction(selectedProfileId, rejectionReason);
+      const res = await rejectProfileAction(
+        selectedProfileId,
+        rejectionReason
+      );
+
       if (res.success) {
         setRejectModalOpen(false);
         router.refresh();
@@ -93,8 +112,10 @@ export function AdminProfileTable({
 
   const handleSuspend = (profileId: string) => {
     setErrorMsg(null);
+
     startTransition(async () => {
       const res = await suspendProfileAction(profileId);
+
       if (res.success) {
         router.refresh();
       } else {
@@ -105,8 +126,10 @@ export function AdminProfileTable({
 
   const handleRestore = (profileId: string) => {
     setErrorMsg(null);
+
     startTransition(async () => {
       const res = await restoreProfileAction(profileId);
+
       if (res.success) {
         router.refresh();
       } else {
@@ -124,9 +147,15 @@ export function AdminProfileTable({
 
   const handleConfirmDelete = () => {
     if (!deletingProfile) return;
+
     setErrorMsg(null);
+
     startTransition(async () => {
-      const res = await deleteProfileAction(deletingProfile.id, deleteReason.trim() || undefined);
+      const res = await deleteProfileAction(
+        deletingProfile.id,
+        deleteReason.trim() || undefined
+      );
+
       if (res.success) {
         setDeleteModalOpen(false);
         setDeletingProfile(null);
@@ -142,16 +171,23 @@ export function AdminProfileTable({
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
-            {currentFilter === "ALL" ? "All Platform Profiles" : `${currentFilter} Profiles`}
+            {currentFilter === "ALL"
+              ? "All Platform Profiles"
+              : `${currentFilter} Profiles`}
           </h2>
+
           <p className="text-xs text-slate-500">
             Showing {profiles.length} member profiles.
           </p>
         </div>
 
-        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 max-w-sm w-full">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex items-center gap-2 max-w-sm w-full"
+        >
           <div className="relative w-full">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+
             <Input
               placeholder="Search by name, email, phone, Profile ID (IM...), city..."
               value={searchQuery}
@@ -159,7 +195,13 @@ export function AdminProfileTable({
               className="pl-9 bg-slate-50 border-slate-200 text-xs text-slate-900 placeholder:text-slate-400"
             />
           </div>
-          <Button type="submit" size="sm" variant="outline" className="h-9 border-slate-200 text-slate-700 hover:bg-slate-50">
+
+          <Button
+            type="submit"
+            size="sm"
+            variant="outline"
+            className="h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+          >
             Search
           </Button>
         </form>
@@ -185,41 +227,75 @@ export function AdminProfileTable({
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-slate-100">
             {profiles.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
-                  No profiles found matching the current search or status criteria.
+                <td
+                  colSpan={7}
+                  className="px-6 py-10 text-center text-slate-400"
+                >
+                  No profiles found matching the current search or status
+                  criteria.
                 </td>
               </tr>
             ) : (
               profiles.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                <tr
+                  key={p.id}
+                  className="hover:bg-slate-50/70 transition-colors"
+                >
                   <td className="px-6 py-4">
-                    <span className="inline-block font-mono text-xs font-bold px-2 py-1 rounded-full" style={{ backgroundColor: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3' }}>
-                      {p.user?.publicId || '—'}
+                    <span
+                      className="inline-block font-mono text-xs font-bold px-2 py-1 rounded-full"
+                      style={{
+                        backgroundColor: "#FFF1F2",
+                        color: "#E11D48",
+                        border: "1px solid #FECDD3",
+                      }}
+                    >
+                      {getDisplayProfileId(p.user, p.userId)}
                     </span>
                   </td>
+
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">
-                      {p.user?.publicId ? `${p.user.publicId} — ${p.user.name || "Member"}` : (p.user?.name || "Member")}
+                      {p.user?.name || "Member"}
                     </div>
-                    <div className="text-xs text-slate-500 font-mono">Profile ID — Profile Name</div>
+
+                    <div
+                      className="text-xs text-slate-500 truncate max-w-[200px]"
+                      title={p.user?.email || ""}
+                    >
+                      {p.user?.email || "No email"}
+                    </div>
+
+                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      {p.user?.phone || "No phone"}
+                    </div>
                   </td>
+
                   <td className="px-6 py-4">
                     <div className="text-xs text-slate-700">
                       {p.gender || "N/A"}, {p.religion || "N/A"}
                     </div>
+
                     <div className="text-xs text-slate-500">
-                      {p.caste || "No Caste"} {p.subCaste ? `(${p.subCaste})` : ""}
+                      {p.caste || "No Caste"}{" "}
+                      {p.subCaste ? `(${p.subCaste})` : ""}
                     </div>
                   </td>
+
                   <td className="px-6 py-4 text-xs text-slate-600">
-                    {p.city ? `${p.city}, ${p.state || ""}` : "Not specified"}
+                    {p.city
+                      ? `${p.city}, ${p.state || ""}`
+                      : "Not specified"}
                   </td>
+
                   <td className="px-6 py-4 text-xs text-slate-600">
                     {p.photos?.length || 0} Photos
                   </td>
+
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -231,6 +307,8 @@ export function AdminProfileTable({
                           ? "bg-red-50 text-red-700 border border-red-200"
                           : p.status === "DRAFT"
                           ? "bg-sky-50 text-sky-700 border border-sky-200"
+                          : p.status === "NOT_ONBOARDED"
+                          ? "bg-gray-50 text-gray-700 border border-gray-200"
                           : p.status === "DELETED"
                           ? "bg-zinc-100 text-zinc-600 border border-zinc-200"
                           : "bg-purple-50 text-purple-700 border border-purple-200"
@@ -238,45 +316,58 @@ export function AdminProfileTable({
                     >
                       {p.status}
                     </span>
+
                     {p.status === "REJECTED" && p.rejectionReason && (
-                      <p className="text-[11px] text-red-600 mt-1 max-w-[200px] truncate" title={p.rejectionReason}>
+                      <p
+                        className="text-[11px] text-red-600 mt-1 max-w-[200px] truncate"
+                        title={p.rejectionReason}
+                      >
                         Reason: {p.rejectionReason}
                       </p>
                     )}
                   </td>
+
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/admin/profiles/${p.id}`}
                         className="inline-flex items-center justify-center rounded-lg text-xs font-medium px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                       >
-                        <Eye className="w-4 h-4 mr-1" /> View
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
                       </Link>
 
-                      {p.status !== "APPROVED" && p.status !== "SUSPENDED" && p.status !== "DELETED" && (
-                        <Button
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => handleApprove(p.id)}
-                          className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
-                        </Button>
-                      )}
+                      {p.status !== "APPROVED" &&
+                        p.status !== "SUSPENDED" &&
+                        p.status !== "DELETED" && (
+                          <Button
+                            size="sm"
+                            disabled={isPending}
+                            onClick={() => handleApprove(p.id)}
+                            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                            Approve
+                          </Button>
+                        )}
 
-                      {p.status !== "REJECTED" && p.status !== "SUSPENDED" && p.status !== "DELETED" && (
-                        <Button
-                          size="sm"
-                          disabled={isPending}
-                          variant="outline"
-                          onClick={() => handleOpenRejectModal(p.id)}
-                          className="h-8 border-red-200 text-red-600 hover:bg-red-50 rounded-lg"
-                        >
-                          <XCircle className="w-3.5 h-3.5 mr-1" /> Reject
-                        </Button>
-                      )}
+                      {p.status !== "REJECTED" &&
+                        p.status !== "SUSPENDED" &&
+                        p.status !== "DELETED" && (
+                          <Button
+                            size="sm"
+                            disabled={isPending}
+                            variant="outline"
+                            onClick={() => handleOpenRejectModal(p.id)}
+                            className="h-8 border-red-200 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" />
+                            Reject
+                          </Button>
+                        )}
 
-                      {p.status !== "SUSPENDED" && p.status !== "DELETED" ? (
+                      {p.status !== "SUSPENDED" &&
+                      p.status !== "DELETED" ? (
                         <Button
                           size="sm"
                           disabled={isPending}
@@ -284,7 +375,8 @@ export function AdminProfileTable({
                           onClick={() => handleSuspend(p.id)}
                           className="h-8 text-purple-600 hover:bg-purple-50 rounded-lg"
                         >
-                          <AlertOctagon className="w-3.5 h-3.5 mr-1" /> Suspend
+                          <AlertOctagon className="w-3.5 h-3.5 mr-1" />
+                          Suspend
                         </Button>
                       ) : p.status === "SUSPENDED" ? (
                         <Button
@@ -294,7 +386,8 @@ export function AdminProfileTable({
                           onClick={() => handleRestore(p.id)}
                           className="h-8 border-purple-200 text-purple-700 hover:bg-purple-50 rounded-lg"
                         >
-                          <RotateCcw className="w-3.5 h-3.5 mr-1" /> Restore
+                          <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                          Restore
                         </Button>
                       ) : null}
 
@@ -325,8 +418,10 @@ export function AdminProfileTable({
           <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-red-600" /> Reject Profile
+                <XCircle className="w-5 h-5 text-red-600" />
+                Reject Profile
               </h3>
+
               <button
                 onClick={() => setRejectModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -334,9 +429,12 @@ export function AdminProfileTable({
                 <X className="w-5 h-5" />
               </button>
             </div>
+
             <p className="text-xs text-slate-500">
-              Please enter the explicit rejection reason. This will be displayed on the user's dashboard and emailed to them.
+              Please enter the explicit rejection reason. This will be
+              displayed on the user's dashboard and emailed to them.
             </p>
+
             <div className="space-y-2">
               <Input
                 type="text"
@@ -346,6 +444,7 @@ export function AdminProfileTable({
                 className="border-slate-200 bg-white text-slate-900"
               />
             </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="ghost"
@@ -355,13 +454,16 @@ export function AdminProfileTable({
               >
                 Cancel
               </Button>
+
               <Button
                 disabled={isPending || !rejectionReason.trim()}
                 onClick={handleConfirmReject}
                 size="sm"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
               >
-                {isPending ? <Spinner className="w-4 h-4 mr-2" /> : null}
+                {isPending ? (
+                  <Spinner className="w-4 h-4 mr-2" />
+                ) : null}
                 Confirm Rejection
               </Button>
             </div>
@@ -377,27 +479,44 @@ export function AdminProfileTable({
               <div className="p-2.5 rounded-full bg-red-50 text-red-600 border border-red-200">
                 <ShieldAlert className="w-6 h-6" />
               </div>
+
               <div>
-                <h3 className="text-base font-bold text-slate-900">Soft-Delete Profile</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Admin Security Action</p>
+                <h3 className="text-base font-bold text-slate-900">
+                  Soft-Delete Profile
+                </h3>
+
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Admin Security Action
+                </p>
               </div>
             </div>
 
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Member:</span>
+
                 <span className="font-semibold text-slate-900">
-                  {deletingProfile.user?.publicId ? `${deletingProfile.user.publicId} — ${deletingProfile.user.name || "Member"}` : (deletingProfile.user?.name || "Member")}
+                  {deletingProfile.user?.publicId
+                    ? `${deletingProfile.user.publicId} — ${
+                        deletingProfile.user.name || "Member"
+                      }`
+                    : deletingProfile.user?.name || "Member"}
                 </span>
               </div>
             </div>
 
             <p className="text-xs text-red-700 leading-relaxed bg-red-50 p-3 rounded-xl border border-red-200">
-              ⚠️ <strong>Warning:</strong> Soft-deleting will mark this profile status as DELETED, deactivate the user login account, record an audit event, and immediately exclude them from all discovery, search, and recommendation feeds.
+              ⚠️ <strong>Warning:</strong> Soft-deleting will mark this profile
+              status as DELETED, deactivate the user login account, record an
+              audit event, and immediately exclude them from all discovery,
+              search, and recommendation feeds.
             </p>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700">Deletion Reason / Audit Note</label>
+              <label className="text-xs font-semibold text-slate-700">
+                Deletion Reason / Audit Note
+              </label>
+
               <Input
                 placeholder="e.g. Inappropriate content / User request / Test account cleanup"
                 value={deleteReason}
@@ -409,19 +528,27 @@ export function AdminProfileTable({
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
               <Button
                 variant="ghost"
-                onClick={() => { setDeleteModalOpen(false); setDeletingProfile(null); }}
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setDeletingProfile(null);
+                }}
                 size="sm"
                 className="text-slate-600 hover:text-slate-900"
               >
                 Cancel
               </Button>
+
               <Button
                 disabled={isPending}
                 onClick={handleConfirmDelete}
                 size="sm"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
               >
-                {isPending ? <Spinner className="w-4 h-4 mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                {isPending ? (
+                  <Spinner className="w-4 h-4 mr-2" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
                 Confirm Soft Delete
               </Button>
             </div>

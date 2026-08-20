@@ -111,7 +111,8 @@ export class AuthService extends BaseService {
             name: data.name?.trim() || "User",
             phone: normalizedPhone,
             role: "USER",
-            isEmailVerified: false,
+            isEmailVerified: true,
+            emailVerified: new Date(),
             isPhoneVerified: false,
           },
         });

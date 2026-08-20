@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Image as ImageIcon, User, Briefcase } from "lucide-react";
 import { AdminProfileDetailActions } from "./admin-profile-detail-actions";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export default async function AdminProfileDetailPage({
   params,
@@ -31,6 +32,8 @@ export default async function AdminProfileDetailPage({
     notFound();
   }
 
+  const displayProfileId = getDisplayProfileId(profile.user, profile.userId);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -42,7 +45,7 @@ export default async function AdminProfileDetailPage({
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            Reviewing Profile: <span className="text-rose-600">{profile.user?.publicId || `Profile ID: ${profile.userId.slice(0, 8)}`}</span>
+            Reviewing Profile: <span className="text-rose-600">{displayProfileId}</span>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 profile.status === "APPROVED"
@@ -59,7 +62,7 @@ export default async function AdminProfileDetailPage({
               {profile.status}
             </span>
           </h1>
-          <p className="text-xs text-slate-500">Profile ID: {profile.user?.publicId || profile.userId.slice(0, 8)} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-slate-500">Profile ID: {displayProfileId} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
 

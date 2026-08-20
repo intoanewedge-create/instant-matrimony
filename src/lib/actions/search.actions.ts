@@ -25,10 +25,12 @@ export async function searchMatchesAction(params: {
   }
 
   const filtersVal = params.filters || {};
-  // Enforce server-side gender isolation (MALE viewer -> FEMALE targets only; FEMALE viewer -> MALE targets only)
-  const viewerGender = profileRes.data.gender?.toUpperCase();
-  const targetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "FEMALE";
-  filtersVal.gender = targetGender;
+  // Enforce server-side gender isolation unless searching by direct Profile ID
+  if (!filtersVal.profilePublicId) {
+    const viewerGender = profileRes.data.gender?.toUpperCase();
+    const targetGender = viewerGender === "MALE" ? "FEMALE" : viewerGender === "FEMALE" ? "MALE" : "FEMALE";
+    filtersVal.gender = targetGender;
+  }
 
   const result = searchFilterSchema.safeParse(filtersVal);
   if (!result.success) {

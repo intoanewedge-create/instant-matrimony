@@ -57,18 +57,26 @@ import {
   INCOME_CURRENCIES,
   INCOME_AMOUNTS,
   GOTHRAM_OPTIONS,
+  RASHI_OPTIONS,
+  NAKSHATRA_OPTIONS,
   MOTHER_TONGUE_OPTIONS,
   FAMILY_VALUE_OPTIONS,
   FAMILY_TYPE_OPTIONS,
   FAMILY_STATUS_OPTIONS,
+  FATHER_OCCUPATION_OPTIONS,
+  MOTHER_OCCUPATION_OPTIONS,
+  SIBLINGS_COUNT_OPTIONS,
   INDIAN_STATES,
   MAJOR_COUNTRIES,
+  HOBBIES_CATEGORIES,
 } from "@/lib/constants/options";
 import {
   uploadPhoto,
   deletePhoto,
   setPrimaryPhoto,
 } from "@/lib/actions/media.actions";
+
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 interface ProfilePhoto {
   id: string;
@@ -83,6 +91,7 @@ interface PartnerPreference {
   maxHeight?: number;
   maritalStatus?: string;
   religion?: string;
+  caste?: string;
   motherTongue?: string;
   education?: string;
   occupation?: string;
@@ -256,6 +265,109 @@ export function ProfileClient({
   const [rowSaving, setRowSaving] = useState(false);
   const [activePrefSection, setActivePrefSection] = useState<string>("pref-basic");
 
+  // Parse initial family details (JSON or text)
+  let initialFamilyData: any = {};
+  try {
+    if (profile.familyDetails && profile.familyDetails.startsWith("{")) {
+      initialFamilyData = JSON.parse(profile.familyDetails);
+    }
+  } catch {
+    initialFamilyData = {};
+  }
+
+  // Rashi & Star state
+  const [selectedRashi, setSelectedRashi] = useState<string>(
+    initialFamilyData.rashi || ""
+  );
+  const [selectedStar, setSelectedStar] = useState<string>(
+    initialFamilyData.star || ""
+  );
+
+  // Education "Others" toggle
+  const initialIsCustomEdu =
+    profile.education &&
+    (!EDUCATION_OPTIONS.includes(profile.education) ||
+      profile.education.startsWith("Others - ") ||
+      profile.education === "Others");
+  const [customEducation, setCustomEducation] = useState<string>(
+    initialFamilyData.customEducation ||
+      (profile.education?.startsWith("Others - ")
+        ? profile.education.replace("Others - ", "")
+        : initialIsCustomEdu && profile.education !== "Others"
+        ? profile.education || ""
+        : "")
+  );
+
+  // Occupation "Others" toggle
+  const initialIsCustomOcc =
+    profile.occupation &&
+    (!OCCUPATION_OPTIONS.includes(profile.occupation) ||
+      profile.occupation.startsWith("Others - ") ||
+      profile.occupation === "Others");
+  const [customOccupation, setCustomOccupation] = useState<string>(
+    initialFamilyData.customOccupation ||
+      (profile.occupation?.startsWith("Others - ")
+        ? profile.occupation.replace("Others - ", "")
+        : initialIsCustomOcc && profile.occupation !== "Others"
+        ? profile.occupation || ""
+        : "")
+  );
+
+  // Family Details Dropdowns
+  const [fatherOccupation, setFatherOccupation] = useState<string>(
+    initialFamilyData.fatherOccupation || "- Select -"
+  );
+  const [motherOccupation, setMotherOccupation] = useState<string>(
+    initialFamilyData.motherOccupation || "- Select -"
+  );
+  const [brothersCount, setBrothersCount] = useState<string>(
+    initialFamilyData.brothersCount || "- Select -"
+  );
+  const [brothersMarried, setBrothersMarried] = useState<string>(
+    initialFamilyData.brothersMarried || "- Select -"
+  );
+  const [sistersCount, setSistersCount] = useState<string>(
+    initialFamilyData.sistersCount || "- Select -"
+  );
+  const [sistersMarried, setSistersMarried] = useState<string>(
+    initialFamilyData.sistersMarried || "- Select -"
+  );
+
+  // Family Location Toggle
+  const [familyLocationType, setFamilyLocationType] = useState<"same" | "different">(
+    initialFamilyData.familyLocationType || "same"
+  );
+  const [familyCountry, setFamilyCountry] = useState<string>(
+    initialFamilyData.familyCountry || profile.country || "India"
+  );
+  const [familyState, setFamilyState] = useState<string>(
+    initialFamilyData.familyState || profile.state || ""
+  );
+  const [familyDistrict, setFamilyDistrict] = useState<string>(
+    initialFamilyData.familyDistrict || profile.district || ""
+  );
+  const [familyCity, setFamilyCity] = useState<string>(
+    initialFamilyData.familyCity || profile.city || ""
+  );
+  const [familyType, setFamilyType] = useState<string>(
+    initialFamilyData.familyType || "Nuclear Family"
+  );
+  const [familyStatus, setFamilyStatus] = useState<string>(
+    initialFamilyData.familyStatus || "Middle Class"
+  );
+
+  // Hobbies & Interests State
+  const [activeHobbiesTab, setActiveHobbiesTab] = useState<string>("Hobbies & Interests");
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(
+    Array.isArray(initialFamilyData.hobbies) ? initialFamilyData.hobbies : []
+  );
+
+  const toggleHobby = (hobby: string) => {
+    setSelectedHobbies((prev) =>
+      prev.includes(hobby) ? prev.filter((h) => h !== hobby) : [...prev, hobby]
+    );
+  };
+
   // Setup Details Form
   const {
     register: registerDetails,
@@ -276,8 +388,8 @@ export function ProfileClient({
       height: profile.height || 160,
       weight: profile.weight || 65,
       maritalStatus: profile.maritalStatus || "Never Married",
-      education: profile.education || "",
-      occupation: profile.occupation || "",
+      education: initialIsCustomEdu ? "Others" : profile.education || "",
+      occupation: initialIsCustomOcc ? "Others" : profile.occupation || "",
       income: profile.income || 0,
       city: profile.city || "",
       district: profile.district || "",
@@ -303,6 +415,7 @@ export function ProfileClient({
     maxHeight: profile.partnerPreference?.maxHeight || 220,
     maritalStatus: profile.partnerPreference?.maritalStatus || "Never Married",
     religion: profile.partnerPreference?.religion || "",
+    caste: (profile.partnerPreference as any)?.caste || "",
     motherTongue: profile.partnerPreference?.motherTongue || "",
     education: profile.partnerPreference?.education || "",
     occupation: profile.partnerPreference?.occupation || "",
@@ -318,6 +431,8 @@ export function ProfileClient({
   const selectedReligion = watchDetails("religion");
   const selectedCaste = watchDetails("caste");
   const selectedSubCaste = watchDetails("subCaste");
+  const selectedEducation = watchDetails("education");
+  const selectedOccupation = watchDetails("occupation");
 
   // Fetch Master Data
   useEffect(() => {
@@ -443,8 +558,66 @@ export function ProfileClient({
     setDetailsError(null);
     setIsPending(true);
     try {
+      const familyPayload = {
+        fatherOccupation,
+        motherOccupation,
+        brothersCount,
+        brothersMarried,
+        sistersCount,
+        sistersMarried,
+        familyType,
+        familyStatus,
+        familyLocationType,
+        familyCountry:
+          familyLocationType === "different"
+            ? familyCountry
+            : data.country || profile.country || "India",
+        familyState:
+          familyLocationType === "different"
+            ? familyState
+            : data.state || profile.state || "",
+        familyDistrict:
+          familyLocationType === "different"
+            ? familyDistrict
+            : data.district || profile.district || "",
+        familyCity:
+          familyLocationType === "different"
+            ? familyCity
+            : data.city || profile.city || "",
+        hobbies: selectedHobbies,
+        customEducation:
+          selectedEducation === "Others" ? customEducation.trim() : undefined,
+        customOccupation:
+          selectedOccupation === "Others" ? customOccupation.trim() : undefined,
+        rashi: selectedRashi,
+        star: selectedStar,
+      };
+
+      const horoscopeFormatted =
+        [
+          selectedRashi ? `Rashi: ${selectedRashi}` : "",
+          selectedStar ? `Star: ${selectedStar}` : "",
+          data.dosham ? `Dosham: ${data.dosham}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ") || data.horoscope || undefined;
+
+      const finalEducation =
+        selectedEducation === "Others" && customEducation.trim()
+          ? `Others - ${customEducation.trim()}`
+          : data.education;
+
+      const finalOccupation =
+        selectedOccupation === "Others" && customOccupation.trim()
+          ? `Others - ${customOccupation.trim()}`
+          : data.occupation;
+
       const payload = {
         ...data,
+        education: finalEducation,
+        occupation: finalOccupation,
+        horoscope: horoscopeFormatted,
+        familyDetails: JSON.stringify(familyPayload),
         height: data.height ? Number(data.height) : undefined,
         weight: data.weight ? Number(data.weight) : undefined,
         income: data.income ? Number(data.income) : undefined,
@@ -599,7 +772,7 @@ export function ProfileClient({
   const mainPhoto = profile.photos?.find((p) => p.isMain) || profile.photos?.[0];
   const profileName = profile.user?.name || "Member Profile";
   const profileRelation = profile.profileCreatedFor || "Self";
-  const publicId = profile.user?.publicId || profile.id.slice(0, 8);
+  const publicId = getDisplayProfileId(profile.user, profile.id);
   const phoneDisplay = profile.user?.phone || profile.phone || "Not set";
   const isPhoneVerified = !!(profile.user?.identityVerification?.status === "VERIFIED" || profile.user?.phone);
 
@@ -644,8 +817,8 @@ export function ProfileClient({
       <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-2xl">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            {/* LEFT COLUMN: Main Avatar Box + Add/Edit Photos */}
-            <div className="md:col-span-3 flex flex-col items-center justify-center text-center space-y-3 border-r-0 md:border-r border-slate-100 pr-0 md:pr-4">
+            {/* LEFT COLUMN: Main Avatar Box + Profile ID Directly Below Photo + Add/Edit Photos */}
+            <div className="md:col-span-3 flex flex-col items-center justify-center text-center space-y-2.5 border-r-0 md:border-r border-slate-100 pr-0 md:pr-4">
               <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-rose-200 shadow-md bg-rose-50 flex items-center justify-center">
                 {mainPhoto ? (
                   <img
@@ -657,6 +830,14 @@ export function ProfileClient({
                   <User className="w-14 h-14 text-rose-300" />
                 )}
               </div>
+
+              {/* Profile ID directly below photo */}
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-mono font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                  Profile ID: {publicId}
+                </span>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -676,7 +857,6 @@ export function ProfileClient({
                     Profile Created For: {profileRelation}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">Profile ID: {publicId}</p>
               </div>
 
               {/* Key Stats */}
@@ -967,7 +1147,7 @@ export function ProfileClient({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="gothram" className="text-xs font-semibold text-slate-700">Gothram</Label>
                         <select
@@ -995,15 +1175,37 @@ export function ProfileClient({
                           ))}
                         </select>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="rashi" className="text-xs font-semibold text-slate-700">Rashi / Moon Sign</Label>
+                        <select
+                          id="rashi"
+                          value={selectedRashi}
+                          onChange={(e) => setSelectedRashi(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          <option value="">Select Rashi</option>
+                          {RASHI_OPTIONS.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="horoscope" className="text-xs font-semibold text-slate-700">Horoscope / Rasi & Star</Label>
-                        <Input
-                          id="horoscope"
-                          placeholder="e.g. Mesha / Aries - Bharani Star"
-                          className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                          {...registerDetails("horoscope")}
-                        />
+                        <Label htmlFor="star" className="text-xs font-semibold text-slate-700">Star / Nakshatra</Label>
+                        <select
+                          id="star"
+                          value={selectedStar}
+                          onChange={(e) => setSelectedStar(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          <option value="">Select Star / Nakshatra</option>
+                          {NAKSHATRA_OPTIONS.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 
@@ -1040,6 +1242,20 @@ export function ProfileClient({
                             <option key={edu} value={edu}>{edu}</option>
                           ))}
                         </select>
+                        {selectedEducation === "Others" && (
+                          <div className="space-y-1.5 mt-2">
+                            <Label htmlFor="customEducation" className="text-xs font-semibold text-slate-700">
+                              Specify Education Degree <span className="text-rose-600">*</span>
+                            </Label>
+                            <Input
+                              id="customEducation"
+                              placeholder="e.g. B.Sc in Data Science, M.S. Bioinformatics"
+                              value={customEducation}
+                              onChange={(e) => setCustomEducation(e.target.value)}
+                              className="border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">
@@ -1054,6 +1270,20 @@ export function ProfileClient({
                             <option key={occ} value={occ}>{occ}</option>
                           ))}
                         </select>
+                        {selectedOccupation === "Others" && (
+                          <div className="space-y-1.5 mt-2">
+                            <Label htmlFor="customOccupation" className="text-xs font-semibold text-slate-700">
+                              Specify Occupation / Job Title <span className="text-rose-600">*</span>
+                            </Label>
+                            <Input
+                              id="customOccupation"
+                              placeholder="e.g. Lead Robotics Engineer, Commercial Pilot"
+                              value={customOccupation}
+                              onChange={(e) => setCustomOccupation(e.target.value)}
+                              className="border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">
@@ -1130,6 +1360,109 @@ export function ProfileClient({
                       5. Family Background & Details
                     </h3>
 
+                    {/* Parents Occupation Dropdowns */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="fatherOccupation" className="text-xs font-semibold text-slate-700">
+                          Father's Occupation
+                        </Label>
+                        <select
+                          id="fatherOccupation"
+                          value={fatherOccupation}
+                          onChange={(e) => setFatherOccupation(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {FATHER_OCCUPATION_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="motherOccupation" className="text-xs font-semibold text-slate-700">
+                          Mother's Occupation
+                        </Label>
+                        <select
+                          id="motherOccupation"
+                          value={motherOccupation}
+                          onChange={(e) => setMotherOccupation(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {MOTHER_OCCUPATION_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Siblings Dropdowns */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="brothersCount" className="text-xs font-semibold text-slate-700">
+                          No. of Brothers
+                        </Label>
+                        <select
+                          id="brothersCount"
+                          value={brothersCount}
+                          onChange={(e) => setBrothersCount(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {SIBLINGS_COUNT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="brothersMarried" className="text-xs font-semibold text-slate-700">
+                          Brothers Married
+                        </Label>
+                        <select
+                          id="brothersMarried"
+                          value={brothersMarried}
+                          onChange={(e) => setBrothersMarried(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {SIBLINGS_COUNT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sistersCount" className="text-xs font-semibold text-slate-700">
+                          No. of Sisters
+                        </Label>
+                        <select
+                          id="sistersCount"
+                          value={sistersCount}
+                          onChange={(e) => setSistersCount(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {SIBLINGS_COUNT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="sistersMarried" className="text-xs font-semibold text-slate-700">
+                          Sisters Married
+                        </Label>
+                        <select
+                          id="sistersMarried"
+                          value={sistersMarried}
+                          onChange={(e) => setSistersMarried(e.target.value)}
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                        >
+                          {SIBLINGS_COUNT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Family Values, Type, Status */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="familyValues" className="text-xs font-semibold text-slate-700">Family Values</Label>
@@ -1149,8 +1482,9 @@ export function ProfileClient({
                         <Label htmlFor="familyType" className="text-xs font-semibold text-slate-700">Family Type</Label>
                         <select
                           id="familyType"
+                          value={familyType}
+                          onChange={(e) => setFamilyType(e.target.value)}
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("drinking")}
                         >
                           <option value="">Select Family Type</option>
                           {FAMILY_TYPE_OPTIONS.map((ft) => (
@@ -1163,8 +1497,9 @@ export function ProfileClient({
                         <Label htmlFor="familyStatus" className="text-xs font-semibold text-slate-700">Family Status</Label>
                         <select
                           id="familyStatus"
+                          value={familyStatus}
+                          onChange={(e) => setFamilyStatus(e.target.value)}
                           className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                          {...registerDetails("foodPreference")}
                         >
                           <option value="">Select Family Status</option>
                           {FAMILY_STATUS_OPTIONS.map((fs) => (
@@ -1174,17 +1509,90 @@ export function ProfileClient({
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="familyDetails" className="text-xs font-semibold text-slate-700">Detailed Family Notes</Label>
-                      <Textarea
-                        id="familyDetails"
-                        placeholder="Father's occupation, mother's background, siblings, hometown..."
-                        className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-[80px] focus-visible:ring-rose-500"
-                        {...registerDetails("familyDetails")}
-                      />
+                    {/* Family Location Toggle */}
+                    <div className="space-y-3 pt-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <Label className="text-xs font-semibold text-slate-700 block">
+                        Family Location
+                      </Label>
+                      <div className="flex items-center gap-6 text-xs text-slate-800">
+                        <label className="flex items-center gap-2 cursor-pointer font-medium">
+                          <input
+                            type="radio"
+                            name="familyLocationToggle"
+                            value="same"
+                            checked={familyLocationType === "same"}
+                            onChange={() => setFamilyLocationType("same")}
+                            className="text-rose-600 focus:ring-rose-500 w-4 h-4"
+                          />
+                          <span>Same as my Location</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer font-medium">
+                          <input
+                            type="radio"
+                            name="familyLocationToggle"
+                            value="different"
+                            checked={familyLocationType === "different"}
+                            onChange={() => setFamilyLocationType("different")}
+                            className="text-rose-600 focus:ring-rose-500 w-4 h-4"
+                          />
+                          <span>Different Location</span>
+                        </label>
+                      </div>
+
+                      {familyLocationType === "different" && (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-slate-200 mt-2 animate-in fade-in duration-200">
+                          <div className="space-y-1">
+                            <Label htmlFor="familyCity" className="text-[11px] font-semibold text-slate-600">Family City</Label>
+                            <Input
+                              id="familyCity"
+                              placeholder="e.g. Vijayawada"
+                              value={familyCity}
+                              onChange={(e) => setFamilyCity(e.target.value)}
+                              className="border-slate-200 bg-white text-slate-900 text-xs h-8 focus-visible:ring-rose-500 rounded-lg"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="familyDistrict" className="text-[11px] font-semibold text-slate-600">Family District</Label>
+                            <Input
+                              id="familyDistrict"
+                              placeholder="e.g. Krishna"
+                              value={familyDistrict}
+                              onChange={(e) => setFamilyDistrict(e.target.value)}
+                              className="border-slate-200 bg-white text-slate-900 text-xs h-8 focus-visible:ring-rose-500 rounded-lg"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="familyState" className="text-[11px] font-semibold text-slate-600">Family State</Label>
+                            <select
+                              id="familyState"
+                              value={familyState}
+                              onChange={(e) => setFamilyState(e.target.value)}
+                              className="w-full h-8 px-2 border border-slate-200 bg-white rounded-lg text-slate-900 text-xs focus:outline-none focus:border-rose-500"
+                            >
+                              <option value="">Select State</option>
+                              {INDIAN_STATES.map((st) => (
+                                <option key={st} value={st}>{st}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="familyCountry" className="text-[11px] font-semibold text-slate-600">Family Country</Label>
+                            <select
+                              id="familyCountry"
+                              value={familyCountry}
+                              onChange={(e) => setFamilyCountry(e.target.value)}
+                              className="w-full h-8 px-2 border border-slate-200 bg-white rounded-lg text-slate-900 text-xs focus:outline-none focus:border-rose-500"
+                            >
+                              {MAJOR_COUNTRIES.map((ct) => (
+                                <option key={ct} value={ct}>{ct}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 pt-2">
                       <Label htmlFor="bio" className="text-xs font-semibold text-slate-700">About Myself (Bio)</Label>
                       <Textarea
                         id="bio"
@@ -1192,6 +1600,98 @@ export function ProfileClient({
                         className="border-slate-200 bg-slate-50 text-slate-900 text-xs min-h-[100px] focus-visible:ring-rose-500"
                         {...registerDetails("bio")}
                       />
+                    </div>
+                  </div>
+
+                  {/* Section F: Hobbies & Interests */}
+                  <div id="hobbies-section" className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider">
+                        6. Hobbies, Interests & Lifestyle
+                      </h3>
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        {selectedHobbies.length} selected
+                      </span>
+                    </div>
+
+                    {/* Category Tabs */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-100">
+                      {Object.keys(HOBBIES_CATEGORIES).map((cat) => {
+                        const countInCat = (HOBBIES_CATEGORIES[cat] || []).filter((h) =>
+                          selectedHobbies.includes(h)
+                        ).length;
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setActiveHobbiesTab(cat)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                              activeHobbiesTab === cat
+                                ? "bg-rose-600 text-white font-bold shadow-xs"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                            }`}
+                          >
+                            <span>{cat}</span>
+                            {countInCat > 0 && (
+                              <span
+                                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                  activeHobbiesTab === cat
+                                    ? "bg-white text-rose-600"
+                                    : "bg-rose-100 text-rose-700"
+                                }`}
+                              >
+                                {countInCat}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Category Pills */}
+                    <div className="p-4 bg-slate-50/70 border border-slate-200 rounded-2xl space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {(HOBBIES_CATEGORIES[activeHobbiesTab] || []).map((hobby) => {
+                          const isSelected = selectedHobbies.includes(hobby);
+                          return (
+                            <button
+                              key={hobby}
+                              type="button"
+                              onClick={() => toggleHobby(hobby)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${
+                                isSelected
+                                  ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                                  : "bg-white text-slate-700 border-slate-200 hover:border-rose-300 hover:bg-rose-50/50"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <Check className="w-3 h-3 text-white" />
+                              ) : (
+                                <span className="text-slate-400 text-xs">+</span>
+                              )}
+                              <span>{hobby}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedHobbies.length > 0 && (
+                        <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between">
+                          <p className="text-[11px] text-slate-500">
+                            Selected Tags:{" "}
+                            <span className="font-semibold text-slate-800">
+                              {selectedHobbies.join(", ")}
+                            </span>
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHobbies([])}
+                            className="text-[11px] text-rose-600 font-semibold hover:underline"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1314,8 +1814,8 @@ export function ProfileClient({
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minAge: prefValues.minAge, maxAge: prefValues.maxAge })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minAge: prefValues.minAge, maxAge: prefValues.maxAge })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1363,8 +1863,8 @@ export function ProfileClient({
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minHeight: prefValues.minHeight, maxHeight: prefValues.maxHeight })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ minHeight: prefValues.minHeight, maxHeight: prefValues.maxHeight })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1401,8 +1901,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ maritalStatus: prefValues.maritalStatus })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ maritalStatus: prefValues.maritalStatus })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1448,15 +1948,48 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ religion: prefValues.religion })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ religion: prefValues.religion })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Row 5: Mother Tongue */}
+                      {/* Row 5: Caste */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred Caste</span>
+                            <span className="text-xs text-slate-500">{prefValues.caste || "Any Caste"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "caste" ? null : "caste")}
+                            aria-label="Edit Caste Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "caste" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.caste}
+                              placeholder="e.g. Reddy, Kamma, Brahmin, Kapu, Any"
+                              onChange={(e) => setPrefValues({ ...prefValues, caste: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ caste: prefValues.caste })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 6: Mother Tongue */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1485,8 +2018,8 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ motherTongue: prefValues.motherTongue })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1500,7 +2033,7 @@ export function ProfileClient({
                         3. Professional Criteria
                       </h3>
 
-                      {/* Row 6: Education */}
+                      {/* Row 7: Education */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1529,8 +2062,45 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ education: prefValues.education })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 8: Occupation */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Occupation / Profession</span>
+                            <span className="text-xs text-slate-500">{prefValues.occupation || "Any Occupation"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "occupation" ? null : "occupation")}
+                            aria-label="Edit Occupation Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "occupation" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.occupation}
+                              onChange={(e) => setPrefValues({ ...prefValues, occupation: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any Occupation</option>
+                              {OCCUPATION_OPTIONS.map((occ) => (
+                                <option key={occ} value={occ}>{occ}</option>
+                              ))}
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ occupation: prefValues.occupation })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1544,7 +2114,7 @@ export function ProfileClient({
                         4. Location Criteria
                       </h3>
 
-                      {/* Row 7: Country */}
+                      {/* Row 9: Country */}
                       <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1573,8 +2143,78 @@ export function ProfileClient({
                             </select>
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ country: prefValues.country })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 10: State */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred State</span>
+                            <span className="text-xs text-slate-500">{prefValues.state || "Any State"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "state" ? null : "state")}
+                            aria-label="Edit State Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "state" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <select
+                              value={prefValues.state}
+                              onChange={(e) => setPrefValues({ ...prefValues, state: e.target.value })}
+                              className="w-full h-9 px-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50"
+                            >
+                              <option value="">Any State</option>
+                              {INDIAN_STATES.map((st) => (
+                                <option key={st} value={st}>{st}</option>
+                              ))}
+                            </select>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ state: prefValues.state })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Row 11: City */}
+                      <div className="p-4 border border-slate-200/90 rounded-2xl hover:border-emerald-300 transition-all bg-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block">Preferred City / District</span>
+                            <span className="text-xs text-slate-500">{prefValues.city || "Any City / District"}</span>
+                          </div>
+                          <button
+                            onClick={() => setEditingRow(editingRow === "city" ? null : "city")}
+                            aria-label="Edit City Preference"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {editingRow === "city" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                            <Input
+                              value={prefValues.city}
+                              placeholder="e.g. Hyderabad, Visakhapatnam, Bangalore, Any"
+                              onChange={(e) => setPrefValues({ ...prefValues, city: e.target.value })}
+                              className="h-9 text-xs border-slate-200"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ city: prefValues.city })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
@@ -1616,8 +2256,8 @@ export function ProfileClient({
                             />
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="sm" onClick={() => setEditingRow(null)} className="text-xs">Cancel</Button>
-                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ bio: prefValues.bio })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-                                {rowSaving ? "Saving..." : "Save Row"}
+                              <Button size="sm" disabled={rowSaving} onClick={() => handleSaveInlineRow({ bio: prefValues.bio })} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                                {rowSaving ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Shield, Edit3, Users, Sparkles } from "lucide-react";
+import { getDisplayProfileId } from "@/lib/utils/public-id";
 
 export function AdminMembershipsClient({
   plans: initialPlans,
@@ -41,7 +42,7 @@ export function AdminMembershipsClient({
     try {
       const res = await editMembershipPlanAction(editingPlan.id, {
         price: Number(formData.price),
-        durationDays: Number(formData.durationDays),
+        durationDays: formData.durationDays,
         description: formData.description,
         isActive: formData.isActive,
       });
@@ -132,7 +133,7 @@ export function AdminMembershipsClient({
                     <tr key={m.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="p-4 font-semibold text-slate-900">
                         <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                          {m.user?.publicId || `IM${m.userId?.slice(0, 8)}`}
+                          {getDisplayProfileId(m.user, m.userId)}
                         </span>
                       </td>
                       <td className="p-4 font-bold text-rose-600">{m.plan?.name}</td>
@@ -171,10 +172,10 @@ export function AdminMembershipsClient({
               </div>
 
               <div>
-                <Label htmlFor="durationDays" className="text-slate-700">Duration (Days)</Label>
+                <Label htmlFor="durationDays" className="text-slate-700">Duration Label (e.g. 90 Days / 6 Months)</Label>
                 <Input
                   id="durationDays"
-                  type="number"
+                  type="text"
                   value={formData.durationDays}
                   onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
                   className="bg-slate-50 border-slate-200 text-slate-900"

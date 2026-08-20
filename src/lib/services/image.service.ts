@@ -2,7 +2,22 @@ import { BaseService } from "./base.service";
 import { Result } from "../result";
 import { imageConfig } from "@/config/image.config";
 import crypto from "crypto";
-import sharp from "sharp";
+
+// Lazy-load sharp to avoid crashing serverless environments (Vercel)
+// where the native libvips binary is not available at module load time.
+let _sharp: any = null;
+async function getSharp() {
+  if (!_sharp) {
+    try {
+      const mod: any = await import("sharp");
+      _sharp = typeof mod.default === "function" ? mod.default : typeof mod === "function" ? mod : (mod.default?.default || mod);
+    } catch (err) {
+      console.warn("Sharp load warning:", err);
+      _sharp = null;
+    }
+  }
+  return _sharp;
+}
 
 export class ImageService extends BaseService {
   async validateImage(
@@ -11,9 +26,19 @@ export class ImageService extends BaseService {
     mimeType: string
   ): Promise<Result<void>> {
     // 1. MIME validation
-    if (!imageConfig.allowedMimeTypes.includes(mimeType.toLowerCase())) {
+    let normalizedMime = (mimeType || "").toLowerCase();
+    if (!normalizedMime || normalizedMime === "application/octet-stream") {
+      const ext = (_originalName || "").toLowerCase().split(".").pop();
+      if (ext === "jpg" || ext === "jpeg") normalizedMime = "image/jpeg";
+      else if (ext === "png") normalizedMime = "image/png";
+      else if (ext === "webp") normalizedMime = "image/webp";
+    }
+    if (normalizedMime === "image/jpg" || normalizedMime === "image/pjpeg") normalizedMime = "image/jpeg";
+    if (normalizedMime === "image/x-png") normalizedMime = "image/png";
+
+    if (!imageConfig.allowedMimeTypes.includes(normalizedMime)) {
       return this.returnFailure(
-        `Invalid file type: ${mimeType}. Allowed formats: ${imageConfig.allowedMimeTypes.join(", ")}`,
+        `Invalid file type: ${mimeType || _originalName}. Allowed formats: ${imageConfig.allowedMimeTypes.join(", ")}`,
         "INVALID_MIME_TYPE"
       );
     }
@@ -28,6 +53,7 @@ export class ImageService extends BaseService {
 
     // 3. Dimension validation
     try {
+      const sharp = await getSharp();
       const metadata = await sharp(buffer).metadata();
       if (!metadata.width || !metadata.height) {
         return this.returnFailure("Invalid image dimensions", "INVALID_DIMENSIONS");
@@ -55,6 +81,7 @@ export class ImageService extends BaseService {
     responsiveBuffers: { sizeName: string; buffer: Buffer; width: number; height: number }[];
   }>> {
     try {
+      const sharp = await getSharp();
       const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
       // 1. Convert to WebP, rotate automatically, and strip EXIF
@@ -118,3 +145,4 @@ export class ImageService extends BaseService {
     }
   }
 }
+

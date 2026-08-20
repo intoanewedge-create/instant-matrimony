@@ -12,17 +12,17 @@ import { PrismaVerificationOtpRepository } from "./repositories/verification-otp
 import { PrismaUserSessionHistoryRepository } from "./repositories/user-session-history.repository";
 
 import { LocalStorageProvider } from "./storage/local-storage";
-import { MockEmailProvider } from "./email/mock-email-provider";
+
 import { SmtpEmailProvider } from "./email/smtp-provider";
 import { ResendEmailProvider } from "./email/resend-provider";
 import { EmailProvider } from "./email/email-provider";
-import { MockOtpProvider } from "./otp/mock-otp-provider";
+
 import { SmsOtpProvider } from "./otp/sms-otp-provider";
 import { EmailOtpProvider } from "./otp/email-otp-provider";
 
 import { EmailNotificationProvider } from "./notifications/providers/email-notification-provider";
 import { BrowserNotificationProvider } from "./notifications/providers/browser-notification-provider";
-import { MockNotificationProvider } from "./notifications/providers/mock-notification-provider";
+
 import { SmsNotificationProvider } from "./notifications/providers/sms-notification-provider";
 import { PushNotificationProvider } from "./notifications/providers/push-notification-provider";
 import { NotificationDispatcher } from "./notifications/pipeline/notification-pipeline";
@@ -67,13 +67,13 @@ import { PrismaMessageReactionRepository } from "./repositories/message-reaction
 
 // New payment providers
 import { PaymentProvider } from "./payments/payment-provider";
-import { MockPaymentProvider } from "./payments/mock-payment-provider";
+
 import { StripePaymentProvider } from "./payments/stripe-provider";
 import { RazorpayPaymentProvider } from "./payments/razorpay-provider";
 
 // New realtime providers
 import { RealtimeProvider } from "./realtime/realtime-provider";
-import { MockRealtimeProvider } from "./realtime/mock-realtime-provider";
+
 import { SocketIOProvider } from "./realtime/socketio-provider";
 import { SupabaseRealtimeProvider } from "./realtime/supabase-provider";
 import { PusherProvider } from "./realtime/pusher-provider";
@@ -85,7 +85,8 @@ import { CloudinaryStorageProvider } from "./storage/cloudinary-provider";
 import { S3StorageProvider } from "./storage/s3-provider";
 import { R2StorageProvider } from "./storage/r2-provider";
 import { MinioStorageProvider } from "./storage/minio-provider";
-import { MockStorageProvider } from "./storage/mock-storage";
+import { SupabaseStorageProvider } from "./storage/supabase-provider";
+
 import { StorageProvider } from "./storage/storage-provider";
 
 import { StorageService } from "./services/storage.service";
@@ -181,7 +182,6 @@ const telemetryRepository = new PrismaTelemetryRepository();
 class DynamicEmailProvider implements EmailProvider {
   private smtpProvider = new SmtpEmailProvider();
   private resendProvider = new ResendEmailProvider();
-  private mockProvider = new MockEmailProvider();
 
   async send(to: string, subject: string, body: string): Promise<void> {
     const config = getEmailConfig();
@@ -191,20 +191,21 @@ class DynamicEmailProvider implements EmailProvider {
     if (config.provider === "resend") {
       return this.resendProvider.send(to, subject, body);
     }
-    return this.mockProvider.send(to, subject, body);
+    throw new Error("Email provider not configured. Please configure SMTP or Resend.");
   }
 }
 
 const emailProvider: EmailProvider = new DynamicEmailProvider();
 
 // Setup OTP Providers
-const mockOtpProvider = new MockOtpProvider();
 const emailOtpProvider = new EmailOtpProvider(emailProvider);
 const smsOtpProvider =
-  smsConfig.provider === "twilio" ? new SmsOtpProvider() : mockOtpProvider;
+  smsConfig.provider === "twilio" ? new SmsOtpProvider() : emailOtpProvider;
 
 let storageProvider: StorageProvider;
-if (storageConfig.provider === "local") {
+if (storageConfig.provider === "supabase" || (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && storageConfig.provider !== "local")) {
+  storageProvider = new SupabaseStorageProvider();
+} else if (storageConfig.provider === "local") {
   storageProvider = new LocalStorageProvider();
 } else if (storageConfig.provider === "cloudinary") {
   storageProvider = new CloudinaryStorageProvider();
@@ -215,19 +216,17 @@ if (storageConfig.provider === "local") {
 } else if (storageConfig.provider === "minio") {
   storageProvider = new MinioStorageProvider();
 } else {
-  storageProvider = new MockStorageProvider();
+  storageProvider = new LocalStorageProvider();
 }
 
 const emailNotificationProvider = new EmailNotificationProvider(emailProvider);
 const browserNotificationProvider = new BrowserNotificationProvider();
-const mockNotificationProvider = new MockNotificationProvider();
 const pushNotificationProvider = new PushNotificationProvider();
 const smsNotificationProvider = new SmsNotificationProvider();
 
 const notificationDispatcher = new NotificationDispatcher([
   emailNotificationProvider,
   browserNotificationProvider,
-  mockNotificationProvider,
   pushNotificationProvider,
   smsNotificationProvider,
 ]);
@@ -238,7 +237,7 @@ if (paymentConfig.provider === "stripe") {
 } else if (paymentConfig.provider === "razorpay") {
   paymentProvider = new RazorpayPaymentProvider();
 } else {
-  paymentProvider = new MockPaymentProvider();
+  paymentProvider = new StripePaymentProvider();
 }
 
 let realtimeProvider: RealtimeProvider;
@@ -249,7 +248,7 @@ if (realtimeConfig.provider === "socketio") {
 } else if (realtimeConfig.provider === "pusher") {
   realtimeProvider = new PusherProvider();
 } else {
-  realtimeProvider = new MockRealtimeProvider();
+  realtimeProvider = new SocketIOProvider();
 }
 
 export const auditService = new AuditService(auditRepository);

@@ -12,7 +12,9 @@ export class EmbeddingProviderRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.providers.get(this.active) || { name: "mock-embedding", health: async () => true };
+    const provider = this.providers.get(this.active);
+    if (!provider) throw new Error(`Embedding provider not configured`);
+    return provider;
   }
 
   setActive(name: string) {
@@ -29,7 +31,9 @@ export class SearchProviderRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.providers.get(this.active) || { name: "mock-search", health: async () => true };
+    const provider = this.providers.get(this.active);
+    if (!provider) throw new Error(`Search provider not configured`);
+    return provider;
   }
 
   setActive(name: string) {
@@ -58,7 +62,9 @@ export class RuleProviderRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.providers.get(this.active) || { name: "mock-rules", health: async () => true };
+    const provider = this.providers.get(this.active);
+    if (!provider) throw new Error(`Rule provider not configured`);
+    return provider;
   }
 }
 
@@ -83,7 +89,9 @@ export class ReportExporterRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.exporters.get(this.active) || { name: "mock-exporter", health: async () => true };
+    const exporter = this.exporters.get(this.active);
+    if (!exporter) throw new Error(`Exporter not configured`);
+    return exporter;
   }
 }
 
@@ -96,7 +104,9 @@ export class ExperimentProviderRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.providers.get(this.active) || { name: "mock-experiments", health: async () => true };
+    const provider = this.providers.get(this.active);
+    if (!provider) throw new Error(`Experiment provider not configured`);
+    return provider;
   }
 }
 
@@ -109,7 +119,9 @@ export class LocalizationProviderRegistry {
   }
 
   getActive(): RegistryProvider {
-    return this.providers.get(this.active) || { name: "mock-localization", health: async () => true };
+    const provider = this.providers.get(this.active);
+    if (!provider) throw new Error(`Localization provider not configured`);
+    return provider;
   }
 }
 
@@ -121,10 +133,10 @@ export class MessageBrokerProvider implements RegistryProvider {
   }
 
   async publish(_topic: string, _message: any): Promise<void> {
-    // mock streaming broker publish
+    throw new Error("Message broker not implemented");
   }
 
   async subscribe(_topic: string, _handler: (msg: any) => void): Promise<void> {
-    // mock streaming broker subscribe
+    throw new Error("Message broker not implemented");
   }
 }

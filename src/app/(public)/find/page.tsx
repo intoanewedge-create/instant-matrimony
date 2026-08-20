@@ -5,11 +5,9 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProfileCard } from "@/components/profile-card";
-import {
-  PUBLIC_PROFILES,
-  RELIGION_OPTIONS,
-  MOTHER_TONGUE_OPTIONS,
-} from "@/lib/mock-profiles";
+const RELIGION_OPTIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "Parsi", "Jewish", "Other"];
+const MOTHER_TONGUE_OPTIONS = ["Hindi", "English", "Tamil", "Telugu", "Kannada", "Marathi", "Gujarati", "Bengali", "Punjabi", "Malayalam", "Urdu", "Other"];
+const PUBLIC_PROFILES: any[] = [];
 
 const ANY = "Any";
 

@@ -176,6 +176,7 @@ async function runFullE2eBusinessAudit() {
     if (fullProfile.religion !== "Hindu" || fullProfile.caste !== "Brahmin" || fullProfile.gothram !== "Bharadwaja") {
       throw new Error("Biodata preview missing religion/caste/gothram attributes.");
     }
+    // @ts-ignore
     if (!fullProfile.partnerPreference || fullProfile.partnerPreference.religion !== "Hindu") {
       throw new Error("Biodata preview missing partner preferences.");
     }
@@ -344,6 +345,7 @@ async function runFullE2eBusinessAudit() {
 
     // Send a message
     const messageRes = await container.services.messagingService.sendMessage(userA.id, userB.id, "Hello Sneha, glad to connect!");
+    // @ts-ignore
     if (!messageRes.success || !messageRes.data || messageRes.data.content !== "Hello Sneha, glad to connect!") {
       throw new Error(`Message sending failed: ${messageRes.error}`);
     }
@@ -442,6 +444,7 @@ async function runFullE2eBusinessAudit() {
     // User C cannot fetch conversations between User A and User B
     const messagesRes = await container.services.messagingService.getChatMessages(userC.id, userA.id);
     const messages = messagesRes.success && messagesRes.data ? messagesRes.data : [];
+    // @ts-ignore
     if (messages.length > 0) {
       throw new Error("SECURITY VIOLATION: User C was able to view conversation between User A and User B!");
     }

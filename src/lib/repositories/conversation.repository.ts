@@ -14,6 +14,9 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findById(id: string): Promise<Conversation | null> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) return null;
+
     return prisma.conversation.findUnique({
       where: { id },
       include: {
@@ -25,6 +28,7 @@ export class PrismaConversationRepository implements IConversationRepository {
           },
         },
         messages: {
+          where: { isDeleted: false },
           orderBy: { createdAt: "desc" },
           take: 1,
         },
@@ -49,6 +53,29 @@ export class PrismaConversationRepository implements IConversationRepository {
   }
 
   async findUserConversations(userId: string): Promise<any[]> {
+    // Check for any accepted interests for this user to ensure conversations exist
+    try {
+      const acceptedInterests = await prisma.interest.findMany({
+        where: {
+          OR: [
+            { senderId: userId, status: "ACCEPTED" },
+            { receiverId: userId, status: "ACCEPTED" },
+          ],
+        },
+        select: { senderId: true, receiverId: true },
+      });
+
+      for (const interest of acceptedInterests) {
+        const otherUserId = interest.senderId === userId ? interest.receiverId : interest.senderId;
+        const existingConv = await this.findByParticipants([userId, otherUserId]);
+        if (!existingConv) {
+          await this.create([userId, otherUserId]);
+        }
+      }
+    } catch {
+      // Ignore background sync errors to not block main query
+    }
+
     const participantEntries = await prisma.conversationParticipant.findMany({
       where: {
         userId,
@@ -68,6 +95,7 @@ export class PrismaConversationRepository implements IConversationRepository {
               },
             },
             messages: {
+              where: { isDeleted: false },
               orderBy: { createdAt: "desc" },
               take: 1,
             },
@@ -112,3 +140,4 @@ export class PrismaConversationRepository implements IConversationRepository {
     });
   }
 }
+

@@ -96,8 +96,16 @@ export class MasterDataService extends BaseService {
 
   async getStates(countryId?: string): Promise<Result<any[]>> {
     try {
+      let resolvedCountryId = countryId;
+      if (countryId) {
+        const country = await prisma.masterCountry.findFirst({
+          where: { OR: [{ id: countryId }, { name: { equals: countryId, mode: "insensitive" } }] },
+        });
+        if (country) resolvedCountryId = country.id;
+      }
+
       const items = await prisma.masterState.findMany({
-        where: countryId ? { countryId } : undefined,
+        where: resolvedCountryId ? { countryId: resolvedCountryId } : undefined,
         orderBy: [{ order: "asc" }, { name: "asc" }],
       });
       return this.returnSuccess(items);
@@ -108,8 +116,16 @@ export class MasterDataService extends BaseService {
 
   async getDistricts(stateId?: string): Promise<Result<any[]>> {
     try {
-      const items = await (prisma as any).masterDistrict.findMany({
-        where: stateId ? { stateId } : undefined,
+      let resolvedStateId = stateId;
+      if (stateId) {
+        const state = await prisma.masterState.findFirst({
+          where: { OR: [{ id: stateId }, { name: { equals: stateId, mode: "insensitive" } }] },
+        });
+        if (state) resolvedStateId = state.id;
+      }
+
+      const items = await prisma.masterDistrict.findMany({
+        where: resolvedStateId ? { stateId: resolvedStateId } : undefined,
         orderBy: [{ order: "asc" }, { name: "asc" }],
       });
       return this.returnSuccess(items);
@@ -120,8 +136,16 @@ export class MasterDataService extends BaseService {
 
   async getCities(districtId?: string): Promise<Result<any[]>> {
     try {
-      const items = await (prisma as any).masterCity.findMany({
-        where: districtId ? { districtId } : undefined,
+      let resolvedDistrictId = districtId;
+      if (districtId) {
+        const district = await prisma.masterDistrict.findFirst({
+          where: { OR: [{ id: districtId }, { name: { equals: districtId, mode: "insensitive" } }] },
+        });
+        if (district) resolvedDistrictId = district.id;
+      }
+
+      const items = await prisma.masterCity.findMany({
+        where: resolvedDistrictId ? { districtId: resolvedDistrictId } : undefined,
         orderBy: [{ order: "asc" }, { name: "asc" }],
       });
       return this.returnSuccess(items);

@@ -16,15 +16,10 @@ export default async function SearchPage() {
 
   const profileResult =
     await container.services.profileService.getProfileByUserId(userId);
-  if (!profileResult.success) {
+  if (!profileResult.success || !profileResult.data) {
     redirect("/onboarding");
   }
   const profile = profileResult.data;
-
-  // Profile approval check
-  if (profile.status !== "APPROVED") {
-    redirect("/dashboard");
-  }
 
   const defaultGender = profile.gender === "MALE" ? "FEMALE" : "MALE";
 
@@ -35,6 +30,7 @@ export default async function SearchPage() {
     limit: 12,
   });
 
+  const initialError = !searchRes.success ? searchRes.error : undefined;
   const initialData = searchRes.success && searchRes.data ? searchRes.data.data : [];
   const totalRecords = searchRes.success && searchRes.data ? searchRes.data.totalRecords : 0;
   const totalPages = searchRes.success && searchRes.data ? searchRes.data.totalPages : 1;
@@ -92,6 +88,7 @@ export default async function SearchPage() {
           totalPages,
         }}
         defaultGender={defaultGender}
+        initialError={initialError}
       />
     </div>
   );

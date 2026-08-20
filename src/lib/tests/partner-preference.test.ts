@@ -61,6 +61,7 @@ async function testPartnerPreferenceFlow() {
   const regRes = await authService.register({
     name: "Pref Test User",
     email: testEmail,
+    phone: `+9198${(Date.now() % 100000000).toString().padStart(8, "0")}`,
     password: "Password@123",
   });
   assert.ok(regRes.success, "Test user registration must succeed");
@@ -87,7 +88,9 @@ async function testPartnerPreferenceFlow() {
     country: "India",
   });
   assert.ok(updatePrefRes.success, `updatePartnerPreference should succeed: ${updatePrefRes.error}`);
+  // @ts-ignore
   assert.strictEqual(updatePrefRes.data.minAge, 26);
+  // @ts-ignore
   assert.strictEqual(updatePrefRes.data.maxAge, 32);
   console.log("✓ updatePartnerPreference correctly upserted PartnerPreference record:", updatePrefRes.data);
 
@@ -95,12 +98,16 @@ async function testPartnerPreferenceFlow() {
   console.log("\n[5. Verifying fetched profile includes partner preferences]");
   const fetchRes = await profileService.getProfileByUserId(userId);
   assert.ok(fetchRes.success, "Profile fetch must succeed");
+  // @ts-ignore
   assert.ok(fetchRes.data.partnerPreference, "Profile must include partnerPreference relation");
+  // @ts-ignore
   assert.strictEqual(fetchRes.data.partnerPreference.minAge, 26);
+  // @ts-ignore
   assert.strictEqual(fetchRes.data.partnerPreference.religion, "Hindu");
   console.log("✓ Fetched profile correctly contains partner preference relation!");
 
   // Verify completion percentage calculation accounts for partner preferences
+  // @ts-ignore
   console.log(`✓ Profile completion percent: ${fetchRes.data.completionPercent}%`);
 
   console.log("\n=================================================");

@@ -14,24 +14,37 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getPublicProfileById, PUBLIC_PROFILES } from "@/lib/mock-profiles";
-
-export function generateStaticParams() {
-  return PUBLIC_PROFILES.map((p) => ({ id: p.id }));
-}
+import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const profile = getPublicProfileById(id);
-  if (!profile) return { title: "Profile Not Found | InstantMatrimony" };
-  return {
-    title: `${profile.name}, ${profile.age} · ${profile.profession} | InstantMatrimony`,
-    description: `${profile.religion} ${profile.community} profile from ${profile.city}, ${profile.state}. Register free to view full details and connect.`,
-  };
+  try {
+    const { id } = await params;
+    const profile = await prisma.profile.findFirst({
+      where: {
+        OR: [
+          { id },
+          { userId: id },
+          { user: { publicId: id } },
+        ],
+        deletedAt: null,
+      },
+      include: { user: true },
+    });
+    if (!profile) return { title: "Profile Not Found | InstantMatrimony" };
+    const age = profile.dateOfBirth
+      ? new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()
+      : "N/A";
+    return {
+      title: `${profile.user?.name || "Member"}, ${age} · ${profile.occupation || "N/A"} | InstantMatrimony`,
+      description: `${profile.religion || ""} ${profile.caste || ""} profile from ${profile.city || ""}, ${profile.state || ""}. Register free to view full details and connect.`,
+    };
+  } catch {
+    return { title: "Profile | InstantMatrimony" };
+  }
 }
 
 export default async function PublicProfilePreview({
@@ -40,24 +53,73 @@ export default async function PublicProfilePreview({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const profile = getPublicProfileById(id);
-  if (!profile) notFound();
+  let dbProfile: any = null;
+
+  try {
+    dbProfile = await prisma.profile.findFirst({
+      where: {
+        OR: [
+          { id },
+          { userId: id },
+          { user: { publicId: id } },
+        ],
+        status: "APPROVED",
+        deletedAt: null,
+        user: { isActive: true, deletedAt: null },
+      },
+      include: {
+        user: { select: { id: true, name: true, publicId: true } },
+        photos: { where: { deletedAt: null } },
+      },
+    });
+  } catch (err) {
+    console.error("PublicProfilePreview query error:", err);
+  }
+
+  if (!dbProfile) notFound();
+
+  // Map DB profile to view structure
+  const name = dbProfile.user?.name || "Member";
+  const mainPhoto =
+    dbProfile.photos?.find((p: any) => p.isMain)?.url ||
+    dbProfile.photos?.[0]?.url ||
+    null;
+
+  const profile: any = {
+    ...dbProfile,
+    name,
+    age: dbProfile.dateOfBirth
+      ? new Date().getFullYear() - new Date(dbProfile.dateOfBirth).getFullYear()
+      : "N/A",
+    profession: dbProfile.occupation || "N/A",
+    community: dbProfile.caste || "N/A",
+    height: dbProfile.height
+      ? `${Math.floor(dbProfile.height / 12)}'${dbProfile.height % 12}"`
+      : "N/A",
+    image: mainPhoto,
+    tone: "from-rose-500 to-pink-500",
+    initials: name.substring(0, 2).toUpperCase(),
+    premium: false,
+    verified: true,
+    lastActive: "Recently",
+    about: dbProfile.bio || "No description provided.",
+  };
 
   const facts = [
     { icon: Ruler, label: "Height", value: profile.height },
     {
       icon: HeartHandshake,
       label: "Marital Status",
-      value: profile.maritalStatus,
+      value: profile.maritalStatus || "N/A",
     },
-    { icon: Languages, label: "Mother Tongue", value: profile.motherTongue },
+    { icon: Languages, label: "Mother Tongue", value: profile.motherTongue || "N/A" },
     {
       icon: Sparkles,
       label: "Community",
-      value: `${profile.religion} · ${profile.community}`,
+      value: `${profile.religion || "N/A"} · ${profile.community}`,
     },
-    { icon: GraduationCap, label: "Education", value: profile.education },
-    { icon: Briefcase, label: "Profession", value: profile.profession },
+    { icon: GraduationCap, label: "Education", value: profile.education || "N/A" },
+    { icon: Briefcase, label: "Profession", value: profile.profession || "N/A" },
   ];
 
   return (
@@ -76,11 +138,19 @@ export default async function PublicProfilePreview({
           <div className="lg:col-span-4">
             <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm sticky top-24">
               <div
-                className={`relative h-52 bg-gradient-to-br ${profile.tone} flex items-center justify-center`}
+                className={`relative h-52 bg-gradient-to-br ${profile.tone} flex items-center justify-center overflow-hidden`}
               >
-                <span className="text-6xl font-extrabold text-white/90">
-                  {profile.initials}
-                </span>
+                {profile.image ? (
+                  <img
+                    src={profile.image}
+                    alt={profile.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-6xl font-extrabold text-white/90">
+                    {profile.initials}
+                  </span>
+                )}
                 {profile.premium && (
                   <span className="absolute top-3 left-3 bg-primary/90 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
                     Premium

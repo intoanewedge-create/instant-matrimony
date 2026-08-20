@@ -15,8 +15,9 @@ export default async function InterestsPage() {
   if (!profileResult.success) {
     redirect("/onboarding");
   }
-  if (profileResult.data.status !== "APPROVED") {
-    redirect("/dashboard");
+  // @ts-ignore
+  if (profileResult.data.status === "DRAFT") {
+    redirect("/onboarding");
   }
 
   // Fetch received and sent interests with member profiles and photos

@@ -12,7 +12,11 @@ export class ProfileMapper {
       publicId: (profile as any).user?.publicId || null,
       gender: profile.gender,
       age: profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : null,
-      dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,
+      dateOfBirth: profile.dateOfBirth
+        ? profile.dateOfBirth instanceof Date
+          ? profile.dateOfBirth.toISOString()
+          : new Date(profile.dateOfBirth).toISOString()
+        : null,
       religion: profile.religion,
       motherTongue: profile.motherTongue,
       caste: profile.caste,
@@ -50,9 +54,13 @@ export class ProfileMapper {
       maxHeight: preference.maxHeight,
       maritalStatus: preference.maritalStatus,
       religion: preference.religion,
+      caste: (preference as any).caste || null,
       motherTongue: preference.motherTongue,
       education: preference.education,
+      occupation: (preference as any).occupation || null,
       country: preference.country,
+      state: (preference as any).state || null,
+      city: (preference as any).city || null,
     };
   }
 }

@@ -30,7 +30,7 @@ export class MessagingService extends BaseService {
     content: string,
     conversationId?: string,
     attachmentMediaIds?: string[]
-  ): Promise<Result<any>> {
+  ): Promise<Result<unknown>> {
     try {
       const allowed = await this.permissionService.canChat(senderId, receiverId);
       if (!allowed) {
@@ -83,12 +83,12 @@ export class MessagingService extends BaseService {
       );
 
       return this.returnSuccess(MessageMapper.toResponse(message));
-    } catch (e: any) {
-      return this.returnFailure(e.message, "MESSAGE_SEND_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "MESSAGE_SEND_ERROR");
     }
   }
 
-  async getChatMessages(userId: string, contactId: string, cursor?: string, limit?: number): Promise<Result<any>> {
+  async getChatMessages(userId: string, contactId: string, cursor?: string, limit?: number): Promise<Result<unknown>> {
     try {
       const allowed = await this.permissionService.canChat(userId, contactId);
       if (!allowed) {
@@ -101,21 +101,21 @@ export class MessagingService extends BaseService {
       const messages = await this.messageRepository.findChatMessages(userId, contactId, cursor, limit);
       const responses = messages.map(MessageMapper.toResponse);
       return this.returnSuccess(responses);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "CHAT_FETCH_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "CHAT_FETCH_ERROR");
     }
   }
 
-  async getConversations(userId: string): Promise<Result<any>> {
+  async getConversations(userId: string): Promise<Result<unknown>> {
     try {
       const conversations = await this.conversationRepo.findUserConversations(userId);
       return this.returnSuccess(conversations);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "CONVERSATIONS_FETCH_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "CONVERSATIONS_FETCH_ERROR");
     }
   }
 
-  async getConversationMessages(userId: string, conversationId: string, cursor?: string, limit?: number): Promise<Result<any>> {
+  async getConversationMessages(userId: string, conversationId: string, cursor?: string, limit?: number): Promise<Result<unknown>> {
     try {
       const participant = await this.participantRepo.findParticipant(conversationId, userId);
       if (!participant || participant.isDeleted) {
@@ -140,39 +140,62 @@ export class MessagingService extends BaseService {
       await this.messageRepository.markAsDelivered(conversationId, userId);
       const responses = messages.map(MessageMapper.toResponse);
       return this.returnSuccess(responses);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "CONVERSATION_MESSAGES_FETCH_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "CONVERSATION_MESSAGES_FETCH_ERROR");
     }
   }
 
-  async markAsRead(userId: string, conversationId: string): Promise<Result<boolean>> {
+  async markAsRead(userId: string, targetId: string): Promise<Result<boolean>> {
     try {
-      const participant = await this.participantRepo.findParticipant(conversationId, userId);
+      let conversationId = targetId;
+      let otherUserId: string | null = null;
+
+      // 1. Try resolving targetId directly as a conversation
+      let participant = await this.participantRepo.findParticipant(conversationId, userId);
       if (!participant) {
-        return this.returnFailure("Participant record not found.", "PARTICIPANT_NOT_FOUND");
+        // targetId might be contactId. Look up conversation between userId and contactId
+        const conversation = await this.conversationRepo.findByParticipants([userId, targetId]);
+        if (conversation) {
+          conversationId = conversation.id;
+          otherUserId = targetId;
+          participant = await this.participantRepo.findParticipant(conversationId, userId);
+        } else {
+          // If no conversation record yet, still mark any direct messages as read
+          await this.messageRepository.markAsRead(targetId, userId);
+          return this.returnSuccess(true);
+        }
       }
 
-      await this.participantRepo.resetUnreadCount(conversationId, userId);
+      if (participant) {
+        await this.participantRepo.resetUnreadCount(conversationId, userId);
+      }
 
-      const conversation = (await this.conversationRepo.findById(conversationId)) as any;
-      if (conversation) {
-        const otherParticipant = conversation.participants.find((p: any) => p.userId !== userId);
-        if (otherParticipant) {
-          await this.messageRepository.markAsRead(otherParticipant.userId, userId);
-          const lastMsg = conversation.messages[0];
-          if (lastMsg) {
-            await this.realtimeProvider.emitReadReceipt(conversationId, userId, lastMsg.id);
+      if (!otherUserId) {
+        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
+        if (conversation && conversation.participants) {
+          const otherParticipant = conversation.participants.find((p: any) => p.userId !== userId);
+          if (otherParticipant) {
+            otherUserId = otherParticipant.userId;
           }
         }
       }
 
+      if (otherUserId) {
+        await this.messageRepository.markAsRead(otherUserId, userId);
+        const conversation = (await this.conversationRepo.findById(conversationId)) as any;
+        const lastMsg = conversation?.messages?.[0];
+        if (lastMsg) {
+          await this.realtimeProvider.emitReadReceipt(conversationId, userId, lastMsg.id);
+        }
+      }
+
       return this.returnSuccess(true);
-    } catch (e: any) {
-      return { success: false, error: e.message };
+    } catch (error: unknown) {
+      return { success: false, error: (error as Error).message };
     }
   }
 
-  async addReaction(userId: string, messageId: string, reaction: string): Promise<Result<any>> {
+  async addReaction(userId: string, messageId: string, reaction: string): Promise<Result<unknown>> {
     try {
       const message = await this.messageRepository.findById(messageId);
       if (!message) {
@@ -181,8 +204,8 @@ export class MessagingService extends BaseService {
 
       const result = await this.reactionRepo.upsert(messageId, userId, reaction);
       return this.returnSuccess(result);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "REACTION_ADD_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "REACTION_ADD_ERROR");
     }
   }
 
@@ -190,8 +213,8 @@ export class MessagingService extends BaseService {
     try {
       await this.reactionRepo.delete(messageId, userId, reaction);
       return this.returnSuccess(true);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "REACTION_REMOVE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "REACTION_REMOVE_ERROR");
     }
   }
 
@@ -199,8 +222,8 @@ export class MessagingService extends BaseService {
     try {
       await this.realtimeProvider.emitTyping(conversationId, userId, isTyping);
       return this.returnSuccess(true);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "TYPING_STATUS_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "TYPING_STATUS_ERROR");
     }
   }
 
@@ -208,12 +231,12 @@ export class MessagingService extends BaseService {
     try {
       await this.realtimeProvider.emitPresence(userId, isOnline, new Date());
       return this.returnSuccess(true);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "PRESENCE_UPDATE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "PRESENCE_UPDATE_ERROR");
     }
   }
 
-  async searchMessages(userId: string, conversationId: string, query: string): Promise<Result<any>> {
+  async searchMessages(userId: string, conversationId: string, query: string): Promise<Result<unknown>> {
     try {
       const participant = await this.participantRepo.findParticipant(conversationId, userId);
       if (!participant) {
@@ -223,8 +246,8 @@ export class MessagingService extends BaseService {
       const messages = await this.messageRepository.searchMessages(conversationId, query);
       const responses = messages.map(MessageMapper.toResponse);
       return this.returnSuccess(responses);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "MESSAGE_SEARCH_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "MESSAGE_SEARCH_ERROR");
     }
   }
 
@@ -239,8 +262,8 @@ export class MessagingService extends BaseService {
       }
       await this.messageRepository.softDelete(messageId);
       return this.returnSuccess(true);
-    } catch (e: any) {
-      return this.returnFailure(e.message, "MESSAGE_DELETE_ERROR");
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "MESSAGE_DELETE_ERROR");
     }
   }
 }

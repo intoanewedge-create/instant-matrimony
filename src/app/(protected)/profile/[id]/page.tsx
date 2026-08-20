@@ -13,7 +13,7 @@ export default async function ProfileDetailPage({
     redirect("/login");
   }
   const selfUserId = (session.user as any).id;
-  const targetUserId = (await params).id;
+  const rawId = (await params).id;
 
   const selfProfile = await prisma.profile.findUnique({
     where: { userId: selfUserId },
@@ -24,20 +24,24 @@ export default async function ProfileDetailPage({
     redirect("/dashboard");
   }
 
-  // If viewing self, redirect to profile workspace
-  if (selfUserId === targetUserId) {
-    redirect("/profile");
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawId);
+  const orConditions: any[] = [{ user: { publicId: rawId } }];
+  if (isUuid) {
+    orConditions.push({ userId: rawId }, { id: rawId });
   }
 
-  // Fetch target profile with privacy settings
-  const targetProfile = await prisma.profile.findUnique({
-    where: { userId: targetUserId },
+  // Fetch target profile with multi-identifier support (userId, profile.id, or user.publicId)
+  const targetProfile = await prisma.profile.findFirst({
+    where: {
+      OR: orConditions,
+      deletedAt: null,
+    },
     include: {
       photos: { where: { deletedAt: null } },
       privacy: true,
       partnerPreference: true,
       user: {
-        select: { id: true, name: true, email: true, phone: true, isActive: true, identityVerification: true },
+        select: { id: true, name: true, email: true, phone: true, publicId: true, isActive: true, identityVerification: true },
       },
     },
   });
@@ -50,6 +54,13 @@ export default async function ProfileDetailPage({
     (!isAdmin && targetProfile.status !== "APPROVED")
   ) {
     redirect("/dashboard");
+  }
+
+  const targetUserId = targetProfile.userId;
+
+  // If viewing self, redirect to profile workspace
+  if (selfUserId === targetUserId) {
+    redirect("/profile");
   }
 
   if (!isAdmin) {
