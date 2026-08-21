@@ -58,6 +58,15 @@ export class MessagingService extends BaseService {
       );
 
       await this.participantRepo.incrementUnreadCount(activeConversationId, senderId);
+      try {
+        const { prisma } = await import("../prisma");
+        await prisma.conversation.update({
+          where: { id: activeConversationId },
+          data: { updatedAt: new Date() },
+        });
+      } catch {
+        // ignore
+      }
 
       await this.realtimeProvider.emitMessage({
         conversationId: activeConversationId,

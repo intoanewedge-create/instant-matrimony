@@ -17,7 +17,10 @@ export class PrismaProfileRepository extends BaseRepository<Profile> implements 
         },
       },
       include: {
-        photos: true,
+        photos: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: "asc" },
+        },
         partnerPreference: true,
         user: {
           select: {

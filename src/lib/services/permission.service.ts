@@ -168,7 +168,7 @@ export class PermissionService extends BaseService {
       ] = await Promise.all([
         prisma.profile.findUnique({
           where: { userId: senderId },
-          select: { gender: true, status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
+          select: { gender: true, status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true, role: true } } },
         }),
         prisma.profile.findUnique({
           where: { userId: receiverId },
@@ -239,7 +239,11 @@ export class PermissionService extends BaseService {
       const isMutual = !!acceptedMatch || (!!sentAtoB && !!sentBtoA);
       if (!isMutual) return false;
 
-      // 4. Sender MUST have active ₹1,000+ membership
+      // 4. Sender MUST have active ₹1,000+ membership (ADMIN role exempt)
+      if (senderProfile.user?.role === "ADMIN") {
+        return true;
+      }
+
       if (!activeMembership) return false;
 
       const planPrice = activeMembership.plan?.price ?? 0;

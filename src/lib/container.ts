@@ -204,12 +204,17 @@ const smsOtpProvider =
 import { SupabaseStorageProvider } from "./storage/supabase-provider";
 
 let storageProvider: StorageProvider;
-if (storageConfig.provider === "supabase") {
+if (
+  storageConfig.provider === "cloudinary" ||
+  process.env.CLOUDINARY_URL ||
+  process.env.CLOUDINARY_CLOUD_NAME ||
+  process.env.CLOUDINARY_API_KEY
+) {
+  storageProvider = new CloudinaryStorageProvider();
+} else if (storageConfig.provider === "supabase") {
   storageProvider = new SupabaseStorageProvider();
 } else if (storageConfig.provider === "local") {
   storageProvider = new LocalStorageProvider();
-} else if (storageConfig.provider === "cloudinary") {
-  storageProvider = new CloudinaryStorageProvider();
 } else if (storageConfig.provider === "s3") {
   storageProvider = new S3StorageProvider();
 } else if (storageConfig.provider === "r2") {

@@ -8,9 +8,13 @@ export const storageConfig = {
     baseUrl: "/uploads",
   },
   cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    cloudName:
+      process.env.CLOUDINARY_CLOUD_NAME ||
+      (process.env.CLOUDINARY_URL && process.env.CLOUDINARY_URL.includes("@")
+        ? process.env.CLOUDINARY_URL.split("@")[1]
+        : ""),
     apiKey: process.env.CLOUDINARY_API_KEY || "",
-    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET || "",
   },
   s3: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",

@@ -480,6 +480,23 @@ export function ProfileClient({
       })
       .catch(() => {});
 
+    // Initial fetch for Districts & Cities from database/master-data
+    const initialDistrictQuery = profile.state ? `&parentId=${encodeURIComponent(profile.state)}` : "";
+    fetch(`/api/master-data?type=districts${initialDistrictQuery}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setDistricts(res.data);
+      })
+      .catch(() => {});
+
+    const initialCityQuery = profile.district ? `&parentId=${encodeURIComponent(profile.district)}` : "";
+    fetch(`/api/master-data?type=cities${initialCityQuery}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.data) setCities(res.data);
+      })
+      .catch(() => {});
+
     getProfilePrivacyAction().then((res) => {
       if (res.success && res.privacy) {
         setPrivacySettings({
@@ -578,17 +595,15 @@ export function ProfileClient({
       fetch(`/api/master-data?type=districts&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
         .then((res) => {
-          if (res.success && res.data) setDistricts(res.data);
+          if (res.success && res.data && res.data.length > 0) setDistricts(res.data);
         })
         .catch(() => {});
-    } else {
-      setDistricts([]);
     }
   }, [selectedState, states]);
 
   // Fetch Cities when District changes
   useEffect(() => {
-    if (selectedDistrict) {
+    if (selectedDistrict && selectedDistrict !== "Other") {
       const distObj = districts.find(
         (d) => d.name === selectedDistrict || d.id === selectedDistrict,
       );
@@ -596,11 +611,9 @@ export function ProfileClient({
       fetch(`/api/master-data?type=cities&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
         .then((res) => {
-          if (res.success && res.data) setCities(res.data);
+          if (res.success && res.data && res.data.length > 0) setCities(res.data);
         })
         .catch(() => {});
-    } else {
-      setCities([]);
     }
   }, [selectedDistrict, districts]);
 
@@ -1466,6 +1479,9 @@ export function ProfileClient({
                           {districts.map((d) => (
                             <option key={d.id || d.name} value={d.name}>{d.name}</option>
                           ))}
+                          {profile.district && profile.district !== "Other" && !districts.some((d) => d.name === profile.district) && (
+                            <option key={profile.district} value={profile.district}>{profile.district}</option>
+                          )}
                           <option value="Other">Other (Please specify)</option>
                         </select>
                         {selectedDistrict === "Other" && (
@@ -1489,6 +1505,9 @@ export function ProfileClient({
                           {cities.map((c) => (
                             <option key={c.id || c.name} value={c.name}>{c.name}</option>
                           ))}
+                          {profile.city && profile.city !== "Other" && !cities.some((c) => c.name === profile.city) && (
+                            <option key={profile.city} value={profile.city}>{profile.city}</option>
+                          )}
                           <option value="Other">Other (Please specify)</option>
                         </select>
                         {selectedCity === "Other" && (

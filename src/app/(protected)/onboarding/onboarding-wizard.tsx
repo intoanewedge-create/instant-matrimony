@@ -206,6 +206,19 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       .then((r) => r.json())
       .then((res) => { if (res.success && res.data) setCountries(res.data); })
       .catch(() => {});
+
+    // Initial fetch for Districts & Cities
+    const distQuery = initialProfile?.state ? `&parentId=${encodeURIComponent(initialProfile.state)}` : "";
+    fetch(`/api/master-data?type=districts${distQuery}`)
+      .then((r) => r.json())
+      .then((res) => { if (res.success && res.data) setDistricts(res.data); })
+      .catch(() => {});
+
+    const cityQuery = initialProfile?.district ? `&parentId=${encodeURIComponent(initialProfile.district)}` : "";
+    fetch(`/api/master-data?type=cities${cityQuery}`)
+      .then((r) => r.json())
+      .then((res) => { if (res.success && res.data) setCities(res.data); })
+      .catch(() => {});
   }, []);
 
   // Fetch Castes when Religion changes
@@ -272,36 +285,27 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
       fetch(`/api/master-data?type=districts&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
         .then((res) => { 
-          if (res.success && res.data) {
+          if (res.success && res.data && res.data.length > 0) {
             setDistricts(res.data);
-          } else {
-            setDistricts([]);
           }
         })
-        .catch(() => setDistricts([]));
-    } else {
-      setDistricts([]);
-      setCities([]);
+        .catch(() => {});
     }
   }, [selectedState, states]);
 
   // Fetch Cities when District changes
   useEffect(() => {
-    if (selectedDistrict) {
+    if (selectedDistrict && selectedDistrict !== "Other") {
       const distObj = districts.find((d) => d.name === selectedDistrict || d.id === selectedDistrict);
       const queryId = distObj?.name || distObj?.id || selectedDistrict;
       fetch(`/api/master-data?type=cities&parentId=${encodeURIComponent(queryId)}`)
         .then((r) => r.json())
         .then((res) => {
-          if (res.success && res.data) {
+          if (res.success && res.data && res.data.length > 0) {
             setCities(res.data);
-          } else {
-            setCities([]);
           }
         })
-        .catch(() => setCities([]));
-    } else {
-      setCities([]);
+        .catch(() => {});
     }
   }, [selectedDistrict, districts]);
 

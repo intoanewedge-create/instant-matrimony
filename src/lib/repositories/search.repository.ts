@@ -273,8 +273,8 @@ export class PrismaSearchRepository implements ISearchRepository {
       } else {
         categoryTargetUserIds = [];
       }
-    } else if (category === "all" || category === "best_matches" || !category) {
-      // Best Matches: Apply viewer's PartnerPreference
+    } else if (category === "best_matches") {
+      // Best Matches: Apply viewer's PartnerPreference defaults
       if (viewerPref) {
         if (filters.minAge === undefined && viewerPref.minAge) filters.minAge = viewerPref.minAge;
         if (filters.maxAge === undefined && viewerPref.maxAge) filters.maxAge = viewerPref.maxAge;
