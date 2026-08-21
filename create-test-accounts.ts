@@ -16,7 +16,7 @@ async function main() {
         name: 'Standard Plan',
         description: 'Standard access with messaging',
         price: 1500,
-        duration: 30,
+        durationDays: 30,
         features: ['MESSAGING', 'CONTACT'],
         isActive: true
       }
@@ -26,7 +26,15 @@ async function main() {
   // 2. Create Test User 1 (Male)
   const user1 = await prisma.user.upsert({
     where: { email: 'test_male@example.com' },
-    update: {},
+    update: {
+      profile: {
+        update: {
+          gender: 'MALE',
+          status: 'APPROVED',
+          completionPercent: 100
+        }
+      }
+    },
     create: {
       email: 'test_male@example.com',
       password: passwordHash,
@@ -36,7 +44,7 @@ async function main() {
       name: 'Rahul Sharma',
       profile: {
         create: {
-          gender: 'Male',
+          gender: 'MALE',
           status: 'APPROVED',
           dateOfBirth: new Date('1990-01-01'),
           height: 175,
@@ -46,7 +54,8 @@ async function main() {
           city: 'Mumbai',
           state: 'Maharashtra',
           country: 'India',
-          bio: 'Test account for matching.'
+          bio: 'Test account for matching.',
+          completionPercent: 100
         }
       }
     },
@@ -56,7 +65,15 @@ async function main() {
   // 3. Create Test User 2 (Female)
   const user2 = await prisma.user.upsert({
     where: { email: 'test_female@example.com' },
-    update: {},
+    update: {
+      profile: {
+        update: {
+          gender: 'FEMALE',
+          status: 'APPROVED',
+          completionPercent: 100
+        }
+      }
+    },
     create: {
       email: 'test_female@example.com',
       password: passwordHash,
@@ -66,7 +83,7 @@ async function main() {
       name: 'Priya Patel',
       profile: {
         create: {
-          gender: 'Female',
+          gender: 'FEMALE',
           status: 'APPROVED',
           dateOfBirth: new Date('1992-05-15'),
           height: 165,
@@ -76,7 +93,8 @@ async function main() {
           city: 'Pune',
           state: 'Maharashtra',
           country: 'India',
-          bio: 'Test account for matching.'
+          bio: 'Test account for matching.',
+          completionPercent: 100
         }
       }
     },
