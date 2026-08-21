@@ -31,7 +31,8 @@ export class ImageService extends BaseService {
 
   async processImage(
     buffer: Buffer,
-    _originalName: string
+    _originalName: string,
+    mimeType?: string
   ): Promise<Result<{
     processedBuffer: Buffer;
     mimeType: string;
@@ -44,14 +45,11 @@ export class ImageService extends BaseService {
     try {
       const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
-      // Bypass sharp processing completely.
-      // We will upload the raw original image directly to Cloudinary.
-      // Cloudinary / Next.js Image Component will handle optimization and resizing.
       return this.returnSuccess({
         processedBuffer: buffer,
-        mimeType: "image/jpeg", // Defaulting to jpeg, cloudinary auto-detects real type
-        width: 1000, // Dummy width
-        height: 1000, // Dummy height
+        mimeType: mimeType || "image/jpeg",
+        width: 1000,
+        height: 1000,
         checksum,
         thumbnailBuffer: buffer,
         responsiveBuffers: [],

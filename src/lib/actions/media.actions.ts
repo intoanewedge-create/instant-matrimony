@@ -44,7 +44,7 @@ export async function uploadPhoto(formData: FormData) {
       return { success: false, error: validateRes.error };
     }
 
-    const processRes = await container.services.imageService.processImage(buffer, file.name);
+    const processRes = await container.services.imageService.processImage(buffer, file.name, file.type);
     if (!processRes.success || !processRes.data) {
       return { success: false, error: processRes.error };
     }
@@ -142,7 +142,7 @@ export async function replacePhoto(photoId: string, formData: FormData) {
       return { success: false, error: validateRes.error };
     }
 
-    const processRes = await container.services.imageService.processImage(buffer, file.name);
+    const processRes = await container.services.imageService.processImage(buffer, file.name, file.type);
     if (!processRes.success || !processRes.data) {
       return { success: false, error: processRes.error };
     }
