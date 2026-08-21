@@ -8,7 +8,8 @@ import crypto from "crypto";
 let _sharp: typeof import("sharp") | null = null;
 async function getSharp() {
   if (!_sharp) {
-    _sharp = (await import("sharp")).default as any;
+    const sharpModule = await import("sharp");
+    _sharp = (sharpModule.default || sharpModule) as any;
   }
   return _sharp as unknown as typeof import("sharp").default;
 }
@@ -45,7 +46,8 @@ export class ImageService extends BaseService {
       if (metadata.width < 100 || metadata.height < 100) {
         return this.returnFailure("Image must be at least 100x100 pixels", "IMAGE_TOO_SMALL");
       }
-    } catch {
+    } catch (e: any) {
+      console.error("Failed to read image metadata:", e);
       return this.returnFailure("Failed to read image metadata", "INVALID_IMAGE_FILE");
     }
 
