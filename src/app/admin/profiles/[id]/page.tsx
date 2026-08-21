@@ -45,7 +45,7 @@ export default async function AdminProfileDetailPage({
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            Reviewing Profile: <span className="text-rose-600">{displayProfileId}</span>
+            Reviewing User: <span className="text-rose-600 font-mono">{profile.userId || profile.user?.id}</span>
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 profile.status === "APPROVED"
@@ -62,7 +62,7 @@ export default async function AdminProfileDetailPage({
               {profile.status}
             </span>
           </h1>
-          <p className="text-xs text-slate-500">Profile ID: {displayProfileId} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-slate-500">User ID: <span className="font-mono font-bold text-slate-700">{profile.userId || profile.user?.id}</span>{profile.user?.publicId ? ` | Public ID: ${profile.user.publicId}` : ""} | Submitted: {new Date(profile.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
 

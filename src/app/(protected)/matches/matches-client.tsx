@@ -329,7 +329,7 @@ export function MatchesClient({ initialResults }: MatchesClientProps) {
       case "pref_nri":
         return "No Non-Resident Indian (NRI) profiles found matching your active criteria.";
       case "with_horoscope":
-        return "No active profiles with horoscope details found.";
+        return "No active profiles with horoscope details found matching your criteria. Ensure you have provided your horoscope details on your profile to unlock full horoscope compatibility matching.";
       case "with_photos":
         return "No active profiles with photos found matching your criteria.";
       default:

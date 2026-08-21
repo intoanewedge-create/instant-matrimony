@@ -88,7 +88,8 @@ export function EditableMasterDataList({
     try {
       const body: any = { category, id: editingId, name: editName.trim() };
       if (labelField === "order") body.order = parseInt(editLabel) || 0;
-      if (labelField === "code") body.code = editLabel;
+      if (labelField === "code" && (category === "countries" || category === "states")) body.code = editLabel;
+      if (labelField === "category" && (category === "educations" || category === "occupations")) body.category = editLabel;
       if (editParentId) body.parentId = editParentId;
 
       const res = await fetch("/api/master-data", {
@@ -141,7 +142,8 @@ export function EditableMasterDataList({
     try {
       const body: any = { category, name: newName.trim() };
       if (labelField === "order") body.order = parseInt(newLabel) || 0;
-      if (labelField === "code") body.code = newLabel;
+      if (labelField === "code" && (category === "countries" || category === "states")) body.code = newLabel;
+      if (labelField === "category" && (category === "educations" || category === "occupations")) body.category = newLabel;
       if (newParentId) body.parentId = newParentId;
 
       const res = await fetch("/api/master-data", {

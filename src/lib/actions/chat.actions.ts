@@ -250,3 +250,18 @@ export async function deleteMessageAction(messageId: string, contactId?: string)
 
   return { success: true };
 }
+
+export async function getOrCreateConversationAction(targetUserId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = session.user.id;
+
+  const serviceResult = await container.services.messagingService.getOrCreateConversation(userId, targetUserId);
+  if (!serviceResult.success) {
+    return { success: false, error: serviceResult.error };
+  }
+
+  return { success: true, conversation: serviceResult.data };
+}

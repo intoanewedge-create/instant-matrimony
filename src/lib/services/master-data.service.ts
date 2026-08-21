@@ -124,34 +124,36 @@ export class MasterDataService extends BaseService {
 
   async getDistricts(stateId?: string): Promise<Result<any[]>> {
     try {
-      if (stateId) {
-        const items = await prisma.masterDistrict.findMany({
-          where: {
-            OR: [
-              { stateId },
-              { state: { name: { equals: stateId, mode: "insensitive" } } },
-            ],
-          },
-          orderBy: [{ order: "asc" }, { name: "asc" }],
-        });
-        if (items.length > 0) {
-          return this.returnSuccess(items);
-        }
+      const items = await prisma.masterDistrict.findMany({
+        where: stateId
+          ? {
+              OR: [
+                { stateId },
+                { state: { name: { equals: stateId, mode: "insensitive" } } },
+              ],
+            }
+          : undefined,
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      });
+      if (items.length > 0) {
+        return this.returnSuccess(items);
       }
 
-      // Check fallback location hierarchy
-      const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
-      const matched = INDIAN_LOCATION_DATA.find(
-        (s) =>
-          s.state.toLowerCase() === (stateId || "").toLowerCase() ||
-          s.state.toLowerCase().includes((stateId || "").toLowerCase())
-      );
-      if (matched) {
-        const mapped = matched.districts.map((d, idx) => ({
-          id: `${matched.state.toLowerCase()}-${idx}`,
-          name: d.name,
-        }));
-        return this.returnSuccess(mapped);
+      if (stateId) {
+        // Check fallback location hierarchy
+        const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
+        const matched = INDIAN_LOCATION_DATA.find(
+          (s) =>
+            s.state.toLowerCase() === stateId.toLowerCase() ||
+            s.state.toLowerCase().includes(stateId.toLowerCase())
+        );
+        if (matched) {
+          const mapped = matched.districts.map((d, idx) => ({
+            id: `${matched.state.toLowerCase()}-${idx}`,
+            name: d.name,
+          }));
+          return this.returnSuccess(mapped);
+        }
       }
 
       return this.returnSuccess([]);
@@ -162,35 +164,37 @@ export class MasterDataService extends BaseService {
 
   async getCities(districtId?: string): Promise<Result<any[]>> {
     try {
-      if (districtId) {
-        const items = await prisma.masterCity.findMany({
-          where: {
-            OR: [
-              { districtId },
-              { district: { name: { equals: districtId, mode: "insensitive" } } },
-            ],
-          },
-          orderBy: [{ order: "asc" }, { name: "asc" }],
-        });
-        if (items.length > 0) {
-          return this.returnSuccess(items);
-        }
+      const items = await prisma.masterCity.findMany({
+        where: districtId
+          ? {
+              OR: [
+                { districtId },
+                { district: { name: { equals: districtId, mode: "insensitive" } } },
+              ],
+            }
+          : undefined,
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      });
+      if (items.length > 0) {
+        return this.returnSuccess(items);
       }
 
-      // Check fallback location hierarchy
-      const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
-      for (const st of INDIAN_LOCATION_DATA) {
-        const d = st.districts.find(
-          (dis) =>
-            dis.name.toLowerCase() === (districtId || "").toLowerCase() ||
-            dis.name.toLowerCase().includes((districtId || "").toLowerCase())
-        );
-        if (d) {
-          const mapped = d.cities.map((c, idx) => ({
-            id: `${d.name.toLowerCase()}-${idx}`,
-            name: c,
-          }));
-          return this.returnSuccess(mapped);
+      if (districtId) {
+        // Check fallback location hierarchy
+        const { INDIAN_LOCATION_DATA } = await import("../constants/locations");
+        for (const st of INDIAN_LOCATION_DATA) {
+          const d = st.districts.find(
+            (dis) =>
+              dis.name.toLowerCase() === districtId.toLowerCase() ||
+              dis.name.toLowerCase().includes(districtId.toLowerCase())
+          );
+          if (d) {
+            const mapped = d.cities.map((c, idx) => ({
+              id: `${d.name.toLowerCase()}-${idx}`,
+              name: c,
+            }));
+            return this.returnSuccess(mapped);
+          }
         }
       }
 
@@ -225,8 +229,12 @@ export class MasterDataService extends BaseService {
       if (!model) return this.returnFailure("Invalid category", "INVALID_CATEGORY");
 
       const createData: any = { name: data.name, order: data.order ?? 0 };
-      if (data.code) createData.code = data.code;
-      if (data.category) createData.category = data.category;
+      if (data.code && (category === "countries" || category === "states")) {
+        createData.code = data.code;
+      }
+      if (data.category && (category === "educations" || category === "occupations")) {
+        createData.category = data.category;
+      }
 
       // Handle parent relationships
       if (category === "castes" && data.parentId) createData.religionId = data.parentId;
@@ -251,8 +259,12 @@ export class MasterDataService extends BaseService {
       const updateData: any = {};
       if (data.name !== undefined) updateData.name = data.name;
       if (data.order !== undefined) updateData.order = data.order;
-      if (data.code !== undefined) updateData.code = data.code;
-      if (data.category !== undefined) updateData.category = data.category;
+      if (data.code !== undefined && (category === "countries" || category === "states")) {
+        updateData.code = data.code;
+      }
+      if (data.category !== undefined && (category === "educations" || category === "occupations")) {
+        updateData.category = data.category;
+      }
 
       if (category === "castes" && data.parentId) updateData.religionId = data.parentId;
       if (category === "subcastes" && data.parentId) updateData.casteId = data.parentId;

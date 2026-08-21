@@ -223,7 +223,7 @@ export function ConciergeDetailClient({
           </Link>
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-              Concierge Case: <span className="text-rose-600 font-mono">{getDisplayProfileId(caseData.user, caseData.userId)}</span> <Sparkles className="w-5 h-5 text-amber-500" />
+              Concierge User: <span className="text-rose-600 font-mono">{caseData.userId}</span> <Sparkles className="w-5 h-5 text-amber-500" />
             </h1>
             <p className="text-xs text-slate-500">VIP Concierge Service Management</p>
           </div>

@@ -311,6 +311,27 @@ export function ProfileClient({
         : "")
   );
 
+  const [customCaste, setCustomCaste] = useState<string>(
+    profile.caste && profile.caste.startsWith("Other - ")
+      ? profile.caste.replace("Other - ", "")
+      : profile.caste || ""
+  );
+  const [customSubCaste, setCustomSubCaste] = useState<string>(
+    profile.subCaste && profile.subCaste.startsWith("Other - ")
+      ? profile.subCaste.replace("Other - ", "")
+      : profile.subCaste || ""
+  );
+  const [customDistrict, setCustomDistrict] = useState<string>(
+    profile.district && profile.district.startsWith("Other - ")
+      ? profile.district.replace("Other - ", "")
+      : profile.district || ""
+  );
+  const [customCity, setCustomCity] = useState<string>(
+    profile.city && profile.city.startsWith("Other - ")
+      ? profile.city.replace("Other - ", "")
+      : profile.city || ""
+  );
+
   // Family Details Dropdowns
   const [fatherOccupation, setFatherOccupation] = useState<string>(
     initialFamilyData.fatherOccupation || "- Select -"
@@ -418,6 +439,7 @@ export function ProfileClient({
   const selectedCountry = watchDetails("country");
   const selectedState = watchDetails("state");
   const selectedDistrict = watchDetails("district");
+  const selectedCity = watchDetails("city");
   const selectedEducation = watchDetails("education");
   const selectedOccupation = watchDetails("occupation");
 
@@ -670,19 +692,43 @@ export function ProfileClient({
           .join(" · ") || data.horoscope || undefined;
 
       const finalEducation =
-        selectedEducation === "Others" && customEducation.trim()
-          ? `Others - ${customEducation.trim()}`
+        (selectedEducation === "Others" || selectedEducation === "Other") && customEducation.trim()
+          ? customEducation.trim()
           : data.education;
 
       const finalOccupation =
-        selectedOccupation === "Others" && customOccupation.trim()
-          ? `Others - ${customOccupation.trim()}`
+        (selectedOccupation === "Others" || selectedOccupation === "Other") && customOccupation.trim()
+          ? customOccupation.trim()
           : data.occupation;
+
+      const finalCaste =
+        selectedCaste === "Other" && customCaste.trim()
+          ? customCaste.trim()
+          : data.caste;
+
+      const finalSubCaste =
+        selectedSubCaste === "Other" && customSubCaste.trim()
+          ? customSubCaste.trim()
+          : data.subCaste;
+
+      const finalDistrict =
+        selectedDistrict === "Other" && customDistrict.trim()
+          ? customDistrict.trim()
+          : data.district;
+
+      const finalCity =
+        selectedCity === "Other" && customCity.trim()
+          ? customCity.trim()
+          : data.city;
 
       const payload = {
         ...data,
         education: finalEducation,
         occupation: finalOccupation,
+        caste: finalCaste,
+        subCaste: finalSubCaste,
+        district: finalDistrict,
+        city: finalCity,
         horoscope: horoscopeFormatted,
         familyDetails: JSON.stringify(familyPayload),
         height: data.height ? Number(data.height) : undefined,
@@ -1169,46 +1215,46 @@ export function ProfileClient({
 
                       <div className="space-y-1.5">
                         <Label htmlFor="caste" className="text-xs font-semibold text-slate-700">Caste</Label>
-                        {castes.length > 0 ? (
-                          <select
-                            id="caste"
-                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                            {...registerDetails("caste")}
-                          >
-                            <option value="">Select Caste</option>
-                            {castes.map((c) => (
-                              <option key={c.id} value={c.name}>{c.name}</option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="caste"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("caste")}
+                        >
+                          <option value="">Select Caste</option>
+                          {castes.map((c) => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {selectedCaste === "Other" && (
                           <Input
-                            id="caste"
-                            placeholder="e.g. Reddy, Kamma, Brahmin"
-                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                            {...registerDetails("caste")}
+                            placeholder="Specify custom caste"
+                            value={customCaste}
+                            onChange={(e) => setCustomCaste(e.target.value)}
+                            className="mt-1.5 border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
                           />
                         )}
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="subCaste" className="text-xs font-semibold text-slate-700">Sub Caste</Label>
-                        {subCastes.length > 0 ? (
-                          <select
-                            id="subCaste"
-                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                            {...registerDetails("subCaste")}
-                          >
-                            <option value="">Select Sub Caste</option>
-                            {subCastes.map((sc) => (
-                              <option key={sc.id} value={sc.name}>{sc.name}</option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="subCaste"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("subCaste")}
+                        >
+                          <option value="">Select Sub Caste</option>
+                          {subCastes.map((sc) => (
+                            <option key={sc.id} value={sc.name}>{sc.name}</option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {selectedSubCaste === "Other" && (
                           <Input
-                            id="subCaste"
-                            placeholder="e.g. Motati, Pedakanti"
-                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                            {...registerDetails("subCaste")}
+                            placeholder="Specify custom sub caste"
+                            value={customSubCaste}
+                            onChange={(e) => setCustomSubCaste(e.target.value)}
+                            className="mt-1.5 border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
                           />
                         )}
                       </div>
@@ -1411,46 +1457,46 @@ export function ProfileClient({
 
                       <div className="space-y-1.5">
                         <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
-                        {districts.length > 0 ? (
-                          <select
-                            id="district"
-                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                            {...registerDetails("district")}
-                          >
-                            <option value="">Select District</option>
-                            {districts.map((d) => (
-                              <option key={d.id || d.name} value={d.name}>{d.name}</option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="district"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("district")}
+                        >
+                          <option value="">Select District</option>
+                          {districts.map((d) => (
+                            <option key={d.id || d.name} value={d.name}>{d.name}</option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {selectedDistrict === "Other" && (
                           <Input
-                            id="district"
-                            placeholder="e.g. Guntur, Rangareddy"
-                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                            {...registerDetails("district")}
+                            placeholder="Specify custom district"
+                            value={customDistrict}
+                            onChange={(e) => setCustomDistrict(e.target.value)}
+                            className="mt-1.5 border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
                           />
                         )}
                       </div>
 
                       <div className="space-y-1.5">
                         <Label htmlFor="city" className="text-xs font-semibold text-slate-700">City / Town</Label>
-                        {cities.length > 0 ? (
-                          <select
-                            id="city"
-                            className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
-                            {...registerDetails("city")}
-                          >
-                            <option value="">Select City / Town</option>
-                            {cities.map((c) => (
-                              <option key={c.id || c.name} value={c.name}>{c.name}</option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="city"
+                          className="w-full h-9 px-2.5 border border-slate-200 bg-slate-50 rounded-lg text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-rose-500"
+                          {...registerDetails("city")}
+                        >
+                          <option value="">Select City / Town</option>
+                          {cities.map((c) => (
+                            <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {selectedCity === "Other" && (
                           <Input
-                            id="city"
-                            placeholder="e.g. Hyderabad, Vijayawada"
-                            className="border-slate-200 bg-slate-50 text-slate-900 text-xs h-9 focus-visible:ring-rose-500"
-                            {...registerDetails("city")}
+                            placeholder="Specify custom city / town"
+                            value={customCity}
+                            onChange={(e) => setCustomCity(e.target.value)}
+                            className="mt-1.5 border-slate-200 bg-white text-slate-900 text-xs h-9 focus-visible:ring-rose-500 rounded-lg"
                           />
                         )}
                       </div>

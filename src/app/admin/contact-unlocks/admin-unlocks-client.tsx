@@ -71,8 +71,8 @@ export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
-                <th className="p-4">Unlocked By (Profile ID)</th>
-                <th className="p-4">Target Profile ID</th>
+                <th className="p-4">Unlocked By (User ID)</th>
+                <th className="p-4">Target User ID</th>
                 <th className="p-4">Membership Plan</th>
                 <th className="p-4">Unlock Reason</th>
                 <th className="p-4">Timestamp</th>
@@ -90,12 +90,12 @@ export function AdminUnlocksClient({ initialUnlocks }: { initialUnlocks: any[] }
                   <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4 font-semibold text-slate-900">
                       <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                        {getDisplayProfileId(u.user, u.userId)}
+                        {u.userId}
                       </span>
                     </td>
                     <td className="p-4 font-semibold text-rose-600">
                       <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
-                        {getDisplayProfileId(u.targetUser, u.targetUserId)}
+                        {u.targetUserId}
                       </span>
                     </td>
                     <td className="p-4">

@@ -240,8 +240,8 @@ export function AdminProfileDetailActions({ profile }: { profile: any }) {
 
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Target Member Profile ID:</span>
-                  <span className="font-mono font-bold text-slate-900">{getDisplayProfileId(profile.user, profile.userId)}</span>
+                  <span className="text-slate-500">Target Member User ID:</span>
+                  <span className="font-mono font-bold text-slate-900">{profile.userId || profile.user?.id}</span>
                 </div>
               </div>
 

@@ -197,8 +197,8 @@ export default async function AdminMasterDataPage() {
               <EditableMasterDataList
                 category="mothertongues"
                 items={motherTongues}
-                labelField="code"
-                labelPrefix="Code"
+                labelField="order"
+                labelPrefix="Order"
               />
             </CardContent>
           </Card>

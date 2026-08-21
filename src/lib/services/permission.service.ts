@@ -157,26 +157,73 @@ export class PermissionService extends BaseService {
     try {
       if (senderId === receiverId) return true;
 
+      const [
+        senderProfile,
+        receiverProfile,
+        blocked,
+        acceptedMatch,
+        sentAtoB,
+        sentBtoA,
+        activeMembership,
+      ] = await Promise.all([
+        prisma.profile.findUnique({
+          where: { userId: senderId },
+          select: { gender: true, status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
+        }),
+        prisma.profile.findUnique({
+          where: { userId: receiverId },
+          select: { gender: true, status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
+        }),
+        prisma.block.findFirst({
+          where: {
+            OR: [
+              { blockerId: senderId, blockedId: receiverId },
+              { blockerId: receiverId, blockedId: senderId },
+            ],
+          },
+          select: { id: true },
+        }),
+        prisma.interest.findFirst({
+          where: {
+            OR: [
+              { senderId, receiverId, status: "ACCEPTED" },
+              { senderId: receiverId, receiverId: senderId, status: "ACCEPTED" },
+            ],
+          },
+          select: { id: true },
+        }),
+        prisma.interest.findFirst({
+          where: { senderId, receiverId },
+          select: { id: true },
+        }),
+        prisma.interest.findFirst({
+          where: { senderId: receiverId, receiverId: senderId },
+          select: { id: true },
+        }),
+        prisma.membership.findFirst({
+          where: {
+            userId: senderId,
+            status: "ACTIVE",
+            endDate: { gte: new Date() },
+          },
+          include: { plan: true },
+        }),
+      ]);
+
       // 0. Strict Gender Isolation Check
-      const isOpposite = await this.isGenderOpposite(senderId, receiverId);
-      if (!isOpposite) return false;
+      if (!senderProfile?.gender || !receiverProfile?.gender) return false;
+      const uGender = senderProfile.gender.toUpperCase();
+      const tGender = receiverProfile.gender.toUpperCase();
+      if ((uGender === "MALE" && tGender !== "FEMALE") || (uGender === "FEMALE" && tGender !== "MALE")) {
+        return false;
+      }
 
       // 1. Both profiles must be APPROVED, non-deleted, and active
-      const senderProfile = await prisma.profile.findUnique({
-        where: { userId: senderId },
-        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
-      });
-      const receiverProfile = await prisma.profile.findUnique({
-        where: { userId: receiverId },
-        select: { status: true, deletedAt: true, user: { select: { isActive: true, deletedAt: true } } },
-      });
       if (
-        !senderProfile ||
         senderProfile.deletedAt !== null ||
         senderProfile.status !== "APPROVED" ||
         !senderProfile.user?.isActive ||
         senderProfile.user?.deletedAt !== null ||
-        !receiverProfile ||
         receiverProfile.deletedAt !== null ||
         receiverProfile.status !== "APPROVED" ||
         !receiverProfile.user?.isActive ||
@@ -186,50 +233,15 @@ export class PermissionService extends BaseService {
       }
 
       // 2. Check block state
-      const blocked = await prisma.block.findFirst({
-        where: {
-          OR: [
-            { blockerId: senderId, blockedId: receiverId },
-            { blockerId: receiverId, blockedId: senderId },
-          ],
-        },
-      });
       if (blocked) return false;
 
-      // 3. Must have mutual match (either ACCEPTED interest, or interests sent both ways)
-      const acceptedMatch = await prisma.interest.findFirst({
-        where: {
-          OR: [
-            { senderId, receiverId, status: "ACCEPTED" },
-            { senderId: receiverId, receiverId: senderId, status: "ACCEPTED" },
-          ],
-        },
-      });
-
-      let isMutual = !!acceptedMatch;
-      if (!isMutual) {
-        const sentAtoB = await prisma.interest.findFirst({ where: { senderId, receiverId } });
-        const sentBtoA = await prisma.interest.findFirst({ where: { senderId: receiverId, receiverId: senderId } });
-        if (sentAtoB && sentBtoA) {
-          isMutual = true;
-        }
-      }
-
+      // 3. Must have mutual match
+      const isMutual = !!acceptedMatch || (!!sentAtoB && !!sentBtoA);
       if (!isMutual) return false;
 
       // 4. Sender MUST have active ₹1,000+ membership
-      const activeMembership = await prisma.membership.findFirst({
-        where: {
-          userId: senderId,
-          status: "ACTIVE",
-          endDate: { gte: new Date() },
-        },
-        include: { plan: true },
-      });
-
       if (!activeMembership) return false;
 
-      // Allow if plan price >= 1000 or plan name is concierge/standard or features contain direct messaging
       const planPrice = activeMembership.plan?.price ?? 0;
       const planName = activeMembership.plan?.name?.toLowerCase() || "";
       const planFeatures = (activeMembership.plan?.features as string[]) || [];

@@ -114,7 +114,7 @@ export function AdminMembershipsClient({
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50/80 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 font-semibold">
                 <tr>
-                  <th className="p-4">Profile ID</th>
+                  <th className="p-4">User ID</th>
                   <th className="p-4">Plan Name</th>
                   <th className="p-4">Start Date</th>
                   <th className="p-4">Expires On</th>
@@ -133,7 +133,7 @@ export function AdminMembershipsClient({
                     <tr key={m.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="p-4 font-semibold text-slate-900">
                         <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                          {getDisplayProfileId(m.user, m.userId)}
+                          {m.userId || m.user?.id}
                         </span>
                       </td>
                       <td className="p-4 font-bold text-rose-600">{m.plan?.name}</td>

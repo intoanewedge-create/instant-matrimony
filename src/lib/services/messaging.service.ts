@@ -115,6 +115,26 @@ export class MessagingService extends BaseService {
     }
   }
 
+  async getOrCreateConversation(userId: string, targetUserId: string): Promise<Result<any>> {
+    try {
+      const allowed = await this.permissionService.canChat(userId, targetUserId);
+      if (!allowed) {
+        return this.returnFailure(
+          "Chat access denied. Ensure you have an active membership and a mutually accepted interest.",
+          "CHAT_ACCESS_DENIED"
+        );
+      }
+
+      let conversation = await this.conversationRepo.findByParticipants([userId, targetUserId]);
+      if (!conversation) {
+        conversation = await this.conversationRepo.create([userId, targetUserId]);
+      }
+      return this.returnSuccess(conversation);
+    } catch (error: unknown) {
+      return this.returnFailure((error as Error).message, "CONVERSATION_GET_OR_CREATE_ERROR");
+    }
+  }
+
   async getConversationMessages(userId: string, conversationId: string, cursor?: string, limit?: number): Promise<Result<unknown>> {
     try {
       const participant = await this.participantRepo.findParticipant(conversationId, userId);

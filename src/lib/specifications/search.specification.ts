@@ -56,7 +56,7 @@ export class SearchSpecification {
       });
     }
 
-    if (params.category === "pref_nri") {
+    if (params.category === "pref_nri" || params.category === "nri_matches") {
       andClauses.push({
         country: {
           notIn: ["India", "INDIA", "india", "In", "IN", "in", "Bharat", "BHARAT"],

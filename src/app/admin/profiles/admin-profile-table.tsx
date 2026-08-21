@@ -218,7 +218,7 @@ export function AdminProfileTable({
         <table className="w-full text-left text-sm text-slate-700">
           <thead className="bg-slate-50/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
             <tr>
-              <th className="px-6 py-3">Profile ID</th>
+              <th className="px-6 py-3">User ID</th>
               <th className="px-6 py-3">Member Details</th>
               <th className="px-6 py-3">Demographics</th>
               <th className="px-6 py-3">Location</th>
@@ -246,16 +246,14 @@ export function AdminProfileTable({
                   className="hover:bg-slate-50/70 transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <span
-                      className="inline-block font-mono text-xs font-bold px-2 py-1 rounded-full"
-                      style={{
-                        backgroundColor: "#FFF1F2",
-                        color: "#E11D48",
-                        border: "1px solid #FECDD3",
-                      }}
-                    >
-                      {getDisplayProfileId(p.user, p.userId)}
-                    </span>
+                    <div className="font-mono text-xs font-bold text-slate-800 break-all select-all">
+                      {p.userId || p.user?.id || p.id}
+                    </div>
+                    {p.user?.publicId && (
+                      <span className="inline-block text-[10px] font-mono text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 mt-1">
+                        {p.user.publicId}
+                      </span>
+                    )}
                   </td>
 
                   <td className="px-6 py-4">

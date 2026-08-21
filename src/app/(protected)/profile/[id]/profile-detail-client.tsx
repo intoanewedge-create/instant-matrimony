@@ -31,7 +31,7 @@ import {
   acceptInterestAction,
   declineInterestAction,
 } from "@/lib/actions/interest.actions";
-import { sendMessageAction } from "@/lib/actions/chat.actions";
+import { sendMessageAction, getOrCreateConversationAction } from "@/lib/actions/chat.actions";
 import { unlockContactAction } from "@/lib/actions/contact-unlock.actions";
 import { getDisplayProfileId } from "@/lib/utils/public-id";
 
@@ -342,9 +342,15 @@ export function ProfileDetailClient({
             )}
 
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (isMutual) {
-                  router.push(`/messages/${profile.userId || profile.id}`);
+                  const targetId = profile.userId || profile.id;
+                  const res = await getOrCreateConversationAction(targetId);
+                  if (res.success && res.conversation) {
+                    router.push(`/messages/${res.conversation.id}`);
+                  } else {
+                    router.push(`/messages/${targetId}`);
+                  }
                 } else {
                   setShowChatModal(true);
                 }

@@ -86,6 +86,14 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
   const [districts, setDistricts] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
 
+  // Custom Dropdown Option States
+  const [casteOther, setCasteOther] = useState("");
+  const [subCasteOther, setSubCasteOther] = useState("");
+  const [educationOther, setEducationOther] = useState("");
+  const [occupationOther, setOccupationOther] = useState("");
+  const [districtOther, setDistrictOther] = useState("");
+  const [cityOther, setCityOther] = useState("");
+
   // Parse Initial Family Details
   let initialFamily: any = {};
   try {
@@ -415,24 +423,24 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
       stepData = {
         religion: data.religion,
-        caste: data.caste || undefined,
-        subCaste: data.subCaste || undefined,
+        caste: data.caste === "Other" && casteOther.trim() ? casteOther.trim() : data.caste || undefined,
+        subCaste: data.subCaste === "Other" && subCasteOther.trim() ? subCasteOther.trim() : data.subCaste || undefined,
         gothram: data.gothram || undefined,
         motherTongue: data.motherTongue === "Other" ? data.motherTongueOther : data.motherTongue,
         horoscope: horoscopeCombined,
       };
     } else if (currentStep === 4) {
       stepData = {
-        education: data.education,
-        occupation: data.occupation,
+        education: data.education === "Other" && educationOther.trim() ? educationOther.trim() : data.education,
+        occupation: data.occupation === "Other" && occupationOther.trim() ? occupationOther.trim() : data.occupation,
         income: Number(data.income) || 0,
       };
     } else if (currentStep === 5) {
       stepData = {
         country: data.country,
         state: data.state,
-        district: data.district || undefined,
-        city: data.city,
+        district: data.district === "Other" && districtOther.trim() ? districtOther.trim() : data.district || undefined,
+        city: data.city === "Other" && cityOther.trim() ? cityOther.trim() : data.city,
       };
     } else if (currentStep === 6) {
       const familyPayload = {
@@ -739,52 +747,52 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="caste" className="text-slate-700 font-medium text-xs">Caste</Label>
-                        {castes.length > 0 ? (
-                          <select
-                            id="caste"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                            {...register("caste")}
-                          >
-                            <option value="">Select Caste</option>
-                            {castes.map((c) => (
-                              <option key={c.id} value={c.name}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="caste"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("caste")}
+                        >
+                          <option value="">Select Caste</option>
+                          {castes.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {watch("caste") === "Other" && (
                           <Input
-                            id="caste"
                             type="text"
-                            placeholder="e.g. Reddy, Kamma, Brahmin, Kapu"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("caste")}
+                            placeholder="Please specify your caste"
+                            value={casteOther}
+                            onChange={(e) => setCasteOther(e.target.value)}
+                            className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
                           />
                         )}
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="subCaste" className="text-slate-700 font-medium text-xs">Sub Caste</Label>
-                        {subCastes.length > 0 ? (
-                          <select
-                            id="subCaste"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
-                            {...register("subCaste")}
-                          >
-                            <option value="">Select Sub Caste</option>
-                            {subCastes.map((sc) => (
-                              <option key={sc.id} value={sc.name}>
-                                {sc.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="subCaste"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm"
+                          {...register("subCaste")}
+                        >
+                          <option value="">Select Sub Caste</option>
+                          {subCastes.map((sc) => (
+                            <option key={sc.id} value={sc.name}>
+                              {sc.name}
+                            </option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {watch("subCaste") === "Other" && (
                           <Input
-                            id="subCaste"
                             type="text"
-                            placeholder="e.g. Motati, Pedakanti, Vaidiki"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("subCaste")}
+                            placeholder="Please specify your sub caste"
+                            value={subCasteOther}
+                            onChange={(e) => setSubCasteOther(e.target.value)}
+                            className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
                           />
                         )}
                       </div>
@@ -912,7 +920,17 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                               <option value="Master Degree (Others)">Master Degree (Others)</option>
                             </>
                           )}
+                        <option value="Other">Other (Please specify)</option>
                       </select>
+                      {watch("education") === "Other" && (
+                        <Input
+                          type="text"
+                          placeholder="Please specify your education degree"
+                          value={educationOther}
+                          onChange={(e) => setEducationOther(e.target.value)}
+                          className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
+                        />
+                      )}
                       {errors.education && <p className="text-xs text-red-600">{errors.education.message as string}</p>}
                     </div>
 
@@ -943,7 +961,17 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                               <option value="Lawyer / Legal Professional">Lawyer / Legal Professional</option>
                             </>
                           )}
+                        <option value="Other">Other (Please specify)</option>
                       </select>
+                      {watch("occupation") === "Other" && (
+                        <Input
+                          type="text"
+                          placeholder="Please specify your occupation"
+                          value={occupationOther}
+                          onChange={(e) => setOccupationOther(e.target.value)}
+                          className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
+                        />
+                      )}
                       {errors.occupation && <p className="text-xs text-red-600">{errors.occupation.message as string}</p>}
                     </div>
 
@@ -1015,26 +1043,26 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="district" className="text-slate-700 font-medium text-xs">District <span className="text-rose-600">*</span></Label>
-                        {districts.length > 0 ? (
-                          <select
-                            id="district"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
-                            {...register("district", { required: "District is required" })}
-                          >
-                            <option value="">- Select District -</option>
-                            {districts.map((d) => (
-                              <option key={d.id} value={d.name}>
-                                {d.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="district"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
+                          {...register("district", { required: "District is required" })}
+                        >
+                          <option value="">- Select District -</option>
+                          {districts.map((d) => (
+                            <option key={d.id} value={d.name}>
+                              {d.name}
+                            </option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {watch("district") === "Other" && (
                           <Input
-                            id="district"
                             type="text"
-                            placeholder="e.g. Guntur, Hyderabad, Krishna"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("district", { required: "District is required" })}
+                            placeholder="Please specify your district"
+                            value={districtOther}
+                            onChange={(e) => setDistrictOther(e.target.value)}
+                            className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
                           />
                         )}
                         {errors.district && <p className="text-xs text-red-600">{errors.district.message as string}</p>}
@@ -1042,26 +1070,26 @@ export function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
 
                       <div className="space-y-2">
                         <Label htmlFor="city" className="text-slate-700 font-medium text-xs">City / Town <span className="text-rose-600">*</span></Label>
-                        {cities.length > 0 ? (
-                          <select
-                            id="city"
-                            className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
-                            {...register("city", { required: "City is required" })}
-                          >
-                            <option value="">- Select City / Town -</option>
-                            {cities.map((c) => (
-                              <option key={c.id} value={c.name}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          id="city"
+                          className="w-full h-10 px-3 border border-slate-300 bg-white rounded-xl text-slate-900 focus:border-rose-500 text-sm font-medium"
+                          {...register("city", { required: "City is required" })}
+                        >
+                          <option value="">- Select City / Town -</option>
+                          {cities.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                          <option value="Other">Other (Please specify)</option>
+                        </select>
+                        {watch("city") === "Other" && (
                           <Input
-                            id="city"
                             type="text"
-                            placeholder="e.g. Hyderabad, Vijayawada, Bangalore"
-                            className="border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-rose-500 rounded-xl text-sm"
-                            {...register("city", { required: "City is required" })}
+                            placeholder="Please specify your city / town"
+                            value={cityOther}
+                            onChange={(e) => setCityOther(e.target.value)}
+                            className="mt-2 border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rose-500 rounded-xl text-sm"
                           />
                         )}
                         {errors.city && <p className="text-xs text-red-600">{errors.city.message as string}</p>}

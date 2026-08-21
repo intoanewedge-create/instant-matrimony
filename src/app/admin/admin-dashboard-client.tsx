@@ -231,7 +231,8 @@ export function AdminDashboardClient({
             activityFeeds.recentUsers?.map((u: any) => (
               <div key={u.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-bold text-slate-900">{getDisplayProfileId(u)}</span>
+                  <span className="font-bold text-slate-900">{u.name || "Member"}</span>
+                  <span className="text-[11px] text-slate-500 font-mono ml-2">User ID: {u.id}</span>
                 </div>
                 <span className="text-[10px] text-slate-400">{formatDateTime(u.createdAt)}</span>
               </div>
@@ -242,7 +243,8 @@ export function AdminDashboardClient({
               <div key={p.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs">
                 <div>
                   <span className="font-bold text-emerald-700">Approved Profile:</span>
-                  <span className="text-slate-900 ml-2 font-medium">{getDisplayProfileId(p.user)}</span>
+                  <span className="text-slate-900 ml-2 font-medium">{p.user?.name || "Member"}</span>
+                  <span className="text-[11px] text-slate-500 font-mono ml-2">User ID: {p.userId || p.user?.id}</span>
                 </div>
                 <span className="text-[10px] text-slate-400">{formatDateTime(p.approvedAt || p.createdAt)}</span>
               </div>
@@ -253,6 +255,7 @@ export function AdminDashboardClient({
               <div key={p.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs">
                 <div>
                   <span className="font-bold text-rose-600">{formatCurrency(p.amount)}</span>
+                  {p.userId && <span className="text-[11px] text-slate-500 font-mono ml-2">User ID: {p.userId}</span>}
                   <span className="text-slate-600 ml-2">[{p.status}] UTR: {p.utrNumber || "N/A"}</span>
                 </div>
                 <span className="text-[10px] text-slate-400">{formatDateTime(p.createdAt)}</span>
@@ -263,9 +266,9 @@ export function AdminDashboardClient({
             activityFeeds.recentUnlocks?.map((u: any) => (
               <div key={u.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-bold text-slate-900">{getDisplayProfileId(u.user)}</span>
+                  <span className="font-bold text-slate-900">{u.user?.name || "User"} ({u.userId})</span>
                   <span className="text-slate-500 mx-1.5">unlocked contact for</span>
-                  <span className="font-bold text-rose-600">{getDisplayProfileId(u.targetUser)}</span>
+                  <span className="font-bold text-rose-600">{u.targetUser?.name || "Target"} ({u.targetUserId})</span>
                 </div>
                 <span className="text-[10px] text-slate-400">{formatDateTime(u.unlockedAt)}</span>
               </div>
@@ -275,7 +278,7 @@ export function AdminDashboardClient({
             activityFeeds.recentConciergeUpdates?.map((cu: any) => (
               <div key={cu.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs">
                 <div>
-                  <span className="font-bold text-pink-600">{getDisplayProfileId(cu.case?.user)}:</span>
+                  <span className="font-bold text-pink-600">{cu.case?.user?.name || "User"} (User ID: {cu.case?.userId}):</span>
                   <span className="text-slate-700 ml-2">{cu.content}</span>
                 </div>
                 <span className="text-[10px] text-slate-400">{formatDateTime(cu.createdAt)}</span>

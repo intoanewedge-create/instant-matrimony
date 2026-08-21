@@ -132,10 +132,10 @@ export function AdminConciergeClient({
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-rose-600 text-base font-mono">
-                      {getDisplayProfileId(c.user, c.userId)}
+                    <h3 className="font-bold text-rose-600 text-sm font-mono break-all">
+                      {c.userId}
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium">Concierge Subscriber</p>
+                    <p className="text-xs text-slate-700 font-semibold">{c.user?.name || "Concierge Subscriber"}</p>
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                     {c.status.replace(/_/g, " ")}

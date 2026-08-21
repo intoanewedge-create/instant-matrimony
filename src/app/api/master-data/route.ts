@@ -67,7 +67,13 @@ export async function POST(request: NextRequest) {
     if (!category || !name) {
       return NextResponse.json({ success: false, error: "Category and name are required" }, { status: 400 });
     }
-    const res = await masterDataService.createEntry(category, { name, order, code, parentId });
+    const res = await masterDataService.createEntry(category, {
+      name,
+      order,
+      code,
+      category: body.category,
+      parentId,
+    });
     return NextResponse.json(res, { status: res.success ? 201 : 400 });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
@@ -77,11 +83,17 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { category, id, name, order, code } = body;
+    const { category, id, name, order, code, parentId } = body;
     if (!category || !id) {
       return NextResponse.json({ success: false, error: "Category and id are required" }, { status: 400 });
     }
-    const res = await masterDataService.updateEntry(category, id, { name, order, code });
+    const res = await masterDataService.updateEntry(category, id, {
+      name,
+      order,
+      code,
+      category: body.category,
+      parentId,
+    });
     return NextResponse.json(res);
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });

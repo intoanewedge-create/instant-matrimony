@@ -46,52 +46,81 @@ export class PrismaMessageRepository implements IMessageRepository {
   }
 
   async findConversations(userId: string): Promise<any[]> {
-    const messages = await prisma.message.findMany({
+    const participantEntries = await prisma.conversationParticipant.findMany({
       where: {
-        OR: [{ senderId: userId }, { receiverId: userId }],
+        userId,
         isDeleted: false,
       },
-      orderBy: { createdAt: "desc" },
-      include: {
-        sender: {
-          include: {
-            profile: {
-              include: { photos: true },
+      select: {
+        unreadCount: true,
+        conversation: {
+          select: {
+            id: true,
+            updatedAt: true,
+            participants: {
+              where: {
+                userId: { not: userId },
+              },
+              select: {
+                userId: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                    publicId: true,
+                    profile: {
+                      select: {
+                        photos: {
+                          where: { deletedAt: null },
+                          select: { url: true, isMain: true },
+                          take: 2,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
-          },
-        },
-        receiver: {
-          include: {
-            profile: {
-              include: { photos: true },
+            messages: {
+              where: { isDeleted: false },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: {
+                content: true,
+                createdAt: true,
+              },
             },
           },
         },
       },
     });
 
-    const conversationsMap = new Map<string, any>();
-    for (const msg of messages) {
-      const partner = msg.senderId === userId ? msg.receiver : msg.sender;
-      if (!partner) continue;
-      if (!conversationsMap.has(partner.id)) {
-        conversationsMap.set(partner.id, {
-          id: partner.id,
-          name: partner.name,
-          image: partner.profile?.photos?.find((p) => p.isMain)?.url || partner.image,
-          lastMessage: msg.content,
-          lastMessageAt: msg.createdAt,
-          unreadCount: msg.receiverId === userId && !msg.read ? 1 : 0,
-        });
-      } else {
-        if (msg.receiverId === userId && !msg.read) {
-          const entry = conversationsMap.get(partner.id);
-          entry.unreadCount += 1;
-        }
-      }
-    }
+    return participantEntries
+      .map((entry) => {
+        const conv = entry.conversation;
+        const otherParticipant = conv.participants[0];
+        const lastMsg = conv.messages[0];
+        if (!otherParticipant?.user) return null;
 
-    return Array.from(conversationsMap.values());
+        const photoUrl =
+          otherParticipant.user.profile?.photos?.find((p) => p.isMain)?.url ||
+          otherParticipant.user.profile?.photos?.[0]?.url ||
+          otherParticipant.user.image ||
+          null;
+
+        return {
+          id: otherParticipant.userId,
+          conversationId: conv.id,
+          name: otherParticipant.user.name || "Member",
+          image: photoUrl,
+          lastMessage: lastMsg ? lastMsg.content : "",
+          lastMessageAt: lastMsg ? lastMsg.createdAt : conv.updatedAt,
+          unreadCount: entry.unreadCount,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b!.lastMessageAt).getTime() - new Date(a!.lastMessageAt).getTime());
   }
 
   async markAsRead(senderId: string, receiverId: string): Promise<void> {
