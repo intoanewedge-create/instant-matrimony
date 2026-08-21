@@ -6,7 +6,7 @@ const cspHeader = `
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   img-src 'self' data: blob: https://res.cloudinary.com https://*.s3.amazonaws.com https://images.unsplash.com;
   font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://api.stripe.com https://api.razorpay.com https://api.resend.com;
+  connect-src 'self' https://api.stripe.com https://api.razorpay.com https://api.resend.com https://res.cloudinary.com;
   frame-src 'self' https://js.stripe.com https://api.razorpay.com;
   object-src 'none';
   base-uri 'self';
@@ -18,6 +18,11 @@ const cspHeader = `
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["sharp"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   async headers() {
     return [
       {
@@ -28,10 +33,7 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" }
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }
         ]
       }
     ];
