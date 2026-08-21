@@ -4,12 +4,23 @@ import { container } from "@/lib/container";
 import { ChatListClient } from "./chat-list-client";
 import { MessageSquare, AlertCircle } from "lucide-react";
 
-export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; conversationId?: string; contactId?: string; userId?: string; partnerId?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
   const userId = (session.user as any).id;
+
+  const { error, conversationId, contactId, userId: targetUserId, partnerId } = await searchParams;
+
+  const targetParam = conversationId || contactId || targetUserId || partnerId;
+  if (targetParam) {
+    redirect(`/messages/${targetParam}`);
+  }
 
   const profileResult = await container.services.profileService.getProfileByUserId(userId);
   if (!profileResult.success) {
@@ -21,8 +32,6 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
 
   const convosResult = await container.services.messagingService.getConversations(userId);
   const conversations = convosResult.success ? convosResult.data : [];
-  
-  const { error } = await searchParams;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50/30 via-slate-50 to-white text-slate-900 py-6 px-4">

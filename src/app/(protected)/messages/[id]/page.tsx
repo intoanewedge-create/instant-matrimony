@@ -21,7 +21,7 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
     redirect("/dashboard");
   }
 
-  // Resolve whether paramId is a contactId (user ID) or a conversationId
+  // Resolve whether paramId is a contactId (user ID), publicId, profileId, or a conversationId
   let contactId = paramId;
   const resolvedConversation = await container.repositories.conversationRepository.findById(paramId);
   if (resolvedConversation && (resolvedConversation as any).participants) {
@@ -32,6 +32,22 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
     const otherParticipant = (resolvedConversation as any).participants.find((p: any) => p.userId !== userId);
     if (otherParticipant) {
       contactId = otherParticipant.userId;
+    }
+  } else {
+    // If not a conversationId, resolve publicId, profileId, or user.id
+    const { prisma } = await import("@/lib/prisma");
+    const targetUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: paramId },
+          { publicId: paramId },
+          { profile: { id: paramId } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (targetUser) {
+      contactId = targetUser.id;
     }
   }
 

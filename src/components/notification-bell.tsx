@@ -43,7 +43,11 @@ function formatRelativeTime(dateInput: string | Date): string {
 function getNotificationTargetUrl(n: NotificationItem): string {
   const type = (n.type || n.category || "").toUpperCase();
   const meta = n.metadata || {};
-  const targetId = n.targetId || meta.targetId || meta.senderId || meta.userId || meta.profileId;
+  let targetId = n.targetId || meta.targetId || meta.senderId || meta.userId || meta.profileId || meta.chatId || meta.conversationId;
+
+  if (!targetId && n.category && n.category.includes(":")) {
+    targetId = n.category.split(":")[1];
+  }
 
   if (type.includes("PROFILE_VIEW") || type.includes("VISIT") || (type.includes("VIEW") && targetId)) {
     return targetId ? `/profile/${targetId}` : `/profile`;
@@ -52,7 +56,7 @@ function getNotificationTargetUrl(n: NotificationItem): string {
     return `/dashboard/interests`;
   }
   if (type.includes("MESSAGE") || type.includes("CHAT")) {
-    return meta.chatId ? `/messages/${meta.chatId}` : targetId ? `/messages/${targetId}` : `/messages`;
+    return targetId ? `/messages/${targetId}` : `/messages`;
   }
   if (type.includes("PROFILE") || type.includes("APPROVAL") || type.includes("REVIEW")) {
     return `/profile`;

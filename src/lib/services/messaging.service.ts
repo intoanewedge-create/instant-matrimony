@@ -88,7 +88,8 @@ export class MessagingService extends BaseService {
         receiverId,
         "New Message Received",
         `You have received a new message: "${content.substring(0, 30)}..."`,
-        "INFO"
+        "INFO",
+        `MESSAGE:${activeConversationId}` as any
       );
 
       return this.returnSuccess(MessageMapper.toResponse(message));
