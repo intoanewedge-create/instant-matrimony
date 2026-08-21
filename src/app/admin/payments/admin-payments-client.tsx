@@ -160,7 +160,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50/80 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200 font-semibold">
               <tr>
-                <th className="p-4">User ID</th>
+                <th className="p-4">Profile ID</th>
                 <th className="p-4">Plan & Amount</th>
                 <th className="p-4">Method & Reference</th>
                 <th className="p-4">Submitted Date</th>
@@ -179,9 +179,14 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
                 filteredPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4 font-semibold text-slate-900">
-                      <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                        {p.userId || p.user?.id}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="inline-block font-mono text-xs font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200 w-fit">
+                          {p.profileId || getDisplayProfileId(p.user, p.userId)}
+                        </span>
+                        {p.user?.name && (
+                          <span className="text-[10px] text-slate-500 mt-0.5">{p.user.name}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="font-bold text-rose-600">{formatCurrency(p.amount)}</div>
@@ -260,7 +265,7 @@ export function AdminPaymentsClient({ initialPayments }: { initialPayments: any[
               <AlertTriangle className="w-5 h-5 text-red-600" /> Reject Payment Verification
             </h3>
             <p className="text-xs text-slate-500">
-              Provide a mandatory rejection reason for User ID <strong className="font-mono">{rejectingPayment.userId || rejectingPayment.user?.id}</strong>.
+              Provide a mandatory rejection reason for Profile ID <strong className="font-mono">{rejectingPayment.profileId || getDisplayProfileId(rejectingPayment.user, rejectingPayment.userId)}</strong>.
             </p>
             <textarea
               rows={3}

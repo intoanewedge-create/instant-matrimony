@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AdminPaymentsClient } from "./admin-payments-client";
 
+import { getDisplayProfileId } from "@/lib/utils/public-id";
+
 export default async function AdminPaymentsPage() {
   const session = await auth();
   if (!session?.user || (session.user as any).role !== "ADMIN") {
@@ -20,7 +22,14 @@ export default async function AdminPaymentsPage() {
   const [users, plans] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: userIds as string[] } },
-      select: { id: true, name: true, email: true, phone: true, publicId: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        publicId: true,
+        profile: { select: { id: true } },
+      },
     }),
     prisma.membershipPlan.findMany({
       where: { id: { in: planIds as string[] } },
@@ -31,11 +40,16 @@ export default async function AdminPaymentsPage() {
   const userMap = new Map(users.map((u) => [u.id, u]));
   const planMap = new Map(plans.map((p) => [p.id, p]));
 
-  const enrichedPayments = payments.map((p) => ({
-    ...p,
-    user: p.userId ? userMap.get(p.userId) : null,
-    plan: p.planId ? planMap.get(p.planId) : null,
-  }));
+  const enrichedPayments = payments.map((p) => {
+    const userObj = p.userId ? userMap.get(p.userId) : null;
+    const profileId = getDisplayProfileId(userObj, p.userId);
+    return {
+      ...p,
+      user: userObj,
+      plan: p.planId ? planMap.get(p.planId) : null,
+      profileId,
+    };
+  });
 
   return (
     <div className="space-y-6">
