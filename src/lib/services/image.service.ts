@@ -3,16 +3,7 @@ import { Result } from "../result";
 import { imageConfig } from "@/config/image.config";
 import crypto from "crypto";
 
-// Lazy-load sharp to avoid crashing serverless environments (Vercel)
-// where the native libvips binary is not available at module load time.
-let _sharp: typeof import("sharp") | null = null;
-async function getSharp() {
-  if (!_sharp) {
-    const sharpModule = await import("sharp");
-    _sharp = (sharpModule.default || sharpModule) as any;
-  }
-  return _sharp as unknown as typeof import("sharp").default;
-}
+import sharp from "sharp";
 
 export class ImageService extends BaseService {
   async validateImage(
@@ -38,7 +29,6 @@ export class ImageService extends BaseService {
 
     // 3. Dimension validation
     try {
-      const sharp = await getSharp();
       const metadata = await sharp(buffer).metadata();
       if (!metadata.width || !metadata.height) {
         return this.returnFailure("Invalid image dimensions", "INVALID_DIMENSIONS");
@@ -67,7 +57,6 @@ export class ImageService extends BaseService {
     responsiveBuffers: { sizeName: string; buffer: Buffer; width: number; height: number }[];
   }>> {
     try {
-      const sharp = await getSharp();
       const checksum = crypto.createHash("sha256").update(buffer).digest("hex");
 
       // 1. Convert to WebP, rotate automatically, and strip EXIF
